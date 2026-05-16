@@ -2,110 +2,104 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Module } from '@/lib/modules'
+import { A } from '@/lib/theme'
+import Icon from '@/components/ui/Icon'
 
 type Flashcard = { id: string; concept: string; definition: string }
 
-export default function FlashcardsClient({ flashcards, module: mod }: { flashcards: Flashcard[]; module: Module }) {
+export default function FlashcardsClient({ flashcards, moduleId }: { flashcards: Flashcard[]; moduleId: string }) {
   const router = useRouter()
-  const [index, setIndex] = useState(0)
+  const [idx, setIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [known, setKnown] = useState(0)
-  const [toReview, setToReview] = useState(0)
+  const [review, setReview] = useState(0)
   const [done, setDone] = useState(false)
 
-  const card = flashcards[index]
-  const progress = index / flashcards.length
+  const total = flashcards.length
+  const card = flashcards[idx]
 
-  function handleKnow() {
-    setKnown(k => k + 1)
-    next()
-  }
-
-  function handleReview() {
-    setToReview(r => r + 1)
-    next()
-  }
-
-  function next() {
+  function handleAction(knew: boolean) {
+    if (knew) setKnown(k => k + 1); else setReview(r => r + 1)
+    if (idx + 1 >= total) { setDone(true); return }
+    setIdx(i => i + 1)
     setFlipped(false)
-    if (index + 1 >= flashcards.length) {
-      setDone(true)
-    } else {
-      setTimeout(() => setIndex(i => i + 1), 150)
-    }
   }
 
-  if (done) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
-          <span className="text-3xl">🎉</span>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Session terminée !</h2>
-        <p className="text-gray-500 text-sm mb-6">
-          ✅ {known} sus · 🔄 {toReview} à revoir sur {flashcards.length} cartes
-        </p>
-        <div className="flex gap-3 w-full max-w-xs">
-          <button onClick={() => { setIndex(0); setFlipped(false); setKnown(0); setToReview(0); setDone(false) }} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm">
-            Recommencer
-          </button>
-          <button onClick={() => router.push(`/quiz/${mod.id}`)} className="flex-1 bg-blue-600 text-white font-semibold py-3.5 rounded-2xl hover:bg-blue-700 transition-colors text-sm">
-            Faire le quiz
-          </button>
-        </div>
+  if (done) return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
+      <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${A.green} 0%, #0E8C3E 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 12px 32px rgba(22,163,74,0.32)' }}>
+        <Icon name="check" size={40} color="#fff" strokeWidth={2.5} />
       </div>
-    )
-  }
+      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Session terminée !</div>
+      <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 28 }}>
+        <span style={{ color: A.green, fontWeight: 600 }}>{known} sues</span> · <span style={{ color: A.amber, fontWeight: 600 }}>{review} à revoir</span> sur {total} cartes
+      </div>
+      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
+        <button onClick={() => { setIdx(0); setFlipped(false); setKnown(0); setReview(0); setDone(false) }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
+          Recommencer
+        </button>
+        <button onClick={() => router.push(`/quiz/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+          Faire le quiz
+        </button>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="px-4 pt-12 pb-6 min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 text-sm">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
-          Retour
+    <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
+      {/* Top */}
+      <div style={{ padding: '60px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <Icon name="x" size={16} color={A.text} />
         </button>
-        <span className="text-sm text-gray-400">{index + 1} / {flashcards.length}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>Flashcards {moduleId}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{idx + 1}<span style={{ color: A.textDim }}>/{total}</span></div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, fontSize: 12 }}>
+          <span style={{ color: A.green, fontWeight: 600 }}>{known} sue</span>
+          <span style={{ color: A.amber, fontWeight: 600 }}>{review} à revoir</span>
+        </div>
       </div>
 
-      {/* Progress */}
-      <div className="w-full bg-gray-100 rounded-full h-1.5 mb-8">
-        <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${progress * 100}%`, backgroundColor: mod.color }} />
+      {/* Progress dots */}
+      <div style={{ padding: '0 20px 10px', display: 'flex', gap: 4 }}>
+        {Array.from({ length: total }).map((_, i) => (
+          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < idx ? A.primary : i === idx ? A.primary + '88' : '#E1E5EC' }} />
+        ))}
       </div>
 
       {/* Card */}
-      <div className="flex-1 flex items-center justify-center">
-        <button
-          onClick={() => setFlipped(f => !f)}
-          className="w-full max-w-sm min-h-64 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-xl transition-all duration-300 active:scale-95"
-          style={{ backgroundColor: flipped ? mod.colorSoft : 'white', border: `2px solid ${flipped ? mod.color + '40' : '#F3F4F6'}` }}
-        >
-          <span className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: mod.color }}>
-            {flipped ? 'Définition' : 'Concept'}
-          </span>
-          <p className="text-lg font-semibold text-gray-900 leading-relaxed">
-            {flipped ? card.definition : card.concept}
-          </p>
-          {!flipped && (
-            <p className="text-xs text-gray-400 mt-6">Appuyez pour voir la définition</p>
-          )}
-        </button>
+      <div style={{ flex: 1, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', perspective: 1200 }}>
+        <div onClick={() => setFlipped(f => !f)} style={{ width: '100%', minHeight: 420, position: 'relative', transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0)', transition: 'transform .55s cubic-bezier(.2,.7,.3,1)', cursor: 'pointer' }}>
+          {/* Front */}
+          <div style={{ position: 'absolute', inset: 0, background: A.surface, borderRadius: 20, border: `0.5px solid ${A.border}`, boxShadow: '0 16px 40px rgba(15,27,45,0.08)', padding: 28, display: 'flex', flexDirection: 'column', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+            <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>Recto · concept</div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: -0.6, textAlign: 'center', lineHeight: 1.2 }}>{card.concept}</div>
+            </div>
+            <div style={{ fontSize: 12, color: A.textDim, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Icon name="refresh" size={12} color={A.textDim} /> Tape pour retourner
+            </div>
+          </div>
+          {/* Back */}
+          <div style={{ position: 'absolute', inset: 0, background: A.text, borderRadius: 20, boxShadow: '0 16px 40px rgba(15,27,45,0.18)', padding: 28, display: 'flex', flexDirection: 'column', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', color: '#fff' }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>Verso · définition</div>
+            <div style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.5, marginTop: 12, flex: 1, display: 'flex', alignItems: 'center' }}>{card.definition}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Icon name="refresh" size={12} color="rgba(255,255,255,0.55)" /> Tape pour retourner
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 mt-8">
-        <button
-          onClick={handleReview}
-          className="flex-1 bg-amber-50 border-2 border-amber-200 text-amber-700 font-semibold py-4 rounded-2xl hover:bg-amber-100 transition-colors"
-        >
-          🔄 À revoir
+      <div style={{ padding: '8px 20px 30px', display: 'flex', gap: 10 }}>
+        <button onClick={() => handleAction(false)} style={{ flex: 1, height: 52, borderRadius: 14, background: A.surface, border: `1.5px solid ${A.amber}`, color: A.amber, fontFamily: A.font, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
+          <Icon name="refresh" size={16} color={A.amber} /> À revoir
         </button>
-        <button
-          onClick={handleKnow}
-          className="flex-1 bg-green-50 border-2 border-green-200 text-green-700 font-semibold py-4 rounded-2xl hover:bg-green-100 transition-colors"
-        >
-          ✅ Je sais
+        <button onClick={() => handleAction(true)} style={{ flex: 1, height: 52, borderRadius: 14, background: A.green, border: 'none', color: '#fff', fontFamily: A.font, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 4px 14px rgba(22,163,74,0.32)' }}>
+          <Icon name="check" size={16} color="#fff" strokeWidth={2.5} /> Je sais
         </button>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import FlashcardsClient from './FlashcardsClient'
-import { MODULE_MAP } from '@/lib/modules'
 import type { ModuleId } from '@/types/database'
+import { A } from '@/lib/theme'
 
 export default async function FlashcardsPage({ params }: { params: Promise<{ moduleId: string }> }) {
   const { moduleId } = await params
@@ -10,25 +10,17 @@ export default async function FlashcardsPage({ params }: { params: Promise<{ mod
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const mod = MODULE_MAP[moduleId as ModuleId]
-  if (!mod) redirect('/dashboard')
-
   const { data: flashcards } = await supabase
-    .from('flashcards')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('module_id', moduleId as ModuleId)
-    .order('created_at')
+    .from('flashcards').select('*')
+    .eq('user_id', user.id).eq('module_id', moduleId as ModuleId).order('created_at')
 
-  if (!flashcards?.length) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <p className="text-4xl mb-4">📭</p>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Aucune flashcard</h2>
-        <p className="text-gray-500 text-sm">Ajoutez des cours pour le module {mod.label} pour générer des flashcards.</p>
-      </div>
-    )
-  }
+  if (!flashcards?.length) return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: A.text, marginBottom: 8 }}>Aucune flashcard</div>
+      <div style={{ fontSize: 14, color: A.textMuted }}>Importez des cours pour le module {moduleId} pour générer des flashcards.</div>
+    </div>
+  )
 
-  return <FlashcardsClient flashcards={flashcards} module={mod} />
+  return <FlashcardsClient flashcards={flashcards} moduleId={moduleId} />
 }

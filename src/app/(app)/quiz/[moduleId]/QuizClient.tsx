@@ -3,127 +3,115 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { Module } from '@/lib/modules'
+import { A } from '@/lib/theme'
+import Icon from '@/components/ui/Icon'
+import type { ModuleId } from '@/types/database'
 
-type Question = {
-  id: string
-  question: string
-  choices: unknown
-  correct_index: number
-  explanation: string
-  module_id: string
-}
+type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string }
 
-export default function QuizClient({ questions, module: mod, userId }: { questions: Question[]; module: Module; userId: string }) {
+export default function QuizClient({ questions, moduleId, userId }: { questions: Question[]; moduleId: string; userId: string }) {
   const router = useRouter()
-  const [index, setIndex] = useState(0)
-  const [selected, setSelected] = useState<number | null>(null)
-  const [score, setScore] = useState(0)
-  const [done, setDone] = useState(false)
+  const [idx, setIdx] = useState(0)
+  const [picked, setPicked] = useState<number | null>(null)
+  const [showResult, setShowResult] = useState(false)
+  const [scoreOk, setScoreOk] = useState(0)
+  const [scoreBad, setScoreBad] = useState(0)
 
-  const q = questions[index]
+  const q = questions[idx]
   const choices = q.choices as string[]
-  const isCorrect = selected === q.correct_index
+  const total = questions.length
 
-  async function handleSelect(choiceIndex: number) {
-    if (selected !== null) return
-    setSelected(choiceIndex)
-    if (choiceIndex === q.correct_index) setScore(s => s + 1)
-
-    // Save attempt
+  async function submit() {
+    if (picked === null) return
+    setShowResult(true)
+    const isCorrect = picked === q.correct_index
+    if (isCorrect) setScoreOk(s => s + 1); else setScoreBad(s => s + 1)
     const supabase = createClient()
-    await supabase.from('quiz_attempts').insert({
-      user_id: userId,
-      module_id: mod.id,
-      question_id: q.id,
-      selected_index: choiceIndex,
-      is_correct: choiceIndex === q.correct_index,
-    })
+    await supabase.from('quiz_attempts').insert({ user_id: userId, module_id: moduleId as ModuleId, question_id: q.id, selected_index: picked, is_correct: isCorrect })
   }
 
-  function handleNext() {
-    setSelected(null)
-    if (index + 1 >= questions.length) {
-      setDone(true)
-    } else {
-      setIndex(i => i + 1)
-    }
-  }
-
-  if (done) {
-    const pct = Math.round((score / questions.length) * 100)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <div className="w-28 h-28 rounded-full flex items-center justify-center mb-6 border-4" style={{ borderColor: mod.color, backgroundColor: mod.colorSoft }}>
-          <span className="text-3xl font-bold" style={{ color: mod.color }}>{pct}%</span>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz terminé !</h2>
-        <p className="text-gray-500 text-sm mb-6">{score} bonne(s) réponse(s) sur {questions.length}</p>
-        <div className="flex gap-3 w-full max-w-xs">
-          <button onClick={() => { setIndex(0); setSelected(null); setScore(0); setDone(false) }} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm">
-            Recommencer
-          </button>
-          <button onClick={() => router.push('/dashboard')} className="flex-1 font-semibold py-3.5 rounded-2xl transition-colors text-sm text-white" style={{ backgroundColor: mod.color }}>
-            Tableau de bord
-          </button>
-        </div>
-      </div>
-    )
+  function next() {
+    if (idx + 1 >= total) { router.push(`/module/${moduleId}`); return }
+    setIdx(i => i + 1); setPicked(null); setShowResult(false)
   }
 
   return (
-    <div className="px-4 pt-12 pb-6 min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 text-sm">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
-          Retour
-        </button>
-        <span className="text-sm font-medium" style={{ color: mod.color }}>{mod.label}</span>
-      </div>
-
-      {/* Progress */}
-      <div className="w-full bg-gray-100 rounded-full h-1.5 mb-6">
-        <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${((index) / questions.length) * 100}%`, backgroundColor: mod.color }} />
-      </div>
-
-      <p className="text-xs text-gray-400 mb-3">Question {index + 1} / {questions.length}</p>
-      <h2 className="text-lg font-bold text-gray-900 mb-6 leading-snug">{q.question}</h2>
-
-      {/* Choices */}
-      <div className="space-y-3 flex-1">
-        {choices.map((choice, i) => {
-          let style = 'bg-white border-2 border-gray-100 text-gray-800'
-          if (selected !== null) {
-            if (i === q.correct_index) style = 'bg-green-50 border-2 border-green-400 text-green-800'
-            else if (i === selected) style = 'bg-red-50 border-2 border-red-400 text-red-800'
-            else style = 'bg-white border-2 border-gray-100 text-gray-400'
-          }
-          return (
-            <button
-              key={i}
-              onClick={() => handleSelect(i)}
-              className={`w-full text-left px-5 py-4 rounded-2xl font-medium text-sm transition-all ${style} ${selected === null ? 'hover:border-blue-300 hover:bg-blue-50 active:scale-98' : ''}`}
-            >
-              <span className="font-bold mr-2">{String.fromCharCode(65 + i)}.</span>
-              {choice}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Explanation + Next */}
-      {selected !== null && (
-        <div className="mt-6">
-          <div className={`rounded-2xl px-4 py-3 mb-4 text-sm ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-            <p className="font-semibold mb-1">{isCorrect ? '✅ Bonne réponse !' : '❌ Incorrect'}</p>
-            <p>{q.explanation}</p>
-          </div>
-          <button onClick={handleNext} className="w-full text-white font-semibold py-4 rounded-2xl transition-colors" style={{ backgroundColor: mod.color }}>
-            {index + 1 >= questions.length ? 'Voir le score' : 'Question suivante →'}
+    <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar */}
+      <div style={{ padding: '60px 20px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <button onClick={() => router.push(`/module/${moduleId}`)} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <Icon name="x" size={16} color={A.text} />
           </button>
+          <div style={{ flex: 1, height: 5, background: '#E9ECF2', borderRadius: 5, overflow: 'hidden' }}>
+            <div style={{ width: `${(idx / total) * 100}%`, height: '100%', background: A.primary, borderRadius: 5, transition: 'width .4s' }} />
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: A.textMuted }}>{idx + 1}<span style={{ color: A.textDim }}>/{total}</span></div>
         </div>
-      )}
+        <div style={{ display: 'flex', gap: 16, fontSize: 12, color: A.textMuted }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 4, background: A.green }} />{scoreOk} bonnes
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 4, background: A.red }} />{scoreBad} erreurs
+          </span>
+        </div>
+      </div>
+
+      {/* Question */}
+      <div style={{ padding: '8px 20px 24px', flex: 1 }}>
+        <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 }}>
+          Question {idx + 1} · {moduleId}
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5, lineHeight: 1.25, marginBottom: 24 }}>{q.question}</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {choices.map((c, i) => {
+            const sel = picked === i
+            const isCorrect = showResult && i === q.correct_index
+            const isWrong = showResult && sel && i !== q.correct_index
+            let bg: string = A.surface, border: string = A.border, color: string = A.text
+            if (isCorrect) { bg = A.greenSoft; border = A.green }
+            else if (isWrong) { bg = '#FEEBEB'; border = A.red }
+            else if (sel) { bg = A.primarySoft; border = A.primary }
+            return (
+              <button key={i} onClick={() => !showResult && setPicked(i)} style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: showResult ? 'default' : 'pointer', textAlign: 'left', fontFamily: A.font, transition: 'all .2s', width: '100%' }}>
+                <div style={{ width: 22, height: 22, borderRadius: 11, border: `1.5px solid ${sel || isCorrect ? border : '#C8CFD9'}`, background: (sel || isCorrect) ? border : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {(sel || isCorrect) && <div style={{ width: 8, height: 8, borderRadius: 4, background: '#fff' }} />}
+                </div>
+                <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color }}>{c}</div>
+                {isCorrect && <Icon name="check" size={18} color={A.green} strokeWidth={2.5} />}
+                {isWrong && <Icon name="x" size={18} color={A.red} strokeWidth={2.5} />}
+              </button>
+            )
+          })}
+        </div>
+
+        {showResult && (
+          <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: picked === q.correct_index ? A.greenSoft : '#FEEBEB', border: `0.5px solid ${picked === q.correct_index ? A.green + '40' : A.red + '40'}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <Icon name={picked === q.correct_index ? 'check' : 'x'} size={16} color={picked === q.correct_index ? A.green : A.red} strokeWidth={2.5} />
+              <div style={{ fontSize: 14, fontWeight: 700, color: picked === q.correct_index ? A.green : A.red }}>
+                {picked === q.correct_index ? 'Bravo !' : 'Pas tout à fait'}
+              </div>
+            </div>
+            <div style={{ fontSize: 13, color: A.text, lineHeight: 1.45 }}>{q.explanation}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom CTA */}
+      <div style={{ padding: '12px 20px 30px' }}>
+        {showResult ? (
+          <button onClick={next} style={{ width: '100%', height: 50, borderRadius: 14, border: 'none', background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+            {idx + 1 >= total ? 'Terminer' : 'Question suivante'} <Icon name="arrowR" size={16} color="#fff" />
+          </button>
+        ) : (
+          <button onClick={submit} style={{ width: '100%', height: 50, borderRadius: 14, border: `0.5px solid ${A.borderStrong}`, background: picked === null ? A.surface : A.primary, color: picked === null ? A.text : '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', opacity: picked === null ? 0.5 : 1, boxShadow: picked !== null ? '0 4px 14px rgba(10,102,224,0.28)' : 'none' }}>
+            Valider
+          </button>
+        )}
+      </div>
     </div>
   )
 }

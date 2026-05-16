@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { A } from '@/lib/theme'
+import Icon from '@/components/ui/Icon'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,75 +20,65 @@ export default function LoginPage() {
     setError(null)
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
+    if (error) { setError(error.message); setLoading(false); return }
     router.push('/dashboard')
     router.refresh()
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 20,
+            background: `linear-gradient(135deg, ${A.primary} 0%, ${A.primaryDark} 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px', boxShadow: '0 12px 32px rgba(10,102,224,0.32)',
+          }}>
+            <Icon name="tooth" size={32} color="#fff" strokeWidth={1.6} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">DentalPrep</h1>
-          <p className="text-gray-500 mt-1 text-sm">Connectez-vous à votre compte</p>
+          <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6, color: A.text }}>DentalPrep</div>
+          <div style={{ fontSize: 14, color: A.textMuted, marginTop: 4 }}>Connectez-vous à votre compte</div>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            <label style={{ fontSize: 13, fontWeight: 600, color: A.text, display: 'block', marginBottom: 6 }}>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
               placeholder="vous@exemple.fr"
-            />
+              style={{ width: '100%', height: 50, borderRadius: 12, border: `0.5px solid ${A.border}`, background: A.surface, padding: '0 16px', fontSize: 15, color: A.text, fontFamily: A.font, outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            <label style={{ fontSize: 13, fontWeight: 600, color: A.text, display: 'block', marginBottom: 6 }}>Mot de passe</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
               placeholder="••••••••"
-            />
+              style={{ width: '100%', height: 50, borderRadius: 12, border: `0.5px solid ${A.border}`, background: A.surface, padding: '0 16px', fontSize: 15, color: A.text, fontFamily: A.font, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+            <div style={{ background: '#FEEBEB', border: `0.5px solid ${A.red}40`, borderRadius: 10, padding: '12px 14px', fontSize: 13, color: A.red }}>
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} style={{
+            width: '100%', height: 50, borderRadius: 14, border: 'none',
+            background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600,
+            fontFamily: A.font, cursor: 'pointer', letterSpacing: -0.2,
+            boxShadow: '0 1px 0 rgba(8,80,184,0.4), 0 4px 14px rgba(10,102,224,0.28)',
+            opacity: loading ? 0.7 : 1,
+          }}>
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p style={{ textAlign: 'center', fontSize: 14, color: A.textMuted, marginTop: 20 }}>
           Pas encore de compte ?{' '}
-          <Link href="/auth/signup" className="text-blue-600 font-medium hover:underline">
+          <Link href="/auth/signup" style={{ color: A.primary, fontWeight: 600, textDecoration: 'none' }}>
             Créer un compte
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   )
 }

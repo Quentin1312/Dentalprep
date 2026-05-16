@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import QuizClient from './QuizClient'
 import { MODULE_MAP } from '@/lib/modules'
+import { A } from '@/lib/theme'
 import type { ModuleId } from '@/types/database'
 
 export default async function QuizPage({ params }: { params: Promise<{ moduleId: string }> }) {
@@ -22,13 +23,13 @@ export default async function QuizPage({ params }: { params: Promise<{ moduleId:
 
   if (!questions?.length) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <p className="text-4xl mb-4">📭</p>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Aucune question</h2>
-        <p className="text-gray-500 text-sm">Ajoutez des cours pour le module {mod.label} pour générer un quiz.</p>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: A.text, marginBottom: 8 }}>Aucune question</div>
+        <div style={{ fontSize: 14, color: A.textMuted }}>Ajoutez des cours pour le module {mod.label} pour générer un quiz.</div>
       </div>
     )
   }
 
-  return <QuizClient questions={questions} module={mod} userId={user.id} />
+  return <QuizClient questions={questions} moduleId={moduleId} userId={user.id} />
 }

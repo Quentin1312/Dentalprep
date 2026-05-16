@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MODULES } from '@/lib/modules'
+import { A } from '@/lib/theme'
+import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
 type Step = 'select' | 'processing' | 'done'
@@ -40,7 +42,6 @@ export default function UploadPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Non connecté')
 
-      // Create course record
       const { data: course, error: courseError } = await supabase
         .from('courses')
         .insert({
@@ -54,24 +55,20 @@ export default function UploadPage() {
         .single()
 
       if (courseError || !course) throw new Error(courseError?.message ?? 'Erreur création cours')
-
       setProcessingStep(1)
 
-      // OCR each page
       for (let i = 0; i < files.length; i++) {
         const formData = new FormData()
         formData.append('file', files[i])
         formData.append('moduleId', moduleId)
         formData.append('courseId', course.id)
         formData.append('pageNumber', String(i + 1))
-
         const ocrRes = await fetch('/api/ocr', { method: 'POST', body: formData })
         if (!ocrRes.ok) throw new Error('Erreur OCR page ' + (i + 1))
       }
 
       setProcessingStep(2)
 
-      // Generate flashcards + quiz
       const genRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,7 +77,6 @@ export default function UploadPage() {
       if (!genRes.ok) throw new Error('Erreur génération')
 
       setProcessingStep(3)
-
       const genData = await genRes.json()
       setResult(genData)
       setStep('done')
@@ -92,20 +88,18 @@ export default function UploadPage() {
 
   if (step === 'processing') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4">
-        <div className="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin mb-6" />
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Traitement en cours…</h2>
-        <div className="space-y-3 w-full max-w-xs">
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', background: A.bg, fontFamily: A.font }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', border: `4px solid ${A.primarySoft}`, borderTop: `4px solid ${A.primary}`, marginBottom: 28, animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+        <div style={{ fontSize: 18, fontWeight: 700, color: A.text, marginBottom: 24 }}>Traitement en cours…</div>
+        <div style={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {PROCESSING_STEPS.map((label, i) => (
-            <div key={i} className={`flex items-center gap-3 text-sm transition-all ${i <= processingStep ? 'text-gray-900' : 'text-gray-300'}`}>
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${i < processingStep ? 'bg-green-500' : i === processingStep ? 'bg-blue-600' : 'bg-gray-200'}`}>
-                {i < processingStep ? (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>
-                ) : i === processingStep ? (
-                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                ) : null}
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 24, height: 24, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: i < processingStep ? A.green : i === processingStep ? A.primary : '#E9ECF2' }}>
+                {i < processingStep && <Icon name="check" size={12} color="#fff" strokeWidth={2.5} />}
+                {i === processingStep && <div style={{ width: 8, height: 8, borderRadius: 4, background: '#fff' }} />}
               </div>
-              {label}
+              <div style={{ fontSize: 13, fontWeight: 500, color: i <= processingStep ? A.text : A.textDim }}>{label}</div>
             </div>
           ))}
         </div>
@@ -115,21 +109,19 @@ export default function UploadPage() {
 
   if (step === 'done' && result) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20,6 9,17 4,12"/>
-          </svg>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
+        <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${A.green} 0%, #0E8C3E 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 12px 32px rgba(22,163,74,0.32)' }}>
+          <Icon name="check" size={40} color="#fff" strokeWidth={2.5} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Cours traité !</h2>
-        <p className="text-gray-500 text-sm mb-6">
-          {result.flashcardsCount} flashcards et {result.questionsCount} questions générées pour le module {moduleId}.
-        </p>
-        <div className="flex gap-3 w-full max-w-xs">
-          <button onClick={() => router.push(`/flashcards/${moduleId}`)} className="flex-1 bg-blue-600 text-white font-semibold py-3.5 rounded-2xl hover:bg-blue-700 transition-colors text-sm">
+        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Cours traité !</div>
+        <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 32, lineHeight: 1.5 }}>
+          <span style={{ color: A.green, fontWeight: 600 }}>{result.flashcardsCount} flashcards</span> et <span style={{ color: A.primary, fontWeight: 600 }}>{result.questionsCount} questions</span> générées pour le module {moduleId}.
+        </div>
+        <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
+          <button onClick={() => router.push(`/flashcards/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
             Réviser
           </button>
-          <button onClick={() => router.push('/dashboard')} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3.5 rounded-2xl hover:bg-gray-50 transition-colors text-sm">
+          <button onClick={() => router.push('/dashboard')} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
             Accueil
           </button>
         </div>
@@ -138,86 +130,98 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="px-4 pt-12 pb-6">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 text-sm mb-6">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
-        Retour
-      </button>
-
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Ajouter un cours</h1>
-      <p className="text-gray-500 text-sm mb-6">Photographiez vos cours pour générer des flashcards et un quiz.</p>
+    <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 40 }}>
+      <div style={{ padding: '62px 20px 0' }}>
+        <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: A.textMuted, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font, marginBottom: 16, padding: 0 }}>
+          <Icon name="chevronL" size={14} color={A.textMuted} /> Retour
+        </button>
+        <div style={{ fontSize: 13, color: A.textMuted, fontWeight: 500 }}>Importer</div>
+        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>Ajouter un cours</div>
+        <div style={{ fontSize: 13, color: A.textMuted, marginTop: 4 }}>Photo → flashcards + quiz générés par IA</div>
+      </div>
 
       {/* Module selector */}
-      <div className="mb-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Module</label>
-        <div className="grid grid-cols-2 gap-2">
-          {MODULES.map(m => (
-            <button
-              key={m.id}
-              onClick={() => setModuleId(m.id)}
-              className={`py-3 px-4 rounded-2xl text-sm font-medium text-left transition-all ${moduleId === m.id ? 'ring-2' : 'bg-gray-100 text-gray-600'}`}
-              style={moduleId === m.id ? { backgroundColor: m.colorSoft, color: m.color, outline: `2px solid ${m.color}` } : {}}
-            >
-              <span className="font-bold">{m.id}</span> — {m.label}
-            </button>
-          ))}
+      <div style={{ padding: '24px 20px 0' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Module</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {MODULES.map(m => {
+            const active = moduleId === m.id
+            return (
+              <button
+                key={m.id}
+                onClick={() => setModuleId(m.id)}
+                style={{
+                  padding: '12px 14px', borderRadius: 14, textAlign: 'left', cursor: 'pointer', fontFamily: A.font,
+                  background: active ? A.primarySoft : A.surface,
+                  border: active ? `1.5px solid ${A.primary}` : `0.5px solid ${A.border}`,
+                  boxShadow: active ? 'none' : '0 1px 0 rgba(15,27,45,0.04), 0 1px 3px rgba(15,27,45,0.06)',
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 700, color: active ? A.primary : A.textMuted }}>{m.id}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: active ? A.primary : A.text, marginTop: 2 }}>{m.label}</div>
+              </button>
+            )
+          })}
         </div>
       </div>
 
       {/* File picker */}
-      <div className="mb-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Photos du cours</label>
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Photos du cours</div>
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full border-2 border-dashed border-gray-300 rounded-2xl py-8 flex flex-col items-center gap-2 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+          style={{
+            width: '100%', boxSizing: 'border-box', padding: '32px 20px',
+            border: `2px dashed ${files.length > 0 ? A.primary : A.border}`,
+            borderRadius: 16, background: files.length > 0 ? A.primarySoft : A.surface,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+            cursor: 'pointer', fontFamily: A.font,
+          }}
         >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>
-          </svg>
-          <span className="text-sm font-medium text-gray-500">
-            {files.length > 0 ? `${files.length} photo(s) sélectionnée(s)` : 'Appuyez pour choisir des photos'}
-          </span>
+          <Icon name="camera" size={32} color={files.length > 0 ? A.primary : A.textDim} />
+          <div style={{ fontSize: 14, fontWeight: 600, color: files.length > 0 ? A.primary : A.textMuted }}>
+            {files.length > 0 ? `${files.length} photo${files.length > 1 ? 's' : ''} sélectionnée${files.length > 1 ? 's' : ''}` : 'Appuyer pour choisir des photos'}
+          </div>
         </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={handleFilePick}
-        />
+        <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFilePick} />
       </div>
 
-      {/* Preview */}
+      {/* Image preview */}
       {files.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-5">
+        <div style={{ padding: '12px 20px 0', display: 'flex', gap: 8, overflowX: 'auto' }}>
           {files.map((f, i) => (
-            <img
-              key={i}
-              src={URL.createObjectURL(f)}
-              alt={`Page ${i + 1}`}
-              className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
-            />
+            <img key={i} src={URL.createObjectURL(f)} alt={`Page ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, flexShrink: 0, border: `0.5px solid ${A.border}` }} />
           ))}
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 mb-4">
-          {error}
+        <div style={{ margin: '12px 20px 0', padding: '12px 14px', borderRadius: 12, background: '#FEF2F2', border: `0.5px solid ${A.red}30`, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Icon name="warn" size={16} color={A.red} />
+          <div style={{ fontSize: 13, color: A.red, fontWeight: 500 }}>{error}</div>
         </div>
       )}
 
-      <button
-        onClick={handleUpload}
-        disabled={!files.length}
-        className="w-full bg-blue-600 text-white font-semibold py-4 rounded-2xl hover:bg-blue-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4 9-9 9a9 9 0 0 1-9-9 9 9 0 0 1 9-9z"/><path d="M12 8v8"/><path d="M8 12l4-4 4 4"/>
-        </svg>
-        Traiter avec l&apos;IA
-      </button>
+      {/* CTA */}
+      <div style={{ padding: '20px 20px 0' }}>
+        <button
+          onClick={handleUpload}
+          disabled={!files.length}
+          style={{
+            width: '100%', height: 52, borderRadius: 14, border: 'none',
+            background: files.length > 0 ? A.primary : A.surface,
+            color: files.length > 0 ? '#fff' : A.textMuted,
+            fontSize: 16, fontWeight: 600, fontFamily: A.font,
+            cursor: files.length > 0 ? 'pointer' : 'default',
+            opacity: files.length > 0 ? 1 : 0.5,
+            boxShadow: files.length > 0 ? '0 4px 14px rgba(10,102,224,0.28)' : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          <Icon name="sparkle" size={18} color={files.length > 0 ? '#fff' : A.textMuted} />
+          Traiter avec l&apos;IA
+        </button>
+      </div>
     </div>
   )
 }

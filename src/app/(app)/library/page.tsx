@@ -1,8 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { MODULE_MAP, MODULES } from '@/lib/modules'
-import type { ModuleId } from '@/types/database'
+import { MODULES } from '@/lib/modules'
+import { A } from '@/lib/theme'
+import Icon from '@/components/ui/Icon'
+
+const BLOC_LABELS: Record<number, string> = {
+  1: 'Prise en charge du patient',
+  2: 'Assistance au praticien',
+  3: 'Gestion du risque infectieux',
+  4: 'Gestion des données',
+}
 
 export default async function LibraryPage() {
   const supabase = await createClient()
@@ -21,45 +29,69 @@ export default async function LibraryPage() {
   })).filter(g => g.courses.length > 0)
 
   return (
-    <div className="px-4 pt-12 pb-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Mes cours</h1>
-        <Link href="/upload" className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </Link>
+    <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
+      <div style={{ padding: '62px 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 13, color: A.textMuted, fontWeight: 500 }}>Bibliothèque</div>
+            <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>Mes cours</div>
+          </div>
+          <Link href="/upload" style={{
+            width: 40, height: 40, borderRadius: 12, background: A.primary,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            textDecoration: 'none', boxShadow: '0 4px 14px rgba(10,102,224,0.28)',
+          }}>
+            <Icon name="plus" size={20} color="#fff" strokeWidth={2.2} />
+          </Link>
+        </div>
       </div>
 
       {!grouped.length ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-4xl mb-4">📚</p>
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Aucun cours</h2>
-          <p className="text-gray-500 text-sm mb-6">Importez vos premiers cours pour commencer à réviser.</p>
-          <Link href="/upload" className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-2xl hover:bg-blue-700 transition-colors">
-            Ajouter un cours
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
+          <div style={{ width: 72, height: 72, borderRadius: 24, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+            <Icon name="fileText" size={32} color={A.primary} />
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: A.text, marginBottom: 8 }}>Aucun cours</div>
+          <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 28, lineHeight: 1.5 }}>
+            Importez vos premiers cours pour commencer à réviser.
+          </div>
+          <Link href="/upload" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: A.primary, color: '#fff', fontFamily: A.font,
+            fontSize: 15, fontWeight: 600, padding: '14px 24px',
+            borderRadius: 14, textDecoration: 'none',
+            boxShadow: '0 4px 14px rgba(10,102,224,0.28)',
+          }}>
+            <Icon name="plus" size={16} color="#fff" /> Ajouter un cours
           </Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div style={{ padding: '20px 20px 0' }}>
           {grouped.map(({ module: m, courses: mCourses }) => (
-            <div key={m.id}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold" style={{ backgroundColor: m.colorSoft, color: m.color }}>{m.id}</div>
-                <h2 className="text-sm font-bold text-gray-700">{m.label}</h2>
+            <div key={m.id} style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingLeft: 2 }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: A.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: '#fff' }}>{m.bloc}</span>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: A.primary, padding: '2px 7px', borderRadius: 6, background: A.primarySoft }}>{m.id}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: A.textMuted }}>{m.label}</div>
               </div>
-              <div className="space-y-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {mCourses.map(course => (
-                  <div key={course.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: m.colorSoft }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={m.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                      </svg>
+                  <div key={course.id} style={{
+                    background: A.surface, borderRadius: 16, padding: 14,
+                    boxShadow: '0 1px 0 rgba(15,27,45,0.04), 0 1px 3px rgba(15,27,45,0.06)',
+                    border: `0.5px solid ${A.border}`,
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon name="fileText" size={18} color={A.primary} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{course.title}</p>
-                      <p className="text-gray-400 text-xs">{course.page_count} page(s)</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{course.title}</div>
+                      <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>{course.page_count} page{(course.page_count ?? 0) > 1 ? 's' : ''}</div>
                     </div>
+                    <Icon name="chevronR" size={14} color={A.textDim} />
                   </div>
                 ))}
               </div>

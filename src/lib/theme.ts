@@ -1,0 +1,18 @@
+export const A = {
+  bg: '#F4F6F8',
+  surface: '#FFFFFF',
+  border: '#E4E8EE',
+  borderStrong: '#D5DBE3',
+  text: '#0F1B2D',
+  textMuted: '#5A6675',
+  textDim: '#8A95A5',
+  primary: '#0A66E0',
+  primaryDark: '#0850B8',
+  primarySoft: '#E6EFFC',
+  green: '#16A34A',
+  greenSoft: '#E7F6EC',
+  amber: '#D97706',
+  amberSoft: '#FCEFD9',
+  red: '#DC2626',
+  font: '-apple-system, "SF Pro Text", system-ui, sans-serif',
+} as const
