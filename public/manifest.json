@@ -3,6 +3,7 @@
   "short_name": "DentalPrep",
   "description": "Révisez le CNQAOS avec des flashcards et quiz générés par IA",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F4F6F8",
   "theme_color": "#0A66E0",

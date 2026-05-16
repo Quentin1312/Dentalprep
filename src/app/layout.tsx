@@ -23,6 +23,20 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className="h-full">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          if (window.navigator.standalone) {
+            document.addEventListener('click', function(e) {
+              var el = e.target;
+              while (el && el.tagName !== 'A') el = el.parentNode;
+              if (el && el.tagName === 'A' && el.href && el.href.indexOf(location.host) !== -1 && el.target !== '_blank') {
+                e.preventDefault();
+                window.location.href = el.href;
+              }
+            });
+          }
+        `}} />
+      </head>
       <body style={{ fontFamily: '-apple-system, "SF Pro Text", system-ui, sans-serif', background: '#F4F6F8', minHeight: '100%' }}>
         {children}
       </body>
