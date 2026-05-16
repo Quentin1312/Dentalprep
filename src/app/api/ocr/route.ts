@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { groq, VISION_MODEL } from '@/lib/groq'
+import { getGroq, VISION_MODEL } from '@/lib/groq'
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   const base64 = buffer.toString('base64')
   const mimeType = file.type || 'image/jpeg'
 
-  const completion = await groq.chat.completions.create({
+  const completion = await getGroq().chat.completions.create({
     model: VISION_MODEL,
     messages: [
       {

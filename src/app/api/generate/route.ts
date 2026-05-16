@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { groq, TEXT_MODEL } from '@/lib/groq'
+import { getGroq, TEXT_MODEL } from '@/lib/groq'
 import type { ModuleId } from '@/types/database'
 
 export async function POST(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const fullText = pages.map(p => p.ocr_text).join('\n\n---\n\n')
 
   // Generate flashcards
-  const flashcardsCompletion = await groq.chat.completions.create({
+  const flashcardsCompletion = await getGroq().chat.completions.create({
     model: TEXT_MODEL,
     messages: [
       {
@@ -43,7 +43,7 @@ Réponds UNIQUEMENT avec un JSON valide, sans markdown ni commentaire.`,
   })
 
   // Generate quiz questions
-  const quizCompletion = await groq.chat.completions.create({
+  const quizCompletion = await getGroq().chat.completions.create({
     model: TEXT_MODEL,
     messages: [
       {
