@@ -1,16 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { MODULES } from '@/lib/modules'
+import { MODULES, BLOCS } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
-const BLOCS = [
-  { n: 1, label: 'Prise en charge du patient' },
-  { n: 2, label: 'Assistance au praticien' },
-  { n: 3, label: 'Gestion du risque infectieux' },
-  { n: 4, label: 'Gestion des données' },
-]
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null
