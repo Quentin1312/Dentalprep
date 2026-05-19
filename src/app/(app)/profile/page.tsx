@@ -10,12 +10,6 @@ import type { PetType } from '@/components/pet/PetCompanion'
 
 type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null }
 
-const PET_COLORS: Record<PetType, { accent: string; soft: string }> = {
-  cat:   { accent: '#FFD84A', soft: 'rgba(255,216,74,0.12)' },
-  dog:   { accent: '#5BB8D4', soft: 'rgba(91,184,212,0.12)' },
-  bunny: { accent: '#E86090', soft: 'rgba(232,96,144,0.12)' },
-}
-
 export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -58,7 +52,7 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('profiles').update({ full_name: name, exam_date: examDate || null, daily_goal_minutes: goal, pet_type: petType, updated_at: new Date().toISOString() }).eq('id', user.id)
+    await supabase.from('profiles').update({ full_name: name, exam_date: examDate || null, daily_goal_minutes: goal, updated_at: new Date().toISOString() }).eq('id', user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -109,37 +103,18 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Pet selection */}
+          {/* Pet — read-only, locked after setup */}
           <div style={{ padding: '20px 20px 0' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Compagnon</div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {(['cat', 'dog', 'bunny'] as PetType[]).map(pet => {
-                const sel = petType === pet
-                const colors = PET_COLORS[pet]
-                return (
-                  <button
-                    key={pet}
-                    onClick={() => setPetType(pet)}
-                    style={{
-                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                      padding: '12px 8px',
-                      borderRadius: 16,
-                      background: sel ? colors.soft : A.surface,
-                      border: `2px solid ${sel ? colors.accent : A.border}`,
-                      cursor: 'pointer', fontFamily: A.font,
-                      transition: 'all .18s',
-                      boxShadow: sel ? `0 4px 16px ${colors.accent}30` : 'none',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      <PetCompanion petType={pet} state={sel ? 'correct' : 'idle'} size={64} hideName />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: sel ? colors.accent : A.textMuted, textAlign: 'center' }}>
-                      {PET_NAMES[pet]}
-                    </div>
-                  </button>
-                )
-              })}
+            <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64 }}>
+                <PetCompanion petType={petType} state="idle" size={64} hideName />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: A.text, letterSpacing: -0.3 }}>{PET_NAMES[petType]}</div>
+                <div style={{ fontSize: 12, color: A.textMuted, marginTop: 3 }}>Ton compagnon de révisions</div>
+              </div>
+              <div style={{ flexShrink: 0, background: A.bg, border: `0.5px solid ${A.border}`, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: A.textDim, fontWeight: 600 }}>Définitif</div>
             </div>
           </div>
 
