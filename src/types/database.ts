@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export type ModuleId = 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M6' | 'M7'
+export type ModuleId = 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M6'
 
 export type Database = {
   public: {
