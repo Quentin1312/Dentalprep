@@ -4,14 +4,28 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { recordSession } from '@/lib/recordSession'
+import { useAppData } from '@/lib/app-context'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
 type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string }
 
-export default function QuizClient({ questions, moduleId, userId }: { questions: Question[]; moduleId: string; userId: string }) {
+export default function QuizClient({
+  questions,
+  moduleId,
+  userId,
+  mode = 'normal',
+  attemptStats = new Map(),
+}: {
+  questions: Question[]
+  moduleId: string
+  userId: string
+  mode?: 'normal' | 'smart'
+  attemptStats?: Map<string, { ok: number; total: number }>
+}) {
   const router = useRouter()
+  const { refresh } = useAppData()
   const startRef = useRef(Date.now())
   const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
@@ -19,97 +33,156 @@ export default function QuizClient({ questions, moduleId, userId }: { questions:
   const [scoreOk, setScoreOk] = useState(0)
   const [scoreBad, setScoreBad] = useState(0)
   const [finished, setFinished] = useState(false)
-  const [finalOk, setFinalOk] = useState(0)
-  const [finalBad, setFinalBad] = useState(0)
+  const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
 
   const q = questions[idx]
   const choices = q?.choices as string[]
   const total = questions.length
 
+  // Badge: question déjà ratée dans le passé
+  const stat = attemptStats.get(q?.id ?? '')
+  const wasTricky = stat && stat.total > 0 && stat.ok / stat.total < 0.6
+
   async function submit() {
     if (picked === null) return
     setShowResult(true)
     const isCorrect = picked === q.correct_index
-    if (isCorrect) setScoreOk(s => s + 1); else setScoreBad(s => s + 1)
+    if (isCorrect) setScoreOk(s => s + 1)
+    else { setScoreBad(s => s + 1); setWrongQuestions(prev => [...prev, q]) }
     const supabase = createClient()
-    await supabase.from('quiz_attempts').insert({ user_id: userId, module_id: moduleId as ModuleId, question_id: q.id, selected_index: picked, is_correct: isCorrect })
+    supabase.from('quiz_attempts').insert({
+      user_id: userId,
+      module_id: moduleId as ModuleId,
+      question_id: q.id,
+      selected_index: picked,
+      is_correct: isCorrect,
+    }).then(() => refresh())
   }
 
   async function next() {
     if (idx + 1 >= total) {
-      const ok = scoreOk + (picked === q.correct_index ? 1 : 0)
-      const bad = scoreBad + (picked !== q.correct_index ? 1 : 0)
-      setFinalOk(ok)
-      setFinalBad(bad)
       setFinished(true)
       const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
       await recordSession(userId, elapsed)
       return
     }
-    setIdx(i => i + 1); setPicked(null); setShowResult(false)
+    setIdx(i => i + 1)
+    setPicked(null)
+    setShowResult(false)
+  }
+
+  function restart(questionsOverride?: Question[]) {
+    const qs = questionsOverride ?? questions
+    // if we restart with wrong questions, we need to re-mount with them — use router for simplicity
+    if (questionsOverride) {
+      // Store in sessionStorage and reload
+      sessionStorage.setItem('quiz_retry', JSON.stringify(qs))
+      window.location.reload()
+    } else {
+      setIdx(0); setPicked(null); setShowResult(false)
+      setScoreOk(0); setScoreBad(0); setFinished(false)
+      setWrongQuestions([]); startRef.current = Date.now()
+    }
   }
 
   if (finished) {
-    const accuracy = Math.round((finalOk / total) * 100)
+    const accuracy = total > 0 ? Math.round((scoreOk / total) * 100) : 0
     const isGood = accuracy >= 75
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
         <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${isGood ? A.green : A.amber} 0%, ${isGood ? '#0E8C3E' : '#B45309'} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: `0 12px 32px ${isGood ? 'rgba(22,163,74,0.32)' : 'rgba(180,83,9,0.32)'}` }}>
           <Icon name={isGood ? 'check' : 'target'} size={40} color="#fff" strokeWidth={2.5} />
         </div>
-        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Quiz terminé !</div>
+        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 4 }}>Quiz terminé !</div>
         <div style={{ fontSize: 48, fontWeight: 700, color: isGood ? A.green : A.amber, letterSpacing: -1, lineHeight: 1, marginBottom: 6 }}>{accuracy}%</div>
-        <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 6 }}>
-          <span style={{ color: A.green, fontWeight: 600 }}>{finalOk} bonnes</span>
+        <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 4 }}>
+          <span style={{ color: A.green, fontWeight: 600 }}>{scoreOk} bonnes</span>
           {' · '}
-          <span style={{ color: A.red, fontWeight: 600 }}>{finalBad} erreurs</span>
-          {' sur '}
-          {total} questions
+          <span style={{ color: A.red, fontWeight: 600 }}>{scoreBad} erreurs</span>
+          {' sur '}{total}
         </div>
-        <div style={{ fontSize: 13, color: isGood ? A.green : A.amber, fontWeight: 600, marginBottom: 32 }}>
-          {isGood ? 'Module maîtrisé ✓' : 'Continuez à réviser !'}
+        <div style={{ fontSize: 13, color: isGood ? A.green : A.amber, fontWeight: 600, marginBottom: 28 }}>
+          {isGood ? 'Excellent ! Module maîtrisé ✓' : 'Continuez à réviser !'}
         </div>
-        <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
-          <button onClick={() => { setIdx(0); setPicked(null); setShowResult(false); setScoreOk(0); setScoreBad(0); setFinished(false); startRef.current = Date.now() }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
-            Recommencer
-          </button>
-          <button onClick={() => router.push(`/module/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-            Retour module
-          </button>
+
+        {wrongQuestions.length > 0 && (
+          <div style={{ width: '100%', maxWidth: 320, background: A.amberSoft, borderRadius: 14, padding: '12px 14px', marginBottom: 16, textAlign: 'left', border: `0.5px solid ${A.amber}30` }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: A.amber, marginBottom: 8 }}>
+              {wrongQuestions.length} question{wrongQuestions.length > 1 ? 's' : ''} à retravailler
+            </div>
+            {wrongQuestions.map((wq, i) => (
+              <div key={wq.id} style={{ fontSize: 12, color: A.text, padding: '4px 0', borderTop: i > 0 ? `0.5px solid ${A.amber}30` : 'none', lineHeight: 1.3 }}>
+                {wq.question.length > 70 ? wq.question.slice(0, 70) + '…' : wq.question}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 }}>
+          {wrongQuestions.length > 0 && (
+            <button onClick={() => restart(wrongQuestions)} style={{ width: '100%', height: 50, borderRadius: 14, border: 'none', background: A.amber, color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Icon name="refresh" size={16} color="#fff" /> Refaire les erreurs ({wrongQuestions.length})
+            </button>
+          )}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => restart()} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
+              Recommencer
+            </button>
+            <button onClick={() => router.push(`/module/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+              Retour module
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
+  const toReviewCount = mode === 'smart' ? questions.filter(q => {
+    const s = attemptStats.get(q.id)
+    return s && s.total > 0 && s.ok / s.total < 0.5
+  }).length : 0
+
   return (
     <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
       {/* Top bar */}
       <div style={{ padding: '60px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
           <button onClick={() => router.push(`/module/${moduleId}`)} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <Icon name="x" size={16} color={A.text} />
           </button>
           <div style={{ flex: 1, height: 5, background: '#E9ECF2', borderRadius: 5, overflow: 'hidden' }}>
-            <div style={{ width: `${(idx / total) * 100}%`, height: '100%', background: A.primary, borderRadius: 5, transition: 'width .4s' }} />
+            <div style={{ width: `${((idx + (showResult ? 1 : 0)) / total) * 100}%`, height: '100%', background: A.primary, borderRadius: 5, transition: 'width .4s' }} />
           </div>
           <div style={{ fontSize: 13, fontWeight: 600, color: A.textMuted }}>{idx + 1}<span style={{ color: A.textDim }}>/{total}</span></div>
         </div>
-        <div style={{ display: 'flex', gap: 16, fontSize: 12, color: A.textMuted }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 4, background: A.green }} />{scoreOk} bonnes
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 4, background: A.red }} />{scoreBad} erreurs
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 14, fontSize: 12, color: A.textMuted }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 4, background: A.green }} />{scoreOk} ✓
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 4, background: A.red }} />{scoreBad} ✗
+            </span>
+          </div>
+          {mode === 'smart' && toReviewCount > 0 && (
+            <div style={{ fontSize: 11, fontWeight: 600, color: A.amber, padding: '3px 8px', borderRadius: 6, background: A.amberSoft }}>
+              🔁 {toReviewCount} à revoir
+            </div>
+          )}
         </div>
       </div>
 
       {/* Question */}
       <div style={{ padding: '8px 20px 24px', flex: 1 }}>
+        {wasTricky && (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: A.amber, background: A.amberSoft, borderRadius: 6, padding: '3px 8px', marginBottom: 10 }}>
+            <Icon name="refresh" size={11} color={A.amber} /> Question difficile — déjà ratée
+          </div>
+        )}
         <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 }}>
           Question {idx + 1} · {moduleId}
         </div>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5, lineHeight: 1.25, marginBottom: 24 }}>{q.question}</div>
+        <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.3, marginBottom: 24 }}>{q.question}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {choices.map((c, i) => {
@@ -121,20 +194,20 @@ export default function QuizClient({ questions, moduleId, userId }: { questions:
             else if (isWrong) { bg = '#FEEBEB'; border = A.red }
             else if (sel) { bg = A.primarySoft; border = A.primary }
             return (
-              <button key={i} onClick={() => !showResult && setPicked(i)} style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: showResult ? 'default' : 'pointer', textAlign: 'left', fontFamily: A.font, transition: 'all .2s', width: '100%' }}>
+              <button key={i} onClick={() => !showResult && setPicked(i)} style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: showResult ? 'default' : 'pointer', textAlign: 'left', fontFamily: A.font, transition: 'all .15s', width: '100%' }}>
                 <div style={{ width: 22, height: 22, borderRadius: 11, border: `1.5px solid ${sel || isCorrect ? border : '#C8CFD9'}`, background: (sel || isCorrect) ? border : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {(sel || isCorrect) && <div style={{ width: 8, height: 8, borderRadius: 4, background: '#fff' }} />}
                 </div>
-                <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color }}>{c}</div>
-                {isCorrect && <Icon name="check" size={18} color={A.green} strokeWidth={2.5} />}
-                {isWrong && <Icon name="x" size={18} color={A.red} strokeWidth={2.5} />}
+                <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color }}>{c}</div>
+                {isCorrect && <Icon name="check" size={16} color={A.green} strokeWidth={2.5} />}
+                {isWrong && <Icon name="x" size={16} color={A.red} strokeWidth={2.5} />}
               </button>
             )
           })}
         </div>
 
         {showResult && (
-          <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: picked === q.correct_index ? A.greenSoft : '#FEEBEB', border: `0.5px solid ${picked === q.correct_index ? A.green + '40' : A.red + '40'}` }}>
+          <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: picked === q.correct_index ? A.greenSoft : '#FEEBEB', border: `0.5px solid ${picked === q.correct_index ? A.green + '40' : A.red + '40'}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <Icon name={picked === q.correct_index ? 'check' : 'x'} size={16} color={picked === q.correct_index ? A.green : A.red} strokeWidth={2.5} />
               <div style={{ fontSize: 14, fontWeight: 700, color: picked === q.correct_index ? A.green : A.red }}>
@@ -147,13 +220,13 @@ export default function QuizClient({ questions, moduleId, userId }: { questions:
       </div>
 
       {/* Bottom CTA */}
-      <div style={{ padding: '12px 20px 30px' }}>
+      <div style={{ padding: '12px 20px 36px' }}>
         {showResult ? (
-          <button onClick={next} style={{ width: '100%', height: 50, borderRadius: 14, border: 'none', background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+          <button onClick={next} style={{ width: '100%', height: 52, borderRadius: 14, border: 'none', background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
             {idx + 1 >= total ? 'Voir les résultats' : 'Question suivante'} <Icon name="arrowR" size={16} color="#fff" />
           </button>
         ) : (
-          <button onClick={submit} style={{ width: '100%', height: 50, borderRadius: 14, border: `0.5px solid ${A.borderStrong}`, background: picked === null ? A.surface : A.primary, color: picked === null ? A.text : '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', opacity: picked === null ? 0.5 : 1, boxShadow: picked !== null ? '0 4px 14px rgba(10,102,224,0.28)' : 'none' }}>
+          <button onClick={submit} disabled={picked === null} style={{ width: '100%', height: 52, borderRadius: 14, border: `0.5px solid ${A.borderStrong}`, background: picked === null ? A.surface : A.primary, color: picked === null ? A.text : '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: picked === null ? 'default' : 'pointer', opacity: picked === null ? 0.45 : 1, boxShadow: picked !== null ? '0 4px 14px rgba(10,102,224,0.28)' : 'none' }}>
             Valider
           </button>
         )}

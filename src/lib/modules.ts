@@ -31,7 +31,7 @@ export const FASCICULES: Fascicule[] = [
   { n: 10, title: 'Pathologies dentaires et buccales',           modules: ['M1', 'M2', 'M6'] },
   { n: 11, title: 'Microbiologie',                               modules: ['M2', 'M4'] },
   { n: 12, title: 'Travail au fauteuil',                         modules: ['M2'] },
-  { n: 13, title: 'Imagerie médicale',                           modules: ['M2'] },
+  { n: 13, title: 'Imagerie médicale',                           modules: ['M3'] },
   { n: 14, title: 'AFGSU 1 + 2',                                 modules: ['M3'] },
   { n: 15, title: 'Gestion des stocks',                          modules: ['M4', 'M5'] },
   { n: 16, title: 'Évaluation et prévention des risques au travail', modules: ['M5'] },
