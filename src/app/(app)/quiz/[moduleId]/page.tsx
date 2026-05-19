@@ -35,6 +35,7 @@ function QuizInner() {
   const [questions, setQuestions] = useState<Question[] | null>(null)
   const [attemptStats, setAttemptStats] = useState<Map<string, { ok: number; total: number }>>(new Map())
   const [userId, setUserId] = useState<string | null>(null)
+  const [petType, setPetType] = useState<string>('cat')
   const [loading, setLoading] = useState(true)
 
   const mod = MODULE_MAP[moduleId as ModuleId]
@@ -45,6 +46,9 @@ function QuizInner() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
+      supabase.from('profiles').select('pet_type').eq('id', user.id).single().then(({ data }) => {
+        if (data?.pet_type) setPetType(data.pet_type)
+      })
 
       let q = supabase.from('quiz_questions').select('*').eq('user_id', user.id).eq('module_id', moduleId as ModuleId)
       if (courseId) q = q.eq('course_id', courseId)
@@ -111,6 +115,7 @@ function QuizInner() {
       userId={userId!}
       mode={mode as 'normal' | 'smart'}
       attemptStats={attemptStats}
+      petType={petType as 'cat' | 'dog' | 'bunny'}
     />
   )
 }

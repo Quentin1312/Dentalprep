@@ -8,6 +8,8 @@ import { useAppData } from '@/lib/app-context'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
+import PetCompanion from '@/components/pet/PetCompanion'
+import type { PetType, PetState } from '@/components/pet/PetCompanion'
 
 type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; page_image_url?: string | null }
 
@@ -17,12 +19,14 @@ export default function QuizClient({
   userId,
   mode = 'normal',
   attemptStats = new Map(),
+  petType = 'cat',
 }: {
   questions: Question[]
   moduleId: string
   userId: string
   mode?: 'normal' | 'smart'
   attemptStats?: Map<string, { ok: number; total: number }>
+  petType?: PetType
 }) {
   const router = useRouter()
   const { refresh } = useAppData()
@@ -38,6 +42,10 @@ export default function QuizClient({
   const q = questions[idx]
   const choices = q?.choices as string[]
   const total = questions.length
+
+  const petState: PetState = showResult
+    ? (picked === q?.correct_index ? 'correct' : 'wrong')
+    : picked !== null ? 'thinking' : 'idle'
 
   // Badge: question déjà ratée dans le passé
   const stat = attemptStats.get(q?.id ?? '')
@@ -144,6 +152,10 @@ export default function QuizClient({
 
   return (
     <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
+      {/* Pet companion — fixed bottom-right */}
+      <div style={{ position: 'fixed', bottom: 104, right: 16, zIndex: 20, pointerEvents: 'none' }}>
+        <PetCompanion petType={petType} state={petState} size={72} />
+      </div>
       {/* Top bar */}
       <div style={{ padding: '60px 20px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>

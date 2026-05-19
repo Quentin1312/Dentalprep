@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number }
+type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number; pet_type: string | null }
 type Course = { id: string; module_id: string; title: string; page_count: number | null }
 type Attempt = { module_id: string; is_correct: boolean }
 
@@ -55,7 +55,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) { router.replace('/auth/login'); return }
 
     const [profRes, coursesRes, attemptsRes] = await Promise.all([
-      supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes').eq('id', user.id).single(),
+      supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct').eq('user_id', user.id),
     ])

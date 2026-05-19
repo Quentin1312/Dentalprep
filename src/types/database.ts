@@ -12,6 +12,7 @@ export type Database = {
           exam_date: string | null
           daily_goal_minutes: number
           streak: number
+          pet_type: string | null
           created_at: string
           updated_at: string
         }
@@ -21,6 +22,7 @@ export type Database = {
           exam_date?: string | null
           daily_goal_minutes?: number
           streak?: number
+          pet_type?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -29,6 +31,7 @@ export type Database = {
           exam_date?: string | null
           daily_goal_minutes?: number
           streak?: number
+          pet_type?: string | null
           updated_at?: string
         }
         Relationships: []
