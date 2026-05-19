@@ -275,7 +275,7 @@ export default function QuickScanPage() {
           </div>
           <div style={{ fontSize: 13, color: A.textDim }}>Cours, schéma, tableau… plusieurs photos possibles</div>
         </button>
-        <input ref={fileRef} type="file" accept="image/*" multiple capture="environment" style={{ display: 'none' }} onChange={handleFilePick} />
+        <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleFilePick} />
       </div>
 
       {files.length > 0 && (
