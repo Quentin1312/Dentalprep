@@ -172,8 +172,13 @@ export default function QuickScanPage() {
       : 'idle'
     return (
       <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ position: 'fixed', bottom: 40, right: 16, zIndex: 20, pointerEvents: 'none' }}>
-          <PetCompanion petType={petType} state={petState} size={72} />
+        {/* Pet companion — above tab bar (71px), peeks in idle, pops on answer */}
+        <div style={{
+          position: 'fixed', bottom: 75, right: 12, zIndex: 25, pointerEvents: 'none',
+          transform: petState === 'idle' ? 'translateY(62px)' : 'translateY(0)',
+          transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+        }}>
+          <PetCompanion petType={petType} state={petState} size={84} />
         </div>
         <div style={{ padding: '60px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setPhase('flashcards')} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>

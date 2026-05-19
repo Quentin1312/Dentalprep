@@ -152,9 +152,13 @@ export default function QuizClient({
 
   return (
     <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
-      {/* Pet companion — fixed bottom-right */}
-      <div style={{ position: 'fixed', bottom: 104, right: 16, zIndex: 20, pointerEvents: 'none' }}>
-        <PetCompanion petType={petType} state={petState} size={72} />
+      {/* Pet companion — peeks from bottom-right, pops up on answer */}
+      <div style={{
+        position: 'fixed', bottom: 56, right: 12, zIndex: 25, pointerEvents: 'none',
+        transform: (petState === 'idle' || petState === 'thinking') ? 'translateY(62px)' : 'translateY(0)',
+        transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
+        <PetCompanion petType={petType} state={petState} size={84} />
       </div>
       {/* Top bar */}
       <div style={{ padding: '60px 20px 16px' }}>

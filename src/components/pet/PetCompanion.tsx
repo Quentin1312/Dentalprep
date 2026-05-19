@@ -5,21 +5,18 @@ import { useEffect, useRef, useState } from 'react'
 export type PetType = 'cat' | 'dog' | 'bunny'
 export type PetState = 'idle' | 'correct' | 'wrong' | 'thinking'
 
-const MESSAGES: Record<PetType, Record<'correct' | 'wrong' | 'thinking', string[]>> = {
+const MESSAGES: Record<PetType, Record<'correct' | 'wrong', string[]>> = {
   cat: {
-    correct: ['Purrrr~ 😸', 'Tu déchires !', 'Miaou !', 'C\'est exact !', 'Trop bien !'],
-    wrong: ['Miaou...', 'Courage !', 'On réessaie !', 'Pas grave 🐱'],
-    thinking: ['Hmm...', 'Réfléchis...', '*ronronne*'],
+    correct: ['Purrrfait !', 'C\'est ça !', 'Tu maîtrises !', 'Heidi valide !', 'Bravo !!'],
+    wrong: ['Oh non !', 'Relève-toi !', 'Prochaine fois !', 'Tu vas y arriver !'],
   },
   dog: {
-    correct: ['Ouaf ! 🐶', 'T\'es le meilleur !', 'Wouf wouf !', 'Parfait !', 'Géniaaaaal !'],
-    wrong: ['Ouuuf...', 'Tu vas y arriver !', 'Allez courage !', 'Encore un effort !'],
-    thinking: ['*frétille*', 'Concentre-toi !', 'Tu peux le faire !'],
+    correct: ['OUAF !!', 'Génial !!', 'Rex est fier !', 'Parfait !', 'Trop fort !'],
+    wrong: ['Allez !!', 'Tu peux !', 'Relève-toi !', 'Encore un effort !'],
   },
   bunny: {
-    correct: ['Hop hop ! 🐰', 'Bravo !', 'Trop bien !', 'Sautille de joie !', 'Excellent !'],
-    wrong: ['Oh non...', 'Rebondis !', 'Prochaine fois !', 'Courage 🥕'],
-    thinking: ['Remue les oreilles...', 'Hmm...', 'Réfléchis bien !'],
+    correct: ['Hop hop !!', 'Excellent !', 'Lune est ravie !', 'Super !!', 'Bravo !'],
+    wrong: ['Oh...', 'Rebondis !', 'Prochaine fois !', 'Courage !'],
   },
 }
 
@@ -248,13 +245,13 @@ export default function PetCompanion({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (state === 'correct' || state === 'wrong' || state === 'thinking') {
-      const msgs = state === 'thinking'
-        ? MESSAGES[petType].thinking
-        : MESSAGES[petType][state as 'correct' | 'wrong']
-      setBubble(pickRandom(msgs))
-      if (timerRef.current) clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(() => setBubble(null), 2800)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (state === 'correct' || state === 'wrong') {
+      // Small delay so animation plays before bubble appears
+      timerRef.current = setTimeout(() => {
+        setBubble(pickRandom(MESSAGES[petType][state]))
+        timerRef.current = setTimeout(() => setBubble(null), 2400)
+      }, 180)
     } else {
       setBubble(null)
     }
