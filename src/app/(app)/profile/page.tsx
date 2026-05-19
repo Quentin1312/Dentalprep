@@ -5,8 +5,16 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
+import PetCompanion, { PET_NAMES } from '@/components/pet/PetCompanion'
+import type { PetType } from '@/components/pet/PetCompanion'
 
-type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null }
+type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null }
+
+const PET_COLORS: Record<PetType, { accent: string; soft: string }> = {
+  cat:   { accent: '#FFD84A', soft: 'rgba(255,216,74,0.12)' },
+  dog:   { accent: '#5BB8D4', soft: 'rgba(91,184,212,0.12)' },
+  bunny: { accent: '#E86090', soft: 'rgba(232,96,144,0.12)' },
+}
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -18,6 +26,7 @@ export default function ProfilePage() {
   const [name, setName] = useState('')
   const [examDate, setExamDate] = useState('')
   const [goal, setGoal] = useState(30)
+  const [petType, setPetType] = useState<PetType>('cat')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -35,6 +44,7 @@ export default function ProfilePage() {
         setName(prof?.full_name ?? '')
         setExamDate(prof?.exam_date ?? '')
         setGoal(prof?.daily_goal_minutes ?? 30)
+        if (prof?.pet_type) setPetType(prof.pet_type as PetType)
         const att = a.data ?? []
         setTotalAttempts(att.length)
         setAccuracy(att.length > 0 ? Math.round((att.filter((x: { is_correct: boolean }) => x.is_correct).length / att.length) * 100) : 0)
@@ -48,7 +58,7 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('profiles').update({ full_name: name, exam_date: examDate || null, daily_goal_minutes: goal, updated_at: new Date().toISOString() }).eq('id', user.id)
+    await supabase.from('profiles').update({ full_name: name, exam_date: examDate || null, daily_goal_minutes: goal, pet_type: petType, updated_at: new Date().toISOString() }).eq('id', user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -96,6 +106,40 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Pet selection */}
+          <div style={{ padding: '20px 20px 0' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Compagnon</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {(['cat', 'dog', 'bunny'] as PetType[]).map(pet => {
+                const sel = petType === pet
+                const colors = PET_COLORS[pet]
+                return (
+                  <button
+                    key={pet}
+                    onClick={() => setPetType(pet)}
+                    style={{
+                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                      padding: '12px 8px',
+                      borderRadius: 16,
+                      background: sel ? colors.soft : A.surface,
+                      border: `2px solid ${sel ? colors.accent : A.border}`,
+                      cursor: 'pointer', fontFamily: A.font,
+                      transition: 'all .18s',
+                      boxShadow: sel ? `0 4px 16px ${colors.accent}30` : 'none',
+                    }}
+                  >
+                    <div style={{ width: 64, height: 78, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                      <PetCompanion petType={pet} state={sel ? 'correct' : 'idle'} size={64} />
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: sel ? colors.accent : A.textMuted }}>
+                      {PET_NAMES[pet]}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
