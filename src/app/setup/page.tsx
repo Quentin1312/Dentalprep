@@ -21,9 +21,9 @@ function ProgressDots({ step }: { step: number }) {
 // Shell commun : évite l'overflow iOS en découpant header / scroll / bouton
 function Shell({ children, button, header }: { children: React.ReactNode; button: React.ReactNode; header?: React.ReactNode }) {
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: A.bg, color: A.text, fontFamily: A.font, overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: A.bg, color: A.text, fontFamily: A.font, overflow: 'hidden', maxWidth: '100vw' }}>
       {header && <div style={{ flexShrink: 0, padding: '48px 24px 16px' }}>{header}</div>}
-      <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as never, padding: header ? '0 24px' : '48px 24px 0' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' as never, padding: header ? '0 24px' : '48px 24px 0' }}>
         {children}
       </div>
       <div style={{ flexShrink: 0, padding: '16px 24px 36px' }}>
