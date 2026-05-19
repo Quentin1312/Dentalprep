@@ -4,6 +4,9 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
+import PetCompanion from '@/components/pet/PetCompanion'
+import type { PetType, PetState } from '@/components/pet/PetCompanion'
+import { useAppData } from '@/lib/app-context'
 
 async function compressImage(file: File, maxPx = 600, quality = 0.82): Promise<File> {
   return new Promise((resolve) => {
@@ -33,6 +36,8 @@ type Phase = 'pick' | 'scanning' | 'flashcards' | 'quiz' | 'done'
 
 export default function QuickScanPage() {
   const router = useRouter()
+  const { data } = useAppData()
+  const petType = (data?.profile?.pet_type ?? 'cat') as PetType
   const fileRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [phase, setPhase] = useState<Phase>('pick')
@@ -162,8 +167,14 @@ export default function QuickScanPage() {
   // ── QUIZ ──────────────────────────────────────────────────────
   if (phase === 'quiz') {
     const q = questions[qIdx]
+    const petState: PetState = selected !== null
+      ? (selected === q.correct_index ? 'correct' : 'wrong')
+      : 'idle'
     return (
       <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', bottom: 40, right: 16, zIndex: 20, pointerEvents: 'none' }}>
+          <PetCompanion petType={petType} state={petState} size={72} />
+        </div>
         <div style={{ padding: '60px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setPhase('flashcards')} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <Icon name="chevronL" size={16} color={A.text} />

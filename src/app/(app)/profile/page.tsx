@@ -131,10 +131,10 @@ export default function ProfilePage() {
                       boxShadow: sel ? `0 4px 16px ${colors.accent}30` : 'none',
                     }}
                   >
-                    <div style={{ width: 64, height: 78, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                      <PetCompanion petType={pet} state={sel ? 'correct' : 'idle'} size={64} />
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <PetCompanion petType={pet} state={sel ? 'correct' : 'idle'} size={64} hideName />
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: sel ? colors.accent : A.textMuted }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: sel ? colors.accent : A.textMuted, textAlign: 'center' }}>
                       {PET_NAMES[pet]}
                     </div>
                   </button>

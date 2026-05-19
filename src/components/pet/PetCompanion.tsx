@@ -237,10 +237,12 @@ export default function PetCompanion({
   petType = 'cat',
   state = 'idle',
   size = 60,
+  hideName = false,
 }: {
   petType?: PetType
   state?: PetState
   size?: number
+  hideName?: boolean
 }) {
   const [bubble, setBubble] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -309,7 +311,7 @@ export default function PetCompanion({
         .star-float2 { animation: star-float2 1.2s 0.2s ease-out forwards; }
       `}</style>
 
-      <div style={{ position: 'relative', display: 'inline-block', width: size, height: size + 14 }}>
+      <div style={{ position: 'relative', display: 'inline-block', width: size, height: hideName ? size : size + 14 }}>
         {/* Speech bubble */}
         {bubble && (
           <div style={{
@@ -362,18 +364,20 @@ export default function PetCompanion({
         </div>
 
         {/* Name */}
-        <div style={{
-          textAlign: 'center',
-          fontSize: 9,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          color: '#FFD84A',
-          textTransform: 'uppercase',
-          marginTop: 2,
-          textShadow: '0 0 8px rgba(255,216,74,0.6)',
-        }}>
-          {PET_NAMES[petType]}
-        </div>
+        {!hideName && (
+          <div style={{
+            textAlign: 'center',
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            color: '#FFD84A',
+            textTransform: 'uppercase',
+            marginTop: 2,
+            textShadow: '0 0 8px rgba(255,216,74,0.6)',
+          }}>
+            {PET_NAMES[petType]}
+          </div>
+        )}
       </div>
     </>
   )

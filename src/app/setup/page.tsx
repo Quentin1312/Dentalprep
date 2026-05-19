@@ -242,12 +242,14 @@ export default function SetupPage() {
         <div style={{ fontSize: 14, color: A.textMuted, lineHeight: 1.5, marginBottom: 24 }}>
           Date du titre CNQAOS ou équivalent.
         </div>
-        <input
-          type="date" value={examDate}
-          min={new Date().toISOString().slice(0, 10)}
-          onChange={e => setExamDate(e.target.value)}
-          style={{ width: '100%', height: 52, borderRadius: 14, background: A.surface, border: `1.5px solid ${A.primary}`, padding: '0 18px', fontSize: 16, fontWeight: 600, color: A.text, fontFamily: A.font, outline: 'none', boxSizing: 'border-box' }}
-        />
+        <div style={{ overflow: 'hidden', borderRadius: 14 }}>
+          <input
+            type="date" value={examDate}
+            min={new Date().toISOString().slice(0, 10)}
+            onChange={e => setExamDate(e.target.value)}
+            style={{ width: '100%', maxWidth: '100%', height: 52, borderRadius: 14, background: A.surface, border: `1.5px solid ${A.primary}`, padding: '0 18px', fontSize: 16, fontWeight: 600, color: A.text, fontFamily: A.font, outline: 'none', boxSizing: 'border-box', display: 'block', WebkitAppearance: 'none' as never }}
+          />
+        </div>
         <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
           {[{ label: 'Déc. 2026', value: '2026-12-18' }, { label: 'Juin 2026', value: '2026-06-15' }, { label: 'Mars 2027', value: '2027-03-20' }].map(s => (
             <button key={s.value} onClick={() => setExamDate(s.value)} style={{ background: examDate === s.value ? A.text : A.surface, color: examDate === s.value ? '#fff' : A.text, border: `0.5px solid ${examDate === s.value ? A.text : A.borderStrong}`, borderRadius: 18, padding: '7px 14px', cursor: 'pointer', fontFamily: A.font, fontSize: 12, fontWeight: 600 }}>
