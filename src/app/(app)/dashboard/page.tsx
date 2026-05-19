@@ -5,6 +5,8 @@ import { MODULES, BLOCS } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
+export const revalidate = 30 // re-fetch au max toutes les 30s
+
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null

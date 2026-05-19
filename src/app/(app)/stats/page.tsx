@@ -4,6 +4,8 @@ import { MODULES } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
+export const revalidate = 30
+
 export default async function StatsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
