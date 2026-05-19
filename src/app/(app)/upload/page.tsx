@@ -3,6 +3,29 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+
+async function compressImage(file: File, maxPx = 1600, quality = 0.85): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(
+        blob => resolve(blob ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }) : file),
+        'image/jpeg', quality
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+    img.src = url
+  })
+}
 import { FASCICULES, MODULE_MAP } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
@@ -67,13 +90,17 @@ export default function UploadPage() {
       setProcessingStep(1)
 
       for (let i = 0; i < files.length; i++) {
+        const compressed = await compressImage(files[i])
         const formData = new FormData()
-        formData.append('file', files[i])
+        formData.append('file', compressed)
         formData.append('moduleId', moduleId)
         formData.append('courseId', course.id)
         formData.append('pageNumber', String(i + 1))
         const ocrRes = await fetch('/api/ocr', { method: 'POST', body: formData })
-        if (!ocrRes.ok) throw new Error('Erreur OCR page ' + (i + 1))
+        if (!ocrRes.ok) {
+          const detail = await ocrRes.json().catch(() => ({}))
+          throw new Error(detail?.error ?? `Erreur OCR page ${i + 1}`)
+        }
       }
 
       setProcessingStep(2)
