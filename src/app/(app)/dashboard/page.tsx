@@ -37,7 +37,10 @@ export default function DashboardPage() {
         supabase.from('courses').select('id,module_id').eq('user_id', user.id),
         supabase.from('quiz_attempts').select('module_id,is_correct').eq('user_id', user.id),
       ]).then(([p, c, a]) => {
-        setProfile(p.data)
+        const prof = p.data
+        // Redirect new users to setup if name not configured
+        if (!prof?.full_name) { router.replace('/setup'); return }
+        setProfile(prof)
         setCourses(c.data ?? [])
         setAttempts(a.data ?? [])
         setLoading(false)
@@ -85,7 +88,7 @@ export default function DashboardPage() {
         {loading ? (
           <div style={{ borderRadius: 20, height: 160, background: '#C8D8F5' }} />
         ) : (
-          <Link href="/profile" style={{ textDecoration: 'none', display: 'block' }}>
+          <Link href={profile?.exam_date ? '/profile' : '/setup'} style={{ textDecoration: 'none', display: 'block' }}>
             <div style={{ background: `linear-gradient(135deg, ${A.primary} 0%, ${A.primaryDark} 100%)`, borderRadius: 20, padding: 18, color: '#fff', boxShadow: '0 10px 30px rgba(10,102,224,0.32)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, border: '20px solid rgba(255,255,255,0.07)', borderRadius: '50%' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, opacity: 0.85, fontWeight: 500 }}>
