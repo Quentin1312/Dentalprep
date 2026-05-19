@@ -9,7 +9,7 @@ import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
-type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string }
+type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; page_image_url?: string | null }
 
 export default function QuizClient({
   questions,
@@ -182,6 +182,11 @@ export default function QuizClient({
         <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 }}>
           Question {idx + 1} · {moduleId}
         </div>
+        {q.page_image_url && (
+          <div style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', border: `0.5px solid ${A.border}` }}>
+            <img src={q.page_image_url} alt="Schéma" style={{ width: '100%', display: 'block', maxHeight: 280, objectFit: 'contain', background: '#fff' }} />
+          </div>
+        )}
         <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.3, marginBottom: 24 }}>{q.question}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

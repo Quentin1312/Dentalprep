@@ -8,7 +8,7 @@ import { MODULE_MAP } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import type { ModuleId } from '@/types/database'
 
-type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string }
+type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
 type AttemptStat = { question_id: string; is_correct: boolean }
 
 function Skel({ h }: { h: number }) {

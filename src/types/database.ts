@@ -115,6 +115,7 @@ export type Database = {
           choices: Json
           correct_index: number
           explanation: string
+          page_image_url: string | null
           created_at: string
         }
         Insert: {
@@ -126,6 +127,7 @@ export type Database = {
           choices: Json
           correct_index: number
           explanation: string
+          page_image_url?: string | null
           created_at?: string
         }
         Update: {
@@ -133,6 +135,7 @@ export type Database = {
           choices?: Json
           correct_index?: number
           explanation?: string
+          page_image_url?: string | null
         }
         Relationships: []
       }
