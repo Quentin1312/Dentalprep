@@ -50,6 +50,7 @@ export default function Icon({ name, size = 20, color = 'currentColor', strokeWi
     tooth:      <><path d="M7 3c-2 0-4 1.5-4 5 0 2 1 4 1.5 6S5 19 6 21c.5 1 1.5 1 2 0l1.5-4c.3-.8.7-1 1.5-1s1.2.2 1.5 1l1.5 4c.5 1 1.5 1 2 0 1-2 1-5 1.5-7s1.5-4 1.5-6c0-3.5-2-5-4-5-1.5 0-2 .5-4 .5S8.5 3 7 3z"/></>,
     grid:       <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
     eye:        <><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></>,
+    trash:      <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></>,
   }
 
   return <svg {...props}>{paths[name] ?? null}</svg>

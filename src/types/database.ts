@@ -178,6 +178,25 @@ export type Database = {
         }
         Relationships: []
       }
+      flashcard_progress: {
+        Row: {
+          user_id: string
+          flashcard_id: string
+          status: 'known' | 'review'
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          flashcard_id: string
+          status: 'known' | 'review'
+          updated_at?: string
+        }
+        Update: {
+          status?: 'known' | 'review'
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
