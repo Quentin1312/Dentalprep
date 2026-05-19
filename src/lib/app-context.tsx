@@ -13,6 +13,7 @@ interface AppData {
   profile: Profile
   courses: Course[]
   attempts: Attempt[]
+  todayMinutes: number
 }
 
 interface AppContextValue {
@@ -54,10 +55,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.replace('/auth/login'); return }
 
-    const [profRes, coursesRes, attemptsRes] = await Promise.all([
+    const today = new Date().toISOString().split('T')[0]
+    const [profRes, coursesRes, attemptsRes, todayRes] = await Promise.all([
       supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct').eq('user_id', user.id),
+      supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
     ])
 
     if (!profRes.data?.full_name) { router.replace('/setup'); return }
@@ -67,6 +70,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       profile: profRes.data,
       courses: coursesRes.data ?? [],
       attempts: attemptsRes.data ?? [],
+      todayMinutes: todayRes.data?.minutes_studied ?? 0,
     }
     writeCache(fresh)
     setData(fresh)
