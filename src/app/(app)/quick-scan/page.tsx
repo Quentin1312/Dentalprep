@@ -90,16 +90,16 @@ export default function QuickScanPage() {
     if (selected !== null) return
     setSelected(idx)
     const correct = idx === questions[qIdx].correct_index
-    const newAnswers = [...answers, correct]
-    setAnswers(newAnswers)
-    setTimeout(() => {
-      if (qIdx + 1 >= questions.length) {
-        setPhase('done')
-      } else {
-        setQIdx(q => q + 1)
-        setSelected(null)
-      }
-    }, 1200)
+    setAnswers(prev => [...prev, correct])
+  }
+
+  function nextQuestion() {
+    if (qIdx + 1 >= questions.length) {
+      setPhase('done')
+    } else {
+      setQIdx(q => q + 1)
+      setSelected(null)
+    }
   }
 
   // ── SCANNING ──────────────────────────────────────────────────
@@ -208,12 +208,17 @@ export default function QuickScanPage() {
           </div>
 
           {selected !== null && (
-            <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: selected === q.correct_index ? A.greenSoft : '#FEF2F2', border: `0.5px solid ${selected === q.correct_index ? A.green : A.red}30` }}>
-              <div style={{ fontSize: 13, color: selected === q.correct_index ? A.green : A.red, fontWeight: 600, marginBottom: 4 }}>
-                {selected === q.correct_index ? '✓ Correct !' : '✗ Incorrect'}
+            <>
+              <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: selected === q.correct_index ? A.greenSoft : '#FEF2F2', border: `0.5px solid ${selected === q.correct_index ? A.green : A.red}30` }}>
+                <div style={{ fontSize: 13, color: selected === q.correct_index ? A.green : A.red, fontWeight: 600, marginBottom: 4 }}>
+                  {selected === q.correct_index ? '✓ Correct !' : '✗ Incorrect'}
+                </div>
+                <div style={{ fontSize: 13, color: A.text, lineHeight: 1.4 }}>{q.explanation}</div>
               </div>
-              <div style={{ fontSize: 13, color: A.text, lineHeight: 1.4 }}>{q.explanation}</div>
-            </div>
+              <button onClick={nextQuestion} style={{ marginTop: 12, width: '100%', height: 50, borderRadius: 14, border: 'none', background: A.primary, color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+                {qIdx + 1 >= questions.length ? 'Voir les résultats' : 'Question suivante'} <Icon name="arrowR" size={16} color="#fff" />
+              </button>
+            </>
           )}
         </div>
 
