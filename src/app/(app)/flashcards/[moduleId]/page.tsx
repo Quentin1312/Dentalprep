@@ -22,5 +22,5 @@ export default async function FlashcardsPage({ params }: { params: Promise<{ mod
     </div>
   )
 
-  return <FlashcardsClient flashcards={flashcards} moduleId={moduleId} />
+  return <FlashcardsClient flashcards={flashcards} moduleId={moduleId} userId={user.id} />
 }

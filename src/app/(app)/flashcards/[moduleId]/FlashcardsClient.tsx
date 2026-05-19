@@ -1,14 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { recordSession } from '@/lib/recordSession'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
 type Flashcard = { id: string; concept: string; definition: string }
 
-export default function FlashcardsClient({ flashcards, moduleId }: { flashcards: Flashcard[]; moduleId: string }) {
+export default function FlashcardsClient({ flashcards, moduleId, userId }: { flashcards: Flashcard[]; moduleId: string; userId: string }) {
   const router = useRouter()
+  const startRef = useRef(Date.now())
   const [idx, setIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [known, setKnown] = useState(0)
@@ -18,9 +20,14 @@ export default function FlashcardsClient({ flashcards, moduleId }: { flashcards:
   const total = flashcards.length
   const card = flashcards[idx]
 
-  function handleAction(knew: boolean) {
+  async function handleAction(knew: boolean) {
     if (knew) setKnown(k => k + 1); else setReview(r => r + 1)
-    if (idx + 1 >= total) { setDone(true); return }
+    if (idx + 1 >= total) {
+      setDone(true)
+      const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
+      await recordSession(userId, elapsed)
+      return
+    }
     setIdx(i => i + 1)
     setFlipped(false)
   }
@@ -35,7 +42,7 @@ export default function FlashcardsClient({ flashcards, moduleId }: { flashcards:
         <span style={{ color: A.green, fontWeight: 600 }}>{known} sues</span> · <span style={{ color: A.amber, fontWeight: 600 }}>{review} à revoir</span> sur {total} cartes
       </div>
       <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
-        <button onClick={() => { setIdx(0); setFlipped(false); setKnown(0); setReview(0); setDone(false) }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
+        <button onClick={() => { setIdx(0); setFlipped(false); setKnown(0); setReview(0); setDone(false); startRef.current = Date.now() }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
           Recommencer
         </button>
         <button onClick={() => router.push(`/quiz/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
