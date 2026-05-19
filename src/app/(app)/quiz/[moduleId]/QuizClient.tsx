@@ -20,6 +20,8 @@ export default function QuizClient({
   mode = 'normal',
   attemptStats = new Map(),
   petType = 'cat',
+  backHref,
+  headerLabel,
 }: {
   questions: Question[]
   moduleId: string
@@ -27,6 +29,8 @@ export default function QuizClient({
   mode?: 'normal' | 'smart'
   attemptStats?: Map<string, { ok: number; total: number }>
   petType?: PetType
+  backHref?: string
+  headerLabel?: string
 }) {
   const router = useRouter()
   const { refresh } = useAppData()
@@ -60,7 +64,7 @@ export default function QuizClient({
     const supabase = createClient()
     supabase.from('quiz_attempts').insert({
       user_id: userId,
-      module_id: moduleId as ModuleId,
+      module_id: (q.module_id || moduleId) as ModuleId,
       question_id: q.id,
       selected_index: picked,
       is_correct: isCorrect,
@@ -136,8 +140,8 @@ export default function QuizClient({
             <button onClick={() => restart()} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
               Recommencer
             </button>
-            <button onClick={() => router.push(`/module/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-              Retour module
+            <button onClick={() => router.push(backHref ?? `/module/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+              {backHref ? 'Retour' : 'Retour module'}
             </button>
           </div>
         </div>
@@ -163,7 +167,7 @@ export default function QuizClient({
       {/* Top bar */}
       <div style={{ padding: '60px 20px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-          <button onClick={() => router.push(`/module/${moduleId}`)} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={() => router.push(backHref ?? `/module/${moduleId}`)} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <Icon name="x" size={16} color={A.text} />
           </button>
           <div style={{ flex: 1, height: 5, background: '#E9ECF2', borderRadius: 5, overflow: 'hidden' }}>
@@ -196,7 +200,7 @@ export default function QuizClient({
           </div>
         )}
         <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 }}>
-          Question {idx + 1} · {moduleId}
+          Question {idx + 1} · {headerLabel ?? moduleId}
         </div>
         {q.page_image_url && (
           <div style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', border: `0.5px solid ${A.border}` }}>

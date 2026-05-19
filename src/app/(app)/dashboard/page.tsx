@@ -50,6 +50,16 @@ export default function DashboardPage() {
   const overallProgress = attempts.length > 0
     ? Math.round((attempts.filter(a => a.is_correct).length / attempts.length) * 100) : 0
 
+  // Count questions with at least 1 wrong answer
+  const errorCount = (() => {
+    const stats = new Map<string, { ok: number; total: number }>()
+    for (const a of attempts) {
+      const s = stats.get(a.question_id) ?? { ok: 0, total: 0 }
+      stats.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+    }
+    return Array.from(stats.values()).filter(s => s.ok < s.total).length
+  })()
+
   const moduleStats = MODULES.map(m => {
     const mAttempts = attempts.filter(a => a.module_id === m.id)
     const correct = mAttempts.filter(a => a.is_correct).length
@@ -180,17 +190,28 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Quiz Flash CTA */}
-      <div style={{ padding: '12px 20px 0' }}>
-        <Link href="/quick-scan" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: A.text, borderRadius: 16, textDecoration: 'none' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="camera" size={20} color="#fff" />
+      {/* Mes erreurs + Quiz Flash — side by side if errors exist, else full-width quiz flash */}
+      <div style={{ padding: '12px 20px 0', display: 'flex', gap: 10 }}>
+        {!loading && errorCount > 0 && (
+          <Link href="/mes-erreurs" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#FEF2F2', borderRadius: 16, textDecoration: 'none', border: `1px solid ${A.red}20` }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: A.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="target" size={18} color="#fff" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: A.red }}>Mes erreurs</div>
+              <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 500 }}>{errorCount} à revoir</div>
+            </div>
+          </Link>
+        )}
+        <Link href="/quick-scan" style={{ flex: errorCount > 0 ? 1 : undefined, width: errorCount > 0 ? undefined : '100%', display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: A.text, borderRadius: 16, textDecoration: 'none' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon name="camera" size={18} color="#fff" />
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>Quiz Flash</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Photo → quiz instantané</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: errorCount > 0 ? 13 : 15, fontWeight: 600, color: '#fff' }}>Quiz Flash</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Photo → quiz IA</div>
           </div>
-          <Icon name="chevronR" size={16} color="rgba(255,255,255,0.5)" />
+          <Icon name="chevronR" size={14} color="rgba(255,255,255,0.5)" />
         </Link>
       </div>
 
