@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
+import { readFlashQuestions } from '@/lib/flash-store'
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -14,6 +16,14 @@ function fasciculeN(title: string): number | null {
 export default function LibraryPage() {
   const { data, loading } = useAppData()
   const courses = data?.courses ?? []
+  const [flashQCount, setFlashQCount] = useState(0)
+  useEffect(() => { setFlashQCount(readFlashQuestions().length) }, [])
+
+  const moduleIds = [...new Set(courses.map(c => c.module_id))]
+  const attemptedModuleIds = new Set((data?.attempts ?? []).map(a => a.module_id))
+  const allModulesQuizzed = moduleIds.length > 0 && moduleIds.every(id => attemptedModuleIds.has(id))
+  const globalUnlocked = flashQCount >= 5 && allModulesQuizzed
+  const missingModules = moduleIds.filter(id => !attemptedModuleIds.has(id))
 
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
@@ -29,8 +39,30 @@ export default function LibraryPage() {
         </Link>
       </div>
 
+      {/* Quiz Global banner */}
+      <Link href="/global-quiz" style={{ textDecoration: 'none', display: 'block', margin: '16px 20px 0' }}>
+        <div style={{ background: globalUnlocked ? `linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)` : A.surface, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: globalUnlocked ? '0 4px 20px rgba(124,58,237,0.28)' : 'none', border: globalUnlocked ? 'none' : `0.5px solid ${A.border}` }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: globalUnlocked ? 'rgba(255,255,255,0.18)' : '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon name="sparkle" size={20} color={globalUnlocked ? '#fff' : '#7C3AED'} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: globalUnlocked ? '#fff' : A.text }}>Quiz Global {globalUnlocked ? '' : '🔒'}</div>
+            <div style={{ fontSize: 12, color: globalUnlocked ? 'rgba(255,255,255,0.75)' : A.textMuted, marginTop: 1 }}>
+              {globalUnlocked
+                ? `${flashQCount} questions · tous modules débloqué`
+                : missingModules.length > 0
+                  ? `Quiz manquant : ${missingModules.join(', ')}`
+                  : flashQCount < 5
+                    ? `Fais des Quiz Flash (${flashQCount}/5 questions)`
+                    : 'Fais le quiz de chaque module'}
+            </div>
+          </div>
+          <Icon name="chevronR" size={16} color={globalUnlocked ? 'rgba(255,255,255,0.7)' : A.textDim} />
+        </div>
+      </Link>
+
       {/* Quick scan banner */}
-      <Link href="/quick-scan" style={{ textDecoration: 'none', display: 'block', margin: '16px 20px 0' }}>
+      <Link href="/quick-scan" style={{ textDecoration: 'none', display: 'block', margin: '10px 20px 0' }}>
         <div style={{ background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 14px rgba(10,102,224,0.22)' }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Icon name="camera" size={20} color="#fff" />

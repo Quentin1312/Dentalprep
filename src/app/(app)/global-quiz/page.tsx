@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useAppData } from '@/lib/app-context'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
@@ -15,7 +14,7 @@ import { readFlashQuestions, addFlashXP, type FlashQuestion } from '@/lib/flash-
 
 type Phase = 'checking' | 'empty' | 'locked' | 'quiz' | 'done'
 type GQuestion = FlashQuestion & { _id: string }
-type MasteryItem = { id: string; title: string; mastery: number; total: number }
+type LockedModule = { id: string; label: string }
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -64,7 +63,7 @@ export default function GlobalQuizPage() {
 
   const [phase, setPhase] = useState<Phase>('checking')
   const [questions, setQuestions] = useState<GQuestion[]>([])
-  const [masteryItems, setMasteryItems] = useState<MasteryItem[]>([])
+  const [lockedModules, setLockedModules] = useState<LockedModule[]>([])
   const [xpGained, setXpGained] = useState(0)
 
   // Quiz state
@@ -79,54 +78,27 @@ export default function GlobalQuizPage() {
     if (checkedRef.current || !data) return
     checkedRef.current = true
 
-    async function check() {
+    function check() {
       const pool = readFlashQuestions()
       if (pool.length < 5) { setPhase('empty'); return }
 
-      if (!data || data.courses.length === 0) {
-        const qs = shuffle(pool).slice(0, 20).map((q, i) => ({ ...q, _id: `g${i}` }))
-        setQuestions(qs)
-        startRef.current = Date.now()
-        setPhase('quiz')
+      if (!data) return
+
+      // Unlock condition: every module that has courses must have ≥1 quiz attempt
+      const moduleIds = [...new Set(data.courses.map(c => c.module_id))]
+      const attemptedModuleIds = new Set(data.attempts.map(a => a.module_id))
+      const missing = moduleIds.filter(id => !attemptedModuleIds.has(id))
+
+      if (missing.length > 0) {
+        setLockedModules(missing.map(id => ({ id, label: id })))
+        setPhase('locked')
         return
       }
 
-      const supabase = createClient()
-      const courseIds = data.courses.map(c => c.id)
-
-      const [flashcardsRes, progressRes] = await Promise.all([
-        supabase.from('flashcards').select('id,course_id').in('course_id', courseIds),
-        supabase.from('flashcard_progress').select('flashcard_id').eq('user_id', data.userId).eq('status', 'known'),
-      ])
-
-      const flashcards = (flashcardsRes.data ?? []) as { id: string; course_id: string }[]
-      const knownIds = new Set((progressRes.data ?? []).map((p: { flashcard_id: string }) => p.flashcard_id))
-
-      const courseMap = new Map<string, { total: number; known: number }>()
-      for (const fc of flashcards) {
-        const s = courseMap.get(fc.course_id) ?? { total: 0, known: 0 }
-        s.total++
-        if (knownIds.has(fc.id)) s.known++
-        courseMap.set(fc.course_id, s)
-      }
-
-      const items: MasteryItem[] = data.courses.map(course => {
-        const s = courseMap.get(course.id) ?? { total: 0, known: 0 }
-        const mastery = s.total > 0 ? Math.round((s.known / s.total) * 100) : 100
-        return { id: course.id, title: course.title, mastery, total: s.total }
-      })
-
-      setMasteryItems(items)
-
-      const allUnlocked = items.every(i => i.total === 0 || i.mastery >= 50)
-      if (allUnlocked) {
-        const qs = shuffle(pool).slice(0, 20).map((q, i) => ({ ...q, _id: `g${i}` }))
-        setQuestions(qs)
-        startRef.current = Date.now()
-        setPhase('quiz')
-      } else {
-        setPhase('locked')
-      }
+      const qs = shuffle(pool).slice(0, 20).map((q, i) => ({ ...q, _id: `g${i}` }))
+      setQuestions(qs)
+      startRef.current = Date.now()
+      setPhase('quiz')
     }
 
     check()
@@ -189,7 +161,7 @@ export default function GlobalQuizPage() {
     </div>
   )
 
-  // ── LOCKED — maîtrise insuffisante ───────────────────────────
+  // ── LOCKED — quiz manquants ──────────────────────────────────
   if (phase === 'locked') return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 48 }}>
       <div style={{ padding: '62px 20px 0', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -206,38 +178,26 @@ export default function GlobalQuizPage() {
         <div style={{ background: '#F3E8FF', borderRadius: 16, padding: '14px 16px', marginBottom: 20, border: '1px solid #DDD6FE' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#7C3AED', marginBottom: 4 }}>Condition d&apos;accès</div>
           <div style={{ fontSize: 13, color: A.text, lineHeight: 1.5 }}>
-            Maîtrise ≥ 50% pour chaque fascicule (flashcards marquées &ldquo;Je sais&rdquo;).
+            Tu dois avoir fait le quiz de <strong>chaque module</strong> pour lequel tu as des cours.
           </div>
         </div>
 
         <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 10 }}>
-          Progression par fascicule
+          Modules à compléter
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {masteryItems.map(item => {
-            const unlocked = item.total === 0 || item.mastery >= 50
-            const color = unlocked ? A.green : item.mastery >= 30 ? A.amber : A.red
-            return (
-              <div key={item.id} style={{ background: A.surface, borderRadius: 14, padding: '12px 14px', border: `0.5px solid ${A.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: A.text, flex: 1, marginRight: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color, flexShrink: 0 }}>
-                    {unlocked ? '✓ ' : ''}{item.mastery}%
-                  </div>
-                </div>
-                <div style={{ height: 5, background: '#E9ECF2', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ width: `${item.mastery}%`, height: '100%', background: color, borderRadius: 3, transition: 'width 0.6s ease' }} />
-                </div>
-                {item.total === 0 && (
-                  <div style={{ fontSize: 11, color: A.textMuted, marginTop: 4 }}>Aucune flashcard générée</div>
-                )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {lockedModules.map(m => (
+            <div key={m.id} style={{ background: A.surface, borderRadius: 14, padding: '12px 14px', border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: A.red }}>{m.id}</span>
               </div>
-            )
-          })}
+              <div style={{ fontSize: 13, fontWeight: 600, color: A.text }}>Module {m.id} — quiz non fait</div>
+            </div>
+          ))}
         </div>
 
         <button onClick={() => router.push('/library')} style={{ marginTop: 20, width: '100%', height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-          Aller réviser les flashcards
+          Aller faire les quiz
         </button>
       </div>
     </div>
