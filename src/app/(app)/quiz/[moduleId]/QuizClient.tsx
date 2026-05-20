@@ -20,6 +20,7 @@ export default function QuizClient({
   mode = 'normal',
   attemptStats = new Map(),
   petType = 'cat',
+  level = 1,
   backHref,
   headerLabel,
 }: {
@@ -29,6 +30,7 @@ export default function QuizClient({
   mode?: 'normal' | 'smart'
   attemptStats?: Map<string, { ok: number; total: number }>
   petType?: PetType
+  level?: number
   backHref?: string
   headerLabel?: string
 }) {
@@ -42,6 +44,7 @@ export default function QuizClient({
   const [scoreBad, setScoreBad] = useState(0)
   const [finished, setFinished] = useState(false)
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
+  const [xpAnim, setXpAnim] = useState(0)
 
   const q = questions[idx]
   const choices = q?.choices as string[]
@@ -59,7 +62,7 @@ export default function QuizClient({
     if (picked === null) return
     setShowResult(true)
     const isCorrect = picked === q.correct_index
-    if (isCorrect) setScoreOk(s => s + 1)
+    if (isCorrect) { setScoreOk(s => s + 1); setXpAnim(n => n + 1) }
     else { setScoreBad(s => s + 1); setWrongQuestions(prev => [...prev, q]) }
     const supabase = createClient()
     supabase.from('quiz_attempts').insert({
@@ -156,13 +159,24 @@ export default function QuizClient({
 
   return (
     <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
+      <style>{`@keyframes xp-float{0%{opacity:1;transform:translateY(0) scale(1)}30%{opacity:1;transform:translateY(-18px) scale(1.25)}100%{opacity:0;transform:translateY(-64px) scale(0.8)}}`}</style>
+      {/* +XP float */}
+      {xpAnim > 0 && (
+        <div key={xpAnim} style={{
+          position: 'fixed', bottom: 148, right: 28, zIndex: 30, pointerEvents: 'none',
+          fontSize: 20, fontWeight: 900, color: '#FFD84A',
+          textShadow: '0 0 14px rgba(255,216,74,0.7), 0 2px 4px rgba(0,0,0,0.4)',
+          animation: 'xp-float 1.1s ease-out forwards',
+          fontFamily: A.font,
+        }}>+10 XP</div>
+      )}
       {/* Pet companion — peeks from bottom-right, pops up on answer */}
       <div style={{
         position: 'fixed', bottom: 56, right: 12, zIndex: 25, pointerEvents: 'none',
         transform: (petState === 'idle' || petState === 'thinking') ? 'translateY(62px)' : 'translateY(0)',
         transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
       }}>
-        <PetCompanion petType={petType} state={petState} size={84} />
+        <PetCompanion petType={petType} state={petState} size={84} level={level} />
       </div>
       {/* Top bar */}
       <div style={{ padding: '60px 20px 16px' }}>

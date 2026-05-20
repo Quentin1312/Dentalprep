@@ -261,16 +261,27 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+// Level-based glow colors
+const LEVEL_GLOW: Record<number, string> = {
+  1: 'transparent',
+  2: 'rgba(59,130,246,0.35)',
+  3: 'rgba(139,92,246,0.5)',
+  4: 'rgba(255,216,74,0.55)',
+  5: 'rgba(255,100,180,0.6)',
+}
+
 export default function PetCompanion({
   petType = 'cat',
   state = 'idle',
   size = 60,
   hideName = false,
+  level = 1,
 }: {
   petType?: PetType
   state?: PetState
   size?: number
   hideName?: boolean
+  level?: number
 }) {
   const [bubble, setBubble] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -289,6 +300,10 @@ export default function PetCompanion({
   }, [state, petType])
 
   const scale = size / 80
+  const glowColor = LEVEL_GLOW[Math.min(level, 5)] ?? 'transparent'
+  const hasAura = level >= 3
+  const hasCrown = level >= 4
+  const hasOrbit = level >= 5
 
   return (
     <>
@@ -302,6 +317,11 @@ export default function PetCompanion({
         @keyframes star-float  { 0%{opacity:1;transform:translateY(0) scale(1)}   100%{opacity:0;transform:translateY(-22px) scale(0.4)} }
         @keyframes star-float2 { 0%{opacity:1;transform:translateY(0) scale(1)}   100%{opacity:0;transform:translateY(-18px) scale(0.4)} }
         @keyframes bubble-in   { from{opacity:0;transform:scale(0.8) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes aura-pulse  { 0%,100%{opacity:0.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+        @keyframes orbit1 { from{transform:rotate(0deg) translateX(${Math.round(size * 0.55)}px) rotate(0deg)} to{transform:rotate(360deg) translateX(${Math.round(size * 0.55)}px) rotate(-360deg)} }
+        @keyframes orbit2 { from{transform:rotate(120deg) translateX(${Math.round(size * 0.55)}px) rotate(-120deg)} to{transform:rotate(480deg) translateX(${Math.round(size * 0.55)}px) rotate(-480deg)} }
+        @keyframes orbit3 { from{transform:rotate(240deg) translateX(${Math.round(size * 0.55)}px) rotate(-240deg)} to{transform:rotate(600deg) translateX(${Math.round(size * 0.55)}px) rotate(-600deg)} }
+        @keyframes crown-bob  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
         .tail-sway  { animation: tail-sway  1.7s ease-in-out infinite; }
         .tail-fast  { animation: tail-fast  0.38s ease-in-out infinite; }
         .tail-still { animation: tail-still 3.2s ease-in-out infinite; }
@@ -311,6 +331,61 @@ export default function PetCompanion({
       `}</style>
 
       <div style={{ position: 'relative', display: 'inline-block', width: size, height: hideName ? size : size + 16 }}>
+
+        {/* Level 3–5: aura ring */}
+        {hasAura && (
+          <div style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            width: size * 1.22, height: size * 1.22,
+            transform: 'translate(-50%, -50%)',
+            borderRadius: '50%',
+            background: level >= 5
+              ? 'conic-gradient(from 0deg, rgba(255,100,180,0.35), rgba(255,216,74,0.35), rgba(139,92,246,0.35), rgba(255,100,180,0.35))'
+              : level >= 4
+              ? `radial-gradient(circle, rgba(255,216,74,0.18) 40%, rgba(255,160,50,0.28) 100%)`
+              : `radial-gradient(circle, rgba(139,92,246,0.14) 40%, rgba(100,60,220,0.22) 100%)`,
+            boxShadow: `0 0 ${size * 0.3}px ${glowColor}`,
+            animation: 'aura-pulse 2.4s ease-in-out infinite',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }} />
+        )}
+
+        {/* Level 5: orbiting sparkles */}
+        {hasOrbit && (
+          <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, zIndex: 2, pointerEvents: 'none' }}>
+            {['orbit1', 'orbit2', 'orbit3'].map((anim, i) => (
+              <div key={i} style={{
+                position: 'absolute',
+                width: size * 0.18, height: size * 0.18,
+                marginLeft: -size * 0.09, marginTop: -size * 0.09,
+                animation: `${anim} ${2.8 + i * 0.3}s linear infinite`,
+                fontSize: size * 0.18,
+                lineHeight: 1,
+                userSelect: 'none',
+              }}>✨</div>
+            ))}
+          </div>
+        )}
+
+        {/* Level 4+: crown above head */}
+        {hasCrown && (
+          <div style={{
+            position: 'absolute',
+            top: hideName ? -size * 0.28 : -size * 0.28,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: size * 0.3,
+            lineHeight: 1,
+            animation: 'crown-bob 2s ease-in-out infinite',
+            pointerEvents: 'none',
+            zIndex: 3,
+            filter: `drop-shadow(0 0 ${size * 0.08}px rgba(255,216,74,0.8))`,
+          }}>
+            {level >= 5 ? '🌈' : '👑'}
+          </div>
+        )}
 
         {/* Speech bubble */}
         {bubble && (
@@ -342,6 +417,7 @@ export default function PetCompanion({
         {/* Animal with animation wrapper */}
         <div style={{
           width: size, height: size,
+          position: 'relative', zIndex: 1,
           animation: state === 'correct'
             ? 'pet-bounce 0.42s ease-in-out infinite'
             : state === 'wrong'
@@ -349,6 +425,9 @@ export default function PetCompanion({
             : undefined,
           transform: `scale(${scale})`,
           transformOrigin: 'bottom center',
+          filter: level >= 2
+            ? `drop-shadow(0 0 ${Math.round(size * 0.12)}px ${glowColor})`
+            : undefined,
         }}>
           {petType === 'cat'   && <CatSVG   state={state} />}
           {petType === 'dog'   && <DogSVG   state={state} />}

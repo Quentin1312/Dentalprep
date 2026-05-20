@@ -7,6 +7,8 @@ import QuizClient from './QuizClient'
 import { MODULE_MAP } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import type { ModuleId } from '@/types/database'
+import { useAppData } from '@/lib/app-context'
+import { computeXP, xpToLevel } from '@/lib/xp'
 
 type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
 type AttemptStat = { question_id: string; is_correct: boolean }
@@ -37,6 +39,7 @@ function QuizInner() {
   const [userId, setUserId] = useState<string | null>(null)
   const [petType, setPetType] = useState<string>('cat')
   const [loading, setLoading] = useState(true)
+  const { data: appData } = useAppData()
 
   const mod = MODULE_MAP[moduleId as ModuleId]
 
@@ -108,6 +111,9 @@ function QuizInner() {
     </div>
   )
 
+  const globalXp = computeXP(appData?.attempts ?? [])
+  const petLevel = xpToLevel(globalXp)
+
   return (
     <QuizClient
       questions={questions}
@@ -116,6 +122,7 @@ function QuizInner() {
       mode={mode as 'normal' | 'smart'}
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
+      level={petLevel}
     />
   )
 }

@@ -7,6 +7,7 @@ import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType, PetState } from '@/components/pet/PetCompanion'
 import { useAppData } from '@/lib/app-context'
+import { computeXP, xpToLevel } from '@/lib/xp'
 
 async function compressImage(file: File, maxPx = 600, quality = 0.82): Promise<File> {
   return new Promise((resolve) => {
@@ -38,6 +39,7 @@ export default function QuickScanPage() {
   const router = useRouter()
   const { data } = useAppData()
   const petType = (data?.profile?.pet_type ?? 'cat') as PetType
+  const petLevel = xpToLevel(computeXP(data?.attempts ?? []))
   const fileRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [phase, setPhase] = useState<Phase>('pick')
@@ -178,7 +180,7 @@ export default function QuickScanPage() {
           transform: petState === 'idle' ? 'translateY(62px)' : 'translateY(0)',
           transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
         }}>
-          <PetCompanion petType={petType} state={petState} size={84} />
+          <PetCompanion petType={petType} state={petState} size={84} level={petLevel} />
         </div>
         <div style={{ padding: '60px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setPhase('flashcards')} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>

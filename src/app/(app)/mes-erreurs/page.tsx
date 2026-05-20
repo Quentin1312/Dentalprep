@@ -9,6 +9,8 @@ import QuizClient from '@/app/(app)/quiz/[moduleId]/QuizClient'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { MODULES } from '@/lib/modules'
 import type { ModuleId } from '@/types/database'
+import { useAppData } from '@/lib/app-context'
+import { computeXP, xpToLevel } from '@/lib/xp'
 
 type Question = {
   id: string; question: string; choices: unknown
@@ -23,6 +25,7 @@ function Skel() {
 
 export default function MesErreursPage() {
   const router = useRouter()
+  const { data: appData } = useAppData()
   const [phase, setPhase] = useState<'loading' | 'list' | 'quiz'>('loading')
   const [questions, setQuestions] = useState<Question[]>([])
   const [attemptStats, setAttemptStats] = useState<Map<string, { ok: number; total: number }>>(new Map())
@@ -109,6 +112,8 @@ export default function MesErreursPage() {
 
   // ── QUIZ phase ────────────────────────────────────────────────
   if (phase === 'quiz' && questions.length > 0) {
+    const globalXp = computeXP(appData?.attempts ?? [])
+    const petLevel = xpToLevel(globalXp)
     return (
       <QuizClient
         questions={questions}
@@ -117,6 +122,7 @@ export default function MesErreursPage() {
         mode="smart"
         attemptStats={attemptStats}
         petType={petType}
+        level={petLevel}
         backHref="/mes-erreurs"
         headerLabel="Erreurs"
       />

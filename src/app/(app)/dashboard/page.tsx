@@ -7,6 +7,7 @@ import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
+import { computeXP, xpProgress } from '@/lib/xp'
 
 function daysUntil(d: string | null) {
   if (!d) return null
@@ -44,6 +45,8 @@ export default function DashboardPage() {
   const petType = (profile?.pet_type ?? 'cat') as PetType
   const goalDone = todayMin >= goalMin
   const goalPct = Math.min(100, Math.round((todayMin / goalMin) * 100))
+  const xp = computeXP(attempts)
+  const xpInfo = xpProgress(xp)
 
   const days = daysUntil(profile?.exam_date ?? null)
   const firstName = profile?.full_name?.split(' ')[0] ?? ''
@@ -175,12 +178,40 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* XP mini widget */}
+      {!loading && (
+        <div style={{ padding: '10px 20px 0' }}>
+          <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flexShrink: 0, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PetCompanion petType={petType} state="idle" size={40} hideName level={xpInfo.level} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: xpInfo.color }}>Niv. {xpInfo.level}</div>
+                  <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 500 }}>{xpInfo.name}</div>
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>{xp} XP</div>
+              </div>
+              <div style={{ height: 6, background: '#E9ECF2', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${xpInfo.pct}%`,
+                  background: `linear-gradient(90deg, ${xpInfo.color}, ${xpInfo.color}CC)`,
+                  borderRadius: 3, transition: 'width 0.8s ease',
+                  boxShadow: `0 0 6px ${xpInfo.color}55`,
+                }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pet celebration banner — only when goal done */}
       {!loading && goalDone && (
         <div style={{ padding: '10px 20px 0' }}>
           <div style={{ background: A.greenSoft, borderRadius: 16, border: `1px solid ${A.green}30`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ flexShrink: 0 }}>
-              <PetCompanion petType={petType} state="correct" size={60} hideName />
+              <PetCompanion petType={petType} state="correct" size={60} hideName level={xpInfo.level} />
             </div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: A.green }}>Objectif du jour atteint !</div>
