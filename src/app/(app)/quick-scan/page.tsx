@@ -6,8 +6,11 @@ import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType, PetState } from '@/components/pet/PetCompanion'
+import Companion, { getMood } from '@/components/ui/Companion'
 import { useAppData } from '@/lib/app-context'
 import { computeXP, xpToLevel } from '@/lib/xp'
+import { recordSession } from '@/lib/recordSession'
+import { addFlashXP, saveFlashQuestions } from '@/lib/flash-store'
 
 async function compressImage(file: File, maxPx = 600, quality = 0.82): Promise<File> {
   return new Promise((resolve) => {
@@ -31,21 +34,53 @@ async function compressImage(file: File, maxPx = 600, quality = 0.82): Promise<F
   })
 }
 
+function ScoreRing({ pct }: { pct: number }) {
+  const r = 42
+  const circ = 2 * Math.PI * r
+  const filled = (pct / 100) * circ
+  const color = pct >= 80 ? A.green : pct >= 60 ? A.primary : pct >= 40 ? A.amber : A.red
+  return (
+    <svg width="130" height="130" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r={r} fill="none" stroke={A.border} strokeWidth="9" />
+      <circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round"
+        strokeDasharray={`${filled} ${circ}`} transform="rotate(-90 50 50)"
+        style={{ transition: 'stroke-dasharray 1s ease' }} />
+      <text x="50" y="47" textAnchor="middle" fontSize="22" fontWeight="700" fill={color}>{pct}%</text>
+      <text x="50" y="62" textAnchor="middle" fontSize="10" fill={A.textMuted}>précision</text>
+    </svg>
+  )
+}
+
+function calcFlashXP(correct: number, total: number): number {
+  const acc = total > 0 ? correct / total : 0
+  return correct * 10 + (acc >= 0.8 ? 30 : acc >= 0.6 ? 15 : 0)
+}
+
+const MESSAGES = {
+  perfect: { title: 'Parfait, tu déchires !',      sub: 'Session excellente — continue sur cette lancée !' },
+  good:    { title: 'Bien joué !',                 sub: 'Tu progresses vraiment bien.'                    },
+  okay:    { title: 'Pas mal !',                   sub: 'Encore un peu de pratique et ça viendra.'        },
+  tough:   { title: 'Courage, tu vas y arriver !', sub: 'La régularité fait toute la différence.'         },
+}
+
 type Flashcard = { concept: string; definition: string }
 type Question = { question: string; choices: string[]; correct_index: number; explanation: string }
 type Phase = 'pick' | 'scanning' | 'flashcards' | 'quiz' | 'done'
 
 export default function QuickScanPage() {
   const router = useRouter()
-  const { data } = useAppData()
+  const { data, refresh } = useAppData()
   const petType = (data?.profile?.pet_type ?? 'cat') as PetType
-  const petLevel = xpToLevel(computeXP(data?.attempts ?? []))
+  const petLevel = xpToLevel(computeXP(data?.attempts ?? []) + (data?.flashXpBonus ?? 0))
   const fileRef = useRef<HTMLInputElement>(null)
+  const startRef = useRef<number>(Date.now())
+  const savedRef = useRef<boolean>(false)
   const [files, setFiles] = useState<File[]>([])
   const [phase, setPhase] = useState<Phase>('pick')
   const [error, setError] = useState<string | null>(null)
   const [flashcards, setFlashcards] = useState<Flashcard[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
+  const [xpGained, setXpGained] = useState(0)
 
   // Flashcard state
   const [fcIdx, setFcIdx] = useState(0)
@@ -64,6 +99,8 @@ export default function QuickScanPage() {
     if (!files.length) return
     setPhase('scanning')
     setError(null)
+    startRef.current = Date.now()
+    savedRef.current = false
     try {
       const form = new FormData()
       for (const f of files) {
@@ -87,6 +124,14 @@ export default function QuickScanPage() {
   function nextFlashcard() {
     if (fcIdx + 1 >= flashcards.length) {
       setPhase(questions.length ? 'quiz' : 'done')
+      if (!questions.length && !savedRef.current) {
+        savedRef.current = true
+        const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
+        const gained = flashcards.length * 5
+        setXpGained(gained)
+        addFlashXP(gained)
+        if (data?.userId) recordSession(data.userId, elapsed).then(() => refresh())
+      }
     } else {
       setFcIdx(i => i + 1)
       setFcFlipped(false)
@@ -100,8 +145,22 @@ export default function QuickScanPage() {
     setAnswers(prev => [...prev, correct])
   }
 
-  function nextQuestion() {
-    if (qIdx + 1 >= questions.length) {
+  async function nextQuestion() {
+    const isLast = qIdx + 1 >= questions.length
+    if (isLast) {
+      if (!savedRef.current) {
+        savedRef.current = true
+        const finalAnswers = [...answers]
+        const score = finalAnswers.filter(Boolean).length
+        const total = finalAnswers.length
+        const gained = calcFlashXP(score, total)
+        setXpGained(gained)
+        const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
+        addFlashXP(gained)
+        saveFlashQuestions(questions)
+        if (data?.userId) await recordSession(data.userId, elapsed)
+        refresh()
+      }
       setPhase('done')
     } else {
       setQIdx(q => q + 1)
@@ -174,7 +233,6 @@ export default function QuickScanPage() {
       : 'idle'
     return (
       <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
-        {/* Pet companion — above tab bar (71px), peeks in idle, pops on answer */}
         <div style={{
           position: 'fixed', bottom: 75, right: 12, zIndex: 25, pointerEvents: 'none',
           transform: petState === 'idle' ? 'translateY(62px)' : 'translateY(0)',
@@ -249,20 +307,76 @@ export default function QuickScanPage() {
   if (phase === 'done') {
     const score = answers.filter(Boolean).length
     const total = answers.length
+    const accuracy = total > 0 ? Math.round((score / total) * 100) : 100
+    const mood = getMood(accuracy)
+    const { title, sub } = MESSAGES[mood]
+    const wrongQs = questions.filter((_, i) => answers[i] === false)
+
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 12px 32px rgba(10,102,224,0.32)' }}>
-          <Icon name="sparkle" size={36} color="#fff" />
+      <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '52px 20px 40px', overflowY: 'auto' }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
+        {/* Companion + bulle */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+          <Companion mood={mood} size={100} />
+          <div style={{ background: A.surface, border: `0.5px solid ${A.border}`, borderRadius: 18, padding: '13px 20px', maxWidth: 280, textAlign: 'center', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{title}</div>
+            <div style={{ fontSize: 13, color: A.textMuted, lineHeight: 1.45 }}>{sub}</div>
+          </div>
         </div>
-        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Quiz Flash terminé !</div>
+
+        {/* Anneau de score (si quiz joué) */}
+        {total > 0 && <ScoreRing pct={accuracy} />}
+
+        {/* Stats */}
         {total > 0 && (
-          <div style={{ fontSize: 15, color: A.textMuted, marginBottom: 4 }}>
-            <span style={{ color: A.green, fontWeight: 700 }}>{score}</span>/<span style={{ fontWeight: 600 }}>{total}</span> bonnes réponses
+          <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340, margin: '20px 0 16px' }}>
+            {([
+              { label: 'Questions', value: total,         color: A.text  },
+              { label: 'Correctes', value: score,         color: A.green },
+              { label: 'Erreurs',   value: total - score, color: A.red   },
+            ] as const).map(({ label, value, color }) => (
+              <div key={label} style={{ flex: 1, background: A.surface, border: `0.5px solid ${A.border}`, borderRadius: 14, padding: '14px 8px', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 11, color: A.textMuted, marginTop: 4 }}>{label}</div>
+              </div>
+            ))}
           </div>
         )}
-        <div style={{ fontSize: 13, color: A.textMuted, marginBottom: 32 }}>{flashcards.length} flashcards · {questions.length} questions</div>
-        <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
-          <button onClick={() => { setPhase('pick'); setFiles([]) }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
+
+        {/* Flashcards info si pas de quiz */}
+        {total === 0 && flashcards.length > 0 && (
+          <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 16 }}>
+            {flashcards.length} flashcard{flashcards.length > 1 ? 's' : ''} révisée{flashcards.length > 1 ? 's' : ''}
+          </div>
+        )}
+
+        {/* XP gagné */}
+        <div style={{ background: A.primarySoft, border: `1px solid ${A.primary}33`, borderRadius: 14, padding: '13px 20px', display: 'flex', alignItems: 'center', gap: 12, width: '100%', maxWidth: 340, marginBottom: 16 }}>
+          <span style={{ fontSize: 24 }}>⭐</span>
+          <div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: A.primary }}>+{xpGained} XP</div>
+            <div style={{ fontSize: 12, color: A.textMuted }}>gagnés cette session</div>
+          </div>
+        </div>
+
+        {/* Questions ratées */}
+        {wrongQs.length > 0 && (
+          <div style={{ width: '100%', maxWidth: 340, background: A.amberSoft, border: `0.5px solid ${A.amber}30`, borderRadius: 14, padding: '12px 14px', marginBottom: 16 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: A.amber, marginBottom: 8 }}>
+              {wrongQs.length} question{wrongQs.length > 1 ? 's' : ''} à retravailler
+            </div>
+            {wrongQs.map((wq, i) => (
+              <div key={i} style={{ fontSize: 12, color: A.text, padding: '4px 0', lineHeight: 1.35, borderTop: i > 0 ? `0.5px solid ${A.amber}30` : 'none' }}>
+                {wq.question.length > 72 ? wq.question.slice(0, 72) + '…' : wq.question}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* CTAs */}
+        <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 340 }}>
+          <button onClick={() => { setPhase('pick'); setFiles([]); setAnswers([]); setQuestions([]); setFlashcards([]) }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
             Nouvelle photo
           </button>
           <button onClick={() => router.push('/library')} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>

@@ -8,6 +8,7 @@ import Icon from '@/components/ui/Icon'
 import PetCompanion, { PET_NAMES } from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { computeXP, xpProgress } from '@/lib/xp'
+import { readFlashXP } from '@/lib/flash-store'
 import { computeBadges } from '@/lib/badges'
 import type { Badge } from '@/lib/badges'
 
@@ -26,6 +27,7 @@ export default function ProfilePage() {
   const [petType, setPetType] = useState<PetType>('cat')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [flashXpBonus, setFlashXpBonus] = useState(0)
 
   useEffect(() => {
     const supabase = createClient()
@@ -46,6 +48,7 @@ export default function ProfilePage() {
         setLoading(false)
       })
     })
+    setFlashXpBonus(readFlashXP())
   }, [router])
 
   async function handleSave() {
@@ -68,7 +71,7 @@ export default function ProfilePage() {
   const totalAttempts = attempts.length
   const correctAttempts = attempts.filter(a => a.is_correct).length
   const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0
-  const xp = computeXP(attempts)
+  const xp = computeXP(attempts) + flashXpBonus
   const xpInfo = xpProgress(xp)
   const badges: Badge[] = computeBadges(attempts, profile?.streak ?? 0)
   const unlockedCount = badges.filter(b => b.unlocked).length

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useAppData } from '@/lib/app-context'
 import { MODULES } from '@/lib/modules'
 import { A } from '@/lib/theme'
@@ -8,6 +9,7 @@ import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { computeXP, xpProgress } from '@/lib/xp'
+import { readFlashQuestions } from '@/lib/flash-store'
 
 function daysUntil(d: string | null) {
   if (!d) return null
@@ -36,6 +38,8 @@ function Ring({ pct, size = 44, stroke = 4, color }: { pct: number; size?: numbe
 
 export default function DashboardPage() {
   const { data, loading } = useAppData()
+  const [flashQCount, setFlashQCount] = useState(0)
+  useEffect(() => { setFlashQCount(readFlashQuestions().length) }, [])
 
   const profile = data?.profile ?? null
   const attempts = data?.attempts ?? []
@@ -45,7 +49,7 @@ export default function DashboardPage() {
   const petType = (profile?.pet_type ?? 'cat') as PetType
   const goalDone = todayMin >= goalMin
   const goalPct = Math.min(100, Math.round((todayMin / goalMin) * 100))
-  const xp = computeXP(attempts)
+  const xp = computeXP(attempts) + (data?.flashXpBonus ?? 0)
   const xpInfo = xpProgress(xp)
 
   const days = daysUntil(profile?.exam_date ?? null)
@@ -245,6 +249,22 @@ export default function DashboardPage() {
           <Icon name="chevronR" size={14} color="rgba(255,255,255,0.5)" />
         </Link>
       </div>
+
+      {/* Quiz Global — visible dès qu'il y a des questions dans le pool */}
+      {!loading && flashQCount >= 5 && (
+        <div style={{ padding: '10px 20px 0' }}>
+          <Link href="/global-quiz" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: `linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)`, borderRadius: 16, textDecoration: 'none', boxShadow: '0 6px 20px rgba(124,58,237,0.28)' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="sparkle" size={18} color="#fff" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>Quiz Global</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{flashQCount} questions accumulées · tous modules</div>
+            </div>
+            <Icon name="chevronR" size={14} color="rgba(255,255,255,0.5)" />
+          </Link>
+        </div>
+      )}
 
       {/* Module progress */}
       <div style={{ padding: '20px 20px 0' }}>

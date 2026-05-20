@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { readFlashXP } from '@/lib/flash-store'
 
 type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number; pet_type: string | null }
 type Course = { id: string; module_id: string; title: string; page_count: number | null }
@@ -14,6 +15,7 @@ interface AppData {
   courses: Course[]
   attempts: Attempt[]
   todayMinutes: number
+  flashXpBonus: number
 }
 
 interface AppContextValue {
@@ -33,7 +35,7 @@ function readCache(): AppData | null {
     if (!raw) return null
     const { ts, data } = JSON.parse(raw)
     if (Date.now() - ts > CACHE_TTL) return null
-    return data as AppData
+    return { ...data, flashXpBonus: readFlashXP() } as AppData
   } catch { return null }
 }
 
@@ -71,6 +73,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       courses: coursesRes.data ?? [],
       attempts: attemptsRes.data ?? [],
       todayMinutes: todayRes.data?.minutes_studied ?? 0,
+      flashXpBonus: readFlashXP(),
     }
     writeCache(fresh)
     setData(fresh)

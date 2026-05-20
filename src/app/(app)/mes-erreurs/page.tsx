@@ -112,7 +112,7 @@ export default function MesErreursPage() {
 
   // ── QUIZ phase ────────────────────────────────────────────────
   if (phase === 'quiz' && questions.length > 0) {
-    const globalXp = computeXP(appData?.attempts ?? [])
+    const globalXp = computeXP(appData?.attempts ?? []) + (appData?.flashXpBonus ?? 0)
     const petLevel = xpToLevel(globalXp)
     return (
       <QuizClient

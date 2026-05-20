@@ -111,7 +111,7 @@ function QuizInner() {
     </div>
   )
 
-  const globalXp = computeXP(appData?.attempts ?? [])
+  const globalXp = computeXP(appData?.attempts ?? []) + (appData?.flashXpBonus ?? 0)
   const petLevel = xpToLevel(globalXp)
 
   return (
