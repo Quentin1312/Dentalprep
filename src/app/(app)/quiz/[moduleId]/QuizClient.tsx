@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType, PetState } from '@/components/pet/PetCompanion'
+import QuizSummary from './QuizSummary'
 
 type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; page_image_url?: string | null }
 
@@ -100,57 +101,18 @@ export default function QuizClient({
     }
   }
 
-  if (finished) {
-    const accuracy = total > 0 ? Math.round((scoreOk / total) * 100) : 0
-    const isGood = accuracy >= 75
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${isGood ? A.green : A.amber} 0%, ${isGood ? '#0E8C3E' : '#B45309'} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: `0 12px 32px ${isGood ? 'rgba(22,163,74,0.32)' : 'rgba(180,83,9,0.32)'}` }}>
-          <Icon name={isGood ? 'check' : 'target'} size={40} color="#fff" strokeWidth={2.5} />
-        </div>
-        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 4 }}>Quiz terminé !</div>
-        <div style={{ fontSize: 48, fontWeight: 700, color: isGood ? A.green : A.amber, letterSpacing: -1, lineHeight: 1, marginBottom: 6 }}>{accuracy}%</div>
-        <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 4 }}>
-          <span style={{ color: A.green, fontWeight: 600 }}>{scoreOk} bonnes</span>
-          {' · '}
-          <span style={{ color: A.red, fontWeight: 600 }}>{scoreBad} erreurs</span>
-          {' sur '}{total}
-        </div>
-        <div style={{ fontSize: 13, color: isGood ? A.green : A.amber, fontWeight: 600, marginBottom: 28 }}>
-          {isGood ? 'Excellent ! Module maîtrisé ✓' : 'Continuez à réviser !'}
-        </div>
-
-        {wrongQuestions.length > 0 && (
-          <div style={{ width: '100%', maxWidth: 320, background: A.amberSoft, borderRadius: 14, padding: '12px 14px', marginBottom: 16, textAlign: 'left', border: `0.5px solid ${A.amber}30` }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: A.amber, marginBottom: 8 }}>
-              {wrongQuestions.length} question{wrongQuestions.length > 1 ? 's' : ''} à retravailler
-            </div>
-            {wrongQuestions.map((wq, i) => (
-              <div key={wq.id} style={{ fontSize: 12, color: A.text, padding: '4px 0', borderTop: i > 0 ? `0.5px solid ${A.amber}30` : 'none', lineHeight: 1.3 }}>
-                {wq.question.length > 70 ? wq.question.slice(0, 70) + '…' : wq.question}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 }}>
-          {wrongQuestions.length > 0 && (
-            <button onClick={() => restart(wrongQuestions)} style={{ width: '100%', height: 50, borderRadius: 14, border: 'none', background: A.amber, color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Icon name="refresh" size={16} color="#fff" /> Refaire les erreurs ({wrongQuestions.length})
-            </button>
-          )}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => restart()} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
-              Recommencer
-            </button>
-            <button onClick={() => router.push(backHref ?? `/module/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-              {backHref ? 'Retour' : 'Retour module'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (finished) return (
+    <QuizSummary
+      scoreOk={scoreOk}
+      scoreBad={scoreBad}
+      total={total}
+      moduleId={moduleId}
+      wrongQuestions={wrongQuestions}
+      onRestart={() => restart()}
+      onRestartWrong={(qs) => restart(qs)}
+      backHref={backHref}
+    />
+  )
 
   const toReviewCount = mode === 'smart' ? questions.filter(q => {
     const s = attemptStats.get(q.id)
