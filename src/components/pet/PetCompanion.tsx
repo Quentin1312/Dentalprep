@@ -424,7 +424,7 @@ export default function PetCompanion({
             ? 'pet-shake 0.13s ease-in-out 5'
             : undefined,
           transform: `scale(${scale})`,
-          transformOrigin: 'bottom center',
+          transformOrigin: '0 0',
           filter: level >= 2
             ? `drop-shadow(0 0 ${Math.round(size * 0.12)}px ${glowColor})`
             : undefined,
