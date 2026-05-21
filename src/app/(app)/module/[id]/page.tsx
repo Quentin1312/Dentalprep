@@ -58,20 +58,11 @@ export default function ModulePage() {
     })
     const relevantCourseIds = c.map(course => course.id)
 
-    // Fetch questions by course_id to include cross-module fascicules
-    const { data: qq } = relevantCourseIds.length > 0
-      ? await supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id).in('course_id', relevantCourseIds)
-      : { data: [] }
-
-    const questionIds = (qq ?? []).map(q => q.id)
-
-    // Fetch attempts by question_id to capture attempts regardless of recorded module_id
-    const [{ data: a }, { data: atts }] = await (questionIds.length > 0
-      ? Promise.all([
-          supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).in('question_id', questionIds),
-          supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).in('question_id', questionIds),
-        ])
-      : Promise.resolve([{ data: [] }, { data: [] }]))
+    const [{ data: qq }, { data: a }, { data: atts }] = await Promise.all([
+      supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id).eq('module_id', mid),
+      supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
+      supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', mid),
+    ])
 
     setCourses(c)
     setFlashcardCount(f?.length ?? 0)
@@ -105,7 +96,7 @@ export default function ModulePage() {
       attemptedByCourse.set(cid, s)
     }
     const prog = new Map<string, { total: number; attempted: number }>()
-    for (const [cid, total] of qCountByCourse) prog.set(cid, { total, attempted: attemptedByCourse.get(cid)?.size ?? 0 })
+    for (const [cid, total] of qCountByCourse) prog.set(`${mid}:${cid}`, { total, attempted: attemptedByCourse.get(cid)?.size ?? 0 })
     setCourseProgress(prog)
 
     setLoading(false)

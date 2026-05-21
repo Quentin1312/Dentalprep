@@ -29,7 +29,8 @@ const SVG_W = 280 // largeur du canvas SVG (assez large pour le winding)
 export default function ModuleParcours({ moduleId, fascicules, courses, courseProgress }: Props) {
   const items = fascicules.map((f, i) => {
     const course = courses.find(c => fasciculeN(c.title) === f.n)
-    const prog: Progress = course ? (courseProgress.get(course.id) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
+    // Clé composée "moduleId:courseId" pour isoler la progression par module
+    const prog: Progress = course ? (courseProgress.get(`${moduleId}:${course.id}`) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
     const totalLessons = prog.total > 0 ? Math.ceil(prog.total / 10) : 0
     const completedLessons = Math.floor(prog.attempted / 10)
     const allDone = totalLessons > 0 && completedLessons >= totalLessons

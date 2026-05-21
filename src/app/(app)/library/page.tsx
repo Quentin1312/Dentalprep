@@ -31,25 +31,29 @@ export default function LibraryPage() {
   const globalUnlocked = flashQCount >= 5 && allModulesQuizzed
   const missingModules = moduleIds.filter(id => !attemptedModuleIds.has(id))
 
-  // Charge le compte de questions par cours pour calculer les leçons
+  // Charge le compte de questions par (module_id:course_id) pour les leçons par module
   const loadProgress = useCallback(async () => {
     if (!data?.userId) return
     const supabase = createClient()
-    const { data: qq } = await supabase.from('quiz_questions').select('id,course_id').eq('user_id', data.userId)
+    const { data: qq } = await supabase.from('quiz_questions').select('id,course_id,module_id').eq('user_id', data.userId)
     if (!qq) return
-    const questionToCourse = new Map(qq.map(q => [q.id as string, q.course_id as string]))
-    const qCountByCourse = new Map<string, number>()
-    for (const q of qq) qCountByCourse.set(q.course_id as string, (qCountByCourse.get(q.course_id as string) ?? 0) + 1)
-    const attemptedByCourse = new Map<string, Set<string>>()
+    // key = "moduleId:courseId"
+    const questionToKey = new Map(qq.map(q => [q.id as string, `${q.module_id}:${q.course_id}`]))
+    const qCountByKey = new Map<string, number>()
+    for (const q of qq) {
+      const key = `${q.module_id}:${q.course_id}`
+      qCountByKey.set(key, (qCountByKey.get(key) ?? 0) + 1)
+    }
+    const attemptedByKey = new Map<string, Set<string>>()
     for (const at of data.attempts ?? []) {
-      const cid = questionToCourse.get(at.question_id)
-      if (!cid) continue
-      const s = attemptedByCourse.get(cid) ?? new Set<string>()
+      const key = questionToKey.get(at.question_id)
+      if (!key) continue
+      const s = attemptedByKey.get(key) ?? new Set<string>()
       s.add(at.question_id)
-      attemptedByCourse.set(cid, s)
+      attemptedByKey.set(key, s)
     }
     const prog = new Map<string, { total: number; attempted: number }>()
-    for (const [cid, total] of qCountByCourse) prog.set(cid, { total, attempted: attemptedByCourse.get(cid)?.size ?? 0 })
+    for (const [key, total] of qCountByKey) prog.set(key, { total, attempted: attemptedByKey.get(key)?.size ?? 0 })
     setCourseProgress(prog)
   }, [data?.userId, data?.attempts])
 
@@ -135,9 +139,9 @@ export default function LibraryPage() {
               const isExpanded = expandedModule === m.id
               const allScanned = scannedCount === mFascicules.length && mFascicules.length > 0
 
-              // Compte des leçons faites/totales pour ce module
+              // Compte des leçons faites/totales pour ce module (clé "moduleId:courseId")
               const moduleLessons = mCourses.reduce((acc, c) => {
-                const p = courseProgress.get(c.id)
+                const p = courseProgress.get(`${m.id}:${c.id}`)
                 if (!p || p.total === 0) return acc
                 return {
                   total: acc.total + Math.ceil(p.total / 10),

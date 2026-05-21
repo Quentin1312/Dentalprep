@@ -106,7 +106,7 @@ function UploadInner() {
       const genRes = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId: course.id, moduleId }),
+        body: JSON.stringify({ courseId: course.id, moduleId, modules: fascicule.modules }),
       })
       if (!genRes.ok) {
         const detail = await genRes.json().catch(() => ({}))

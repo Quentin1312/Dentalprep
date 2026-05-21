@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& py -c \"import os; files = [f for f in os.listdir\\(r'C:\\\\Users\\\\quent\\\\Downloads'\\) if 'natomie' in f or 'natomie' in f.lower\\(\\)]; print\\(files\\)\")",
+      "PowerShell($env:PYTHONUTF8=1; & py -c \"import os; files = [f for f in os.listdir\\(r'C:\\\\Users\\\\quent\\\\Downloads'\\) if 'natomie' in f.lower\\(\\)]; print\\(files\\)\")"
+    ]
+  }
+}

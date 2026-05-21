@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import QuizClient from './QuizClient'
-import { MODULE_MAP, FASCICULES } from '@/lib/modules'
+import { MODULE_MAP } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import type { ModuleId } from '@/types/database'
 import { useAppData } from '@/lib/app-context'
@@ -51,62 +51,50 @@ function QuizInner() {
     if (!mod) { router.replace('/dashboard'); return }
     const supabase = createClient()
 
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+    supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
-
       supabase.from('profiles').select('pet_type').eq('id', user.id).single().then(({ data }) => {
         if (data?.pet_type) setPetType(data.pet_type)
       })
 
-      // Find course IDs for this module via fascicule-number matching (supports shared fascicules)
-      const mFasNums = new Set(FASCICULES.filter(f => f.modules.includes(moduleId as ModuleId)).map(f => f.n))
-      const { data: allCourses } = await supabase.from('courses').select('id,title').eq('user_id', user.id)
-      const relevantCourseIds = courseId
-        ? [courseId]
-        : (allCourses ?? []).filter(c => { const n = c.title.match(/Fascicule\s+(\d+)/i); return n && mFasNums.has(parseInt(n[1])) }).map(c => c.id)
+      let q = supabase.from('quiz_questions').select('*').eq('user_id', user.id).eq('module_id', moduleId as ModuleId)
+      if (courseId) q = q.eq('course_id', courseId)
 
-      if (relevantCourseIds.length === 0) { setLoading(false); return }
+      Promise.all([
+        q.order('created_at'),
+        supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', moduleId as ModuleId),
+      ]).then(([{ data: qs }, { data: atts }]) => {
+        const raw = qs ?? []
+        const stats = new Map<string, { ok: number; total: number }>()
+        for (const a of atts ?? [] as AttemptStat[]) {
+          const s = stats.get(a.question_id) ?? { ok: 0, total: 0 }
+          stats.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+        }
+        setAttemptStats(stats)
 
-      const { data: qs } = await supabase.from('quiz_questions').select('*').eq('user_id', user.id).in('course_id', relevantCourseIds).order('created_at')
-      const raw = qs ?? []
-
-      const questionIds = raw.map(q => q.id)
-      const { data: atts } = questionIds.length > 0
-        ? await supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).in('question_id', questionIds)
-        : { data: [] }
-
-      const stats = new Map<string, { ok: number; total: number }>()
-      for (const a of atts ?? [] as AttemptStat[]) {
-        const s = stats.get(a.question_id) ?? { ok: 0, total: 0 }
-        stats.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
-      }
-      setAttemptStats(stats)
-
-      let sorted = raw
-      if (mode === 'smart') {
-        sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
-        const toReview = sorted.filter(q => smartSort(q, stats) === 0)
-        const unseen = sorted.filter(q => smartSort(q, stats) === 1)
-        const improving = sorted.filter(q => smartSort(q, stats) === 2)
-        const mastered = sorted.filter(q => smartSort(q, stats) === 3)
-        sorted = [
-          ...toReview,
-          ...unseen.slice(0, Math.max(5, 20 - toReview.length)),
-          ...improving.slice(0, 5),
-          ...mastered.slice(0, 2),
-        ].slice(0, 30)
-        setQuestions(sorted)
-      } else {
-        const total = Math.ceil(sorted.length / LESSON_SIZE)
-        setTotalLessons(total || 1)
-        setQuestions(sorted.slice(lesson * LESSON_SIZE, (lesson + 1) * LESSON_SIZE))
-      }
-      setLoading(false)
-    }
-
-    load()
+        let sorted = raw
+        if (mode === 'smart') {
+          sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
+          const toReview = sorted.filter(q => smartSort(q, stats) === 0)
+          const unseen = sorted.filter(q => smartSort(q, stats) === 1)
+          const improving = sorted.filter(q => smartSort(q, stats) === 2)
+          const mastered = sorted.filter(q => smartSort(q, stats) === 3)
+          sorted = [
+            ...toReview,
+            ...unseen.slice(0, Math.max(5, 20 - toReview.length)),
+            ...improving.slice(0, 5),
+            ...mastered.slice(0, 2),
+          ].slice(0, 30)
+          setQuestions(sorted)
+        } else {
+          const total = Math.ceil(sorted.length / LESSON_SIZE)
+          setTotalLessons(total || 1)
+          setQuestions(sorted.slice(lesson * LESSON_SIZE, (lesson + 1) * LESSON_SIZE))
+        }
+        setLoading(false)
+      })
+    })
   }, [moduleId, courseId, mode, lesson, mod, router])
 
   const style = `@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`
