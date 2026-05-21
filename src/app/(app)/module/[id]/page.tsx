@@ -124,7 +124,10 @@ export default function ModulePage() {
 
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+      <style>{`
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(10,102,224,0.45)}50%{box-shadow:0 0 0 14px rgba(10,102,224,0)}}
+      `}</style>
 
       <div style={{ padding: '62px 20px 0' }}>
         <Link href="/library" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: A.textMuted, fontWeight: 500, textDecoration: 'none', marginBottom: 16 }}>
@@ -226,73 +229,127 @@ export default function ModulePage() {
         </div>
       </div>
 
-      {/* Fascicules du module */}
+      {/* Parcours */}
       <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 10 }}>Fascicules</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 20 }}>Parcours</div>
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><Skel h={66} /><Skel h={66} /></div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <Skel h={72} /><Skel h={40} /><Skel h={72} /><Skel h={40} />
+          </div>
         ) : (
-          <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,27,45,0.06)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             {mFascicules.map((f, fi) => {
               const course = courses.find(c => fasciculeN(c.title) === f.n)
-              const isLast = fi === mFascicules.length - 1
               const prog = course ? (courseProgress.get(course.id) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
               const totalLessons = prog.total > 0 ? Math.ceil(prog.total / 10) : 0
               const completedLessons = Math.floor(prog.attempted / 10)
-              const nextLesson = Math.min(completedLessons, Math.max(0, totalLessons - 1))
               const allDone = totalLessons > 0 && completedLessons >= totalLessons
-              const quizLabel = allDone ? 'Revoir' : completedLessons === 0 ? 'Commencer' : `Leçon ${completedLessons + 1}`
+              const isCurrent = !allDone && !!course && totalLessons > 0
+              const nextLesson = Math.min(completedLessons, Math.max(0, totalLessons - 1))
+
+              const prevCourse = fi > 0 ? courses.find(c => fasciculeN(c.title) === mFascicules[fi - 1].n) : null
+              const prevProg = prevCourse ? (courseProgress.get(prevCourse.id) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
+              const prevDone = prevProg.total > 0 && Math.floor(prevProg.attempted / 10) >= Math.ceil(prevProg.total / 10)
+
+              // Winding positions: 0 → droite → droite → 0 → gauche → gauche → 0 ...
+              const xOffsets = [0, 64, 64, 0, -64, -64]
+              const xOff = xOffsets[fi % xOffsets.length]
+              const prevXOff = fi > 0 ? xOffsets[(fi - 1) % xOffsets.length] : 0
+
+              const bg = allDone
+                ? `linear-gradient(145deg, #16A34A 0%, #0E8C3E 100%)`
+                : isCurrent
+                  ? `linear-gradient(145deg, ${A.primary} 0%, #0850B8 100%)`
+                  : '#EAECF0'
+
               return (
-                <div key={f.n} style={{ padding: '12px 14px', borderBottom: isLast ? 'none' : `0.5px solid ${A.border}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: course ? (allDone ? A.greenSoft : A.primarySoft) : '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: course ? (allDone ? A.green : A.primary) : A.textDim }}>{f.n}</span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
-                      {course
-                        ? <div style={{ fontSize: 11, color: allDone ? A.green : A.textMuted, marginTop: 1 }}>{totalLessons > 0 ? `${completedLessons}/${totalLessons} leçons` : `${course.page_count ?? 0} pages`}</div>
-                        : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>}
-                    </div>
+                <div key={f.n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                  {/* Connecteur */}
+                  {fi > 0 && (
+                    <div style={{
+                      width: 4, height: 44, borderRadius: 2,
+                      background: prevDone ? '#16A34A' : '#D1D5DB',
+                      transform: `translateX(${(prevXOff + xOff) / 2}px)`,
+                      marginBottom: 0,
+                    }} />
+                  )}
+                  {/* Nœud */}
+                  <div style={{ transform: `translateX(${xOff}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {course ? (
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <Link href={`/quiz/${id}?courseId=${course.id}&lesson=${nextLesson}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: allDone ? A.greenSoft : A.primarySoft, border: `0.5px solid ${allDone ? A.green : A.primary}20` }}>
-                        <Icon name="target" size={11} color={allDone ? A.green : A.primary} />
-                        <span style={{ fontSize: 11, fontWeight: 600, color: allDone ? A.green : A.primary }}>{quizLabel}</span>
-                      </Link>
-                      {confirmId === course.id ? (
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => setConfirmId(null)} style={{ padding: '5px 8px', borderRadius: 8, border: `0.5px solid ${A.border}`, background: A.bg, fontSize: 11, fontWeight: 600, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>✕</button>
-                          <button onClick={() => deleteCourse(course.id)} disabled={deletingId === course.id} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', background: A.red, fontSize: 11, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: A.font, opacity: deletingId === course.id ? 0.6 : 1 }}>
-                            {deletingId === course.id ? '…' : 'Sup.'}
-                          </button>
+                      <Link href={`/quiz/${id}?courseId=${course.id}&lesson=${nextLesson}`} style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          width: 76, height: 76, borderRadius: 38,
+                          background: bg,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: isCurrent
+                            ? '0 0 0 6px rgba(10,102,224,0.15), 0 6px 24px rgba(10,102,224,0.35)'
+                            : allDone
+                              ? '0 4px 16px rgba(22,163,74,0.35)'
+                              : '0 2px 8px rgba(0,0,0,0.1)',
+                          animation: isCurrent ? 'pulse-glow 2.4s ease-in-out infinite' : 'none',
+                          cursor: 'pointer',
+                        }}>
+                          {allDone
+                            ? <Icon name="check" size={32} color="#fff" strokeWidth={2.5} />
+                            : isCurrent
+                              ? <Icon name="bolt" size={30} color="#fff" />
+                              : <span style={{ fontSize: 20, fontWeight: 700, color: A.textMuted }}>{f.n}</span>
+                          }
                         </div>
-                      ) : (
-                        <button onClick={() => setConfirmId(course.id)} style={{ width: 28, height: 28, borderRadius: 8, background: '#FEF2F2', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                          <Icon name="trash" size={12} color={A.red} />
-                        </button>
+                      </Link>
+                    ) : (
+                      <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          width: 76, height: 76, borderRadius: 38,
+                          background: '#F3F4F6',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          border: `2.5px dashed #D1D5DB`,
+                          cursor: 'pointer',
+                        }}>
+                          <Icon name="camera" size={28} color="#9CA3AF" />
+                        </div>
+                      </Link>
+                    )}
+                    {/* Label */}
+                    <div style={{ marginTop: 10, textAlign: 'center', maxWidth: 130 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: A.text, lineHeight: 1.35 }}>{f.title}</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, marginTop: 3,
+                        color: allDone ? '#16A34A' : isCurrent ? A.primary : '#9CA3AF' }}>
+                        {allDone ? '✓ Terminé' : course ? (totalLessons > 0 ? `${completedLessons}/${totalLessons} leçons` : 'Chargement…') : 'Non scanné'}
+                      </div>
+                      {/* Mini dots sous le label */}
+                      {course && totalLessons > 1 && (
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 6 }}>
+                          {Array.from({ length: totalLessons }).map((_, i) => (
+                            <div key={i} style={{
+                              width: i === (allDone ? totalLessons - 1 : completedLessons) ? 14 : 6,
+                              height: 6, borderRadius: 3,
+                              background: i < completedLessons ? '#16A34A' : i === completedLessons && !allDone ? A.primary : '#E5E7EB',
+                              transition: 'all .3s',
+                            }} />
+                          ))}
+                        </div>
+                      )}
+                      {/* Supprimer */}
+                      {course && (
+                        <div style={{ marginTop: 8 }}>
+                          {confirmId === course.id ? (
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                              <button onClick={() => setConfirmId(null)} style={{ padding: '3px 8px', borderRadius: 6, border: `0.5px solid ${A.border}`, background: A.bg, fontSize: 11, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>✕</button>
+                              <button onClick={() => deleteCourse(course.id)} disabled={deletingId === course.id} style={{ padding: '3px 8px', borderRadius: 6, border: 'none', background: A.red, fontSize: 11, color: '#fff', cursor: 'pointer', fontFamily: A.font, opacity: deletingId === course.id ? 0.6 : 1 }}>
+                                {deletingId === course.id ? '…' : 'Supprimer'}
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setConfirmId(course.id)} style={{ fontSize: 10, color: '#D1D5DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font }}>
+                              supprimer
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                  ) : (
-                    <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}` }}>
-                      <Icon name="camera" size={11} color={A.textMuted} />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Scanner</span>
-                    </Link>
-                  )}
                   </div>
-                {course && totalLessons > 1 && (
-                  <div style={{ display: 'flex', gap: 5, marginTop: 8, paddingLeft: 38 }}>
-                    {Array.from({ length: totalLessons }).map((_, i) => (
-                      <div key={i} style={{
-                        width: i === (allDone ? totalLessons - 1 : completedLessons) ? 18 : 6,
-                        height: 6, borderRadius: 3,
-                        background: i < completedLessons ? A.green : i === completedLessons && !allDone ? A.primary : '#E1E5EC',
-                        transition: 'all .3s',
-                      }} />
-                    ))}
-                  </div>
-                )}
-              </div>
+                </div>
               )
             })}
           </div>
