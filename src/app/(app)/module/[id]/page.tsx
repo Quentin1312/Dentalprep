@@ -10,7 +10,7 @@ import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 import ModuleParcours from '@/components/library/ModuleParcours'
 
-type Course = { id: string; title: string; page_count: number | null }
+type Course = { id: string; title: string; page_count: number | null; module_id?: string }
 type QuizQuestion = { id: string; course_id: string }
 
 function fasciculeN(title: string): number | null {
@@ -43,15 +43,37 @@ export default function ModulePage() {
     if (!user) { router.replace('/auth/login'); return }
     const mid = id as ModuleId
 
-    const [{ data: c }, { data: f }, { data: a }, { data: qq }, { data: atts }] = await Promise.all([
-      supabase.from('courses').select('id,title,page_count').eq('user_id', user.id).eq('module_id', mid).order('created_at', { ascending: false }),
+    // Fetch all user courses (shared fascicules may have a different module_id)
+    const [{ data: allC }, { data: f }] = await Promise.all([
+      supabase.from('courses').select('id,title,page_count,module_id').eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.from('flashcards').select('id').eq('user_id', user.id).eq('module_id', mid),
-      supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
-      supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id).eq('module_id', mid),
-      supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', mid),
     ])
 
-    setCourses(c ?? [])
+    // Filter courses by fascicule-number match (handles shared fascicules)
+    const mFasNums = new Set(FASCICULES.filter(f => f.modules.includes(mid)).map(f => f.n))
+    const c = (allC ?? []).filter(course => {
+      if (course.module_id === mid) return true
+      const n = course.title.match(/Fascicule\s+(\d+)/i)
+      return n !== null && mFasNums.has(parseInt(n[1]))
+    })
+    const relevantCourseIds = c.map(course => course.id)
+
+    // Fetch questions by course_id to include cross-module fascicules
+    const { data: qq } = relevantCourseIds.length > 0
+      ? await supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id).in('course_id', relevantCourseIds)
+      : { data: [] }
+
+    const questionIds = (qq ?? []).map(q => q.id)
+
+    // Fetch attempts by question_id to capture attempts regardless of recorded module_id
+    const [{ data: a }, { data: atts }] = await (questionIds.length > 0
+      ? Promise.all([
+          supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).in('question_id', questionIds),
+          supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).in('question_id', questionIds),
+        ])
+      : Promise.resolve([{ data: [] }, { data: [] }]))
+
+    setCourses(c)
     setFlashcardCount(f?.length ?? 0)
     const att = a ?? []
     setTotalAttempts(att.length)

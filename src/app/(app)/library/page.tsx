@@ -125,7 +125,12 @@ export default function LibraryPage() {
             ))
           : MODULES.map(m => {
               const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
-              const mCourses = courses.filter(c => c.module_id === m.id)
+              const mFasNums = new Set(mFascicules.map(f => f.n))
+              const mCourses = courses.filter(c => {
+                if (c.module_id === m.id) return true
+                const n = c.title.match(/Fascicule\s+(\d+)/i)
+                return n !== null && mFasNums.has(parseInt(n[1]))
+              })
               const scannedCount = mFascicules.filter(f => mCourses.some(c => fasciculeN(c.title) === f.n)).length
               const isExpanded = expandedModule === m.id
               const allScanned = scannedCount === mFascicules.length && mFascicules.length > 0
