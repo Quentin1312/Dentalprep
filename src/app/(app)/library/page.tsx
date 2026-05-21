@@ -31,6 +31,15 @@ export default function LibraryPage() {
   const globalUnlocked = flashQCount >= 5 && allModulesQuizzed
   const missingModules = moduleIds.filter(id => !attemptedModuleIds.has(id))
 
+  // Accuracy par module depuis les tentatives du contexte
+  const accuracyByModule = new Map<string, number>()
+  const _stats = new Map<string, { ok: number; total: number }>()
+  for (const a of data?.attempts ?? []) {
+    const s = _stats.get(a.module_id) ?? { ok: 0, total: 0 }
+    _stats.set(a.module_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+  }
+  for (const [mid, s] of _stats) accuracyByModule.set(mid, Math.round(s.ok / s.total * 100))
+
   // Charge le compte de questions par (module_id:course_id) pour les leçons par module
   const loadProgress = useCallback(async () => {
     if (!data?.userId) return
@@ -186,6 +195,11 @@ export default function LibraryPage() {
                           <>
                             {scannedCount}/{mFascicules.length} fascicule{mFascicules.length > 1 ? 's' : ''}
                             {moduleLessons.total > 0 && ` · ${moduleLessons.done}/${moduleLessons.total} leçons`}
+                            {accuracyByModule.has(m.id) && (
+                              <span style={{ color: (accuracyByModule.get(m.id) ?? 0) >= 75 ? '#16A34A' : '#D97706', fontWeight: 600 }}>
+                                {` · ${accuracyByModule.get(m.id)}%`}
+                              </span>
+                            )}
                           </>
                         )}
                       </div>

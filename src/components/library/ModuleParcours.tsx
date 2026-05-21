@@ -23,7 +23,7 @@ function fasciculeN(title: string): number | null {
 // Pattern winding gauche-droite (largeur en px depuis le centre)
 const OFFSETS = [0, 56, 70, 56, 0, -56, -70, -56]
 const NODE_SIZE = 68
-const ROW_H = 132 // hauteur d'une ligne (cercle + label + espace)
+const ROW_H = 164 // hauteur d'une ligne (cercle + label + boutons + espace)
 const SVG_W = 280 // largeur du canvas SVG (assez large pour le winding)
 
 export default function ModuleParcours({ moduleId, fascicules, courses, courseProgress }: Props) {
@@ -109,12 +109,12 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
               </Link>
             )}
 
-            <div style={{ marginTop: 10, textAlign: 'center', maxWidth: 150 }}>
+            <div style={{ marginTop: 8, textAlign: 'center', maxWidth: 150 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: A.text, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {it.f.title}
               </div>
               <div style={{
-                fontSize: 10, fontWeight: 600, marginTop: 3,
+                fontSize: 10, fontWeight: 600, marginTop: 2,
                 color: it.allDone ? '#16A34A' : it.isCurrent ? A.primary : '#9CA3AF',
               }}>
                 {it.allDone
@@ -124,6 +124,25 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
                     : 'À scanner'}
               </div>
             </div>
+
+            {it.course && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                <Link
+                  href={`/quiz/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 20, background: A.primarySoft, border: `1px solid ${A.primary}22` }}
+                >
+                  <Icon name="bolt" size={11} color={A.primary} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: A.primary }}>Quiz</span>
+                </Link>
+                <Link
+                  href={`/flashcards/${moduleId}`}
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 20, background: '#F3E8FF', border: '1px solid #7C3AED22' }}
+                >
+                  <Icon name="cards" size={11} color="#7C3AED" />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED' }}>Cartes</span>
+                </Link>
+              </div>
+            )}
           </div>
         )
       })}
