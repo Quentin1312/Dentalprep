@@ -27,12 +27,8 @@ function FlashcardsInner() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
-      let q = supabase.from('flashcards').select('id,concept,definition').eq('user_id', user.id)
-      if (courseId) {
-        q = q.eq('course_id', courseId)
-      } else {
-        q = q.eq('module_id', moduleId as ModuleId)
-      }
+      let q = supabase.from('flashcards').select('id,concept,definition').eq('user_id', user.id).eq('module_id', moduleId as ModuleId)
+      if (courseId) q = q.eq('course_id', courseId)
       q.order('created_at').then(({ data }) => { setFlashcards(data ?? []); setLoading(false) })
     })
   }, [moduleId, courseId, router])
