@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES } from '@/lib/modules'
 import { A } from '@/lib/theme'
@@ -21,6 +21,7 @@ export default function LibraryPage() {
   const [flashQCount, setFlashQCount] = useState(0)
   const [courseProgress, setCourseProgress] = useState<Map<string, { total: number; attempted: number }>>(new Map())
   const [expandedModule, setExpandedModule] = useState<string | null>(null)
+  const initialExpandRef = useRef(false)
 
   useEffect(() => { setFlashQCount(readFlashQuestions().length) }, [])
 
@@ -54,12 +55,13 @@ export default function LibraryPage() {
 
   useEffect(() => { loadProgress() }, [loadProgress])
 
-  // Expand le premier module qui a des cours scannés par défaut
+  // Expand le premier module qui a des cours scannés — uniquement au premier chargement
   useEffect(() => {
-    if (expandedModule || !data) return
+    if (initialExpandRef.current || !data) return
+    initialExpandRef.current = true
     const firstWithCourses = MODULES.find(m => courses.some(c => c.module_id === m.id))
     if (firstWithCourses) setExpandedModule(firstWithCourses.id)
-  }, [data, courses, expandedModule])
+  }, [data, courses])
 
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
