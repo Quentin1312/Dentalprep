@@ -11,6 +11,7 @@ import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
 type Course = { id: string; title: string; page_count: number | null }
+type QuizQuestion = { id: string; course_id: string }
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -31,6 +32,7 @@ export default function ModulePage() {
   const [accuracy, setAccuracy] = useState<number | null>(null)
   const [totalAttempts, setTotalAttempts] = useState(0)
   const [toReviewCount, setToReviewCount] = useState(0)
+  const [courseProgress, setCourseProgress] = useState<Map<string, { total: number; attempted: number }>>(new Map())
   const [loading, setLoading] = useState(true)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -48,7 +50,7 @@ export default function ModulePage() {
       supabase.from('courses').select('id,title,page_count').eq('user_id', user.id).eq('module_id', mid).order('created_at', { ascending: false }),
       supabase.from('flashcards').select('id').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
-      supabase.from('quiz_questions').select('id').eq('user_id', user.id).eq('module_id', mid),
+      supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', mid),
     ])
 
@@ -64,11 +66,28 @@ export default function ModulePage() {
       const s = statsByQ.get(at.question_id) ?? { ok: 0, total: 0 }
       statsByQ.set(at.question_id, { ok: s.ok + (at.is_correct ? 1 : 0), total: s.total + 1 })
     }
-    const toReview = (qq ?? []).filter(q => {
+    const qqData = (qq ?? []) as QuizQuestion[]
+    const toReview = qqData.filter(q => {
       const s = statsByQ.get(q.id)
       return !s || s.total === 0 || s.ok / s.total < 0.6
     }).length
     setToReviewCount(toReview)
+
+    // Calcul progression leçons par cours
+    const questionToCourse = new Map(qqData.map(q => [q.id, q.course_id]))
+    const qCountByCourse = new Map<string, number>()
+    for (const q of qqData) qCountByCourse.set(q.course_id, (qCountByCourse.get(q.course_id) ?? 0) + 1)
+    const attemptedByCourse = new Map<string, Set<string>>()
+    for (const at of atts ?? []) {
+      const cid = questionToCourse.get(at.question_id)
+      if (!cid) continue
+      const s = attemptedByCourse.get(cid) ?? new Set<string>()
+      s.add(at.question_id)
+      attemptedByCourse.set(cid, s)
+    }
+    const prog = new Map<string, { total: number; attempted: number }>()
+    for (const [cid, total] of qCountByCourse) prog.set(cid, { total, attempted: attemptedByCourse.get(cid)?.size ?? 0 })
+    setCourseProgress(prog)
 
     setLoading(false)
   }, [id, router])
@@ -217,22 +236,29 @@ export default function ModulePage() {
             {mFascicules.map((f, fi) => {
               const course = courses.find(c => fasciculeN(c.title) === f.n)
               const isLast = fi === mFascicules.length - 1
+              const prog = course ? (courseProgress.get(course.id) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
+              const totalLessons = prog.total > 0 ? Math.ceil(prog.total / 10) : 0
+              const completedLessons = Math.floor(prog.attempted / 10)
+              const nextLesson = Math.min(completedLessons, Math.max(0, totalLessons - 1))
+              const allDone = totalLessons > 0 && completedLessons >= totalLessons
+              const quizLabel = allDone ? 'Revoir' : completedLessons === 0 ? 'Commencer' : `Leçon ${completedLessons + 1}`
               return (
-                <div key={f.n} style={{ padding: '12px 14px', borderBottom: isLast ? 'none' : `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: course ? A.greenSoft : '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: course ? A.green : A.textDim }}>{f.n}</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
-                    {course
-                      ? <div style={{ fontSize: 11, color: A.green, marginTop: 1 }}>{course.page_count ?? 0} pages · scanné</div>
-                      : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>}
-                  </div>
-                  {course ? (
+                <div key={f.n} style={{ padding: '12px 14px', borderBottom: isLast ? 'none' : `0.5px solid ${A.border}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: course ? (allDone ? A.greenSoft : A.primarySoft) : '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: course ? (allDone ? A.green : A.primary) : A.textDim }}>{f.n}</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
+                      {course
+                        ? <div style={{ fontSize: 11, color: allDone ? A.green : A.textMuted, marginTop: 1 }}>{totalLessons > 0 ? `${completedLessons}/${totalLessons} leçons` : `${course.page_count ?? 0} pages`}</div>
+                        : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>}
+                    </div>
+                    {course ? (
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <Link href={`/quiz/${id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: A.primarySoft, border: `0.5px solid ${A.primary}20` }}>
-                        <Icon name="target" size={11} color={A.primary} />
-                        <span style={{ fontSize: 11, fontWeight: 600, color: A.primary }}>Quiz</span>
+                      <Link href={`/quiz/${id}?courseId=${course.id}&lesson=${nextLesson}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: allDone ? A.greenSoft : A.primarySoft, border: `0.5px solid ${allDone ? A.green : A.primary}20` }}>
+                        <Icon name="target" size={11} color={allDone ? A.green : A.primary} />
+                        <span style={{ fontSize: 11, fontWeight: 600, color: allDone ? A.green : A.primary }}>{quizLabel}</span>
                       </Link>
                       {confirmId === course.id ? (
                         <div style={{ display: 'flex', gap: 4 }}>
@@ -253,7 +279,20 @@ export default function ModulePage() {
                       <span style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Scanner</span>
                     </Link>
                   )}
-                </div>
+                  </div>
+                {course && totalLessons > 1 && (
+                  <div style={{ display: 'flex', gap: 5, marginTop: 8, paddingLeft: 38 }}>
+                    {Array.from({ length: totalLessons }).map((_, i) => (
+                      <div key={i} style={{
+                        width: i === (allDone ? totalLessons - 1 : completedLessons) ? 18 : 6,
+                        height: 6, borderRadius: 3,
+                        background: i < completedLessons ? A.green : i === completedLessons && !allDone ? A.primary : '#E1E5EC',
+                        transition: 'all .3s',
+                      }} />
+                    ))}
+                  </div>
+                )}
+              </div>
               )
             })}
           </div>

@@ -49,6 +49,9 @@ export default function QuizSummary({
   onRestart,
   onRestartWrong,
   backHref,
+  lesson,
+  totalLessons,
+  nextLessonHref,
 }: {
   scoreOk: number
   scoreBad: number
@@ -58,6 +61,9 @@ export default function QuizSummary({
   onRestart: () => void
   onRestartWrong: (qs: Question[]) => void
   backHref?: string
+  lesson?: number
+  totalLessons?: number
+  nextLessonHref?: string
 }) {
   const router = useRouter()
   const accuracy = total > 0 ? Math.round((scoreOk / total) * 100) : 0
@@ -71,6 +77,22 @@ export default function QuizSummary({
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       padding: '52px 20px 40px', overflowY: 'auto',
     }}>
+
+      {/* Dots de progression leçons */}
+      {totalLessons !== undefined && lesson !== undefined && totalLessons > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
+          {Array.from({ length: totalLessons }).map((_, i) => (
+            <div key={i} style={{
+              width: i === lesson ? 22 : 8, height: 8, borderRadius: 4,
+              background: i < lesson ? A.green : i === lesson ? A.primary : '#E1E5EC',
+              transition: 'all .3s',
+            }} />
+          ))}
+          <div style={{ fontSize: 12, fontWeight: 600, color: A.textMuted, marginLeft: 4 }}>
+            {lesson + 1}/{totalLessons}
+          </div>
+        </div>
+      )}
 
       {/* Companion + bulle */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginBottom: 20 }}>
@@ -156,6 +178,20 @@ export default function QuizSummary({
             Refaire les erreurs ({wrongQuestions.length})
           </button>
         )}
+        {nextLessonHref && (
+          <button
+            onClick={() => router.push(nextLessonHref)}
+            style={{
+              height: 54, borderRadius: 14, border: 'none',
+              background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
+              color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              boxShadow: '0 6px 20px rgba(10,102,224,0.35)',
+            }}
+          >
+            Leçon {(lesson ?? 0) + 2}/{totalLessons} →
+          </button>
+        )}
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={onRestart}
@@ -171,13 +207,15 @@ export default function QuizSummary({
           <button
             onClick={() => router.push(backHref ?? `/module/${moduleId}`)}
             style={{
-              flex: 1, height: 50, borderRadius: 14, border: 'none',
-              background: A.primary, color: '#fff',
+              flex: 1, height: 50, borderRadius: 14,
+              background: nextLessonHref ? A.surface : A.primary,
+              border: nextLessonHref ? `0.5px solid ${A.borderStrong}` : 'none',
+              color: nextLessonHref ? A.text : '#fff',
               fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(10,102,224,0.28)',
+              boxShadow: nextLessonHref ? 'none' : '0 4px 14px rgba(10,102,224,0.28)',
             }}
           >
-            {backHref ? 'Retour' : 'Retour module'}
+            {nextLessonHref ? 'Fin pour aujourd\'hui' : 'Retour module'}
           </button>
         </div>
       </div>

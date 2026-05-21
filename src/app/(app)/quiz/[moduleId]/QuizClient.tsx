@@ -24,6 +24,9 @@ export default function QuizClient({
   level = 1,
   backHref,
   headerLabel,
+  lesson,
+  totalLessons,
+  nextLessonHref,
 }: {
   questions: Question[]
   moduleId: string
@@ -34,6 +37,9 @@ export default function QuizClient({
   level?: number
   backHref?: string
   headerLabel?: string
+  lesson?: number
+  totalLessons?: number
+  nextLessonHref?: string
 }) {
   const router = useRouter()
   const { refresh } = useAppData()
@@ -111,6 +117,9 @@ export default function QuizClient({
       onRestart={() => restart()}
       onRestartWrong={(qs) => restart(qs)}
       backHref={backHref}
+      lesson={lesson}
+      totalLessons={totalLessons}
+      nextLessonHref={nextLessonHref}
     />
   )
 
@@ -178,12 +187,14 @@ export default function QuizClient({
         <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 }}>
           Question {idx + 1} · {headerLabel ?? moduleId}
         </div>
+
+        <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.3, marginBottom: q.page_image_url ? 14 : 24 }}>{q.question}</div>
+
         {q.page_image_url && (
-          <div style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', border: `0.5px solid ${A.border}` }}>
-            <img src={q.page_image_url} alt="Schéma" style={{ width: '100%', display: 'block', maxHeight: 280, objectFit: 'contain', background: '#fff' }} />
+          <div style={{ marginBottom: 18, borderRadius: 12, overflow: 'hidden', border: `0.5px solid ${A.border}`, background: '#fff', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={q.page_image_url} alt="Schéma" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           </div>
         )}
-        <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.3, marginBottom: 24 }}>{q.question}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {choices.map((c, i) => {

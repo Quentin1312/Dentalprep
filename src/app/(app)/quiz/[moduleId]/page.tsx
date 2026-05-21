@@ -33,8 +33,12 @@ function QuizInner() {
 
   const courseId = searchParams.get('courseId') ?? null
   const mode = searchParams.get('mode') ?? 'normal' // 'normal' | 'smart'
+  const lesson = parseInt(searchParams.get('lesson') ?? '0', 10)
+
+  const LESSON_SIZE = 10
 
   const [questions, setQuestions] = useState<Question[] | null>(null)
+  const [totalLessons, setTotalLessons] = useState(1)
   const [attemptStats, setAttemptStats] = useState<Map<string, { ok: number; total: number }>>(new Map())
   const [userId, setUserId] = useState<string | null>(null)
   const [petType, setPetType] = useState<string>('cat')
@@ -71,25 +75,26 @@ function QuizInner() {
         let sorted = raw
         if (mode === 'smart') {
           sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
-          // Cap à 25 questions, mais prendre au moins toutes les questions à revoir
           const toReview = sorted.filter(q => smartSort(q, stats) === 0)
           const unseen = sorted.filter(q => smartSort(q, stats) === 1)
           const improving = sorted.filter(q => smartSort(q, stats) === 2)
           const mastered = sorted.filter(q => smartSort(q, stats) === 3)
-          // Priorité: toutes les erreurs + quelques nouvelles + quelques améliorations
           sorted = [
             ...toReview,
             ...unseen.slice(0, Math.max(5, 20 - toReview.length)),
             ...improving.slice(0, 5),
             ...mastered.slice(0, 2),
           ].slice(0, 30)
+          setQuestions(sorted)
+        } else {
+          const total = Math.ceil(sorted.length / LESSON_SIZE)
+          setTotalLessons(total || 1)
+          setQuestions(sorted.slice(lesson * LESSON_SIZE, (lesson + 1) * LESSON_SIZE))
         }
-
-        setQuestions(sorted)
         setLoading(false)
       })
     })
-  }, [moduleId, courseId, mode, mod, router])
+  }, [moduleId, courseId, mode, lesson, mod, router])
 
   const style = `@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`
 
@@ -114,6 +119,10 @@ function QuizInner() {
   const globalXp = computeXP(appData?.attempts ?? []) + (appData?.flashXpBonus ?? 0)
   const petLevel = xpToLevel(globalXp)
 
+  const nextLessonHref = mode !== 'smart' && lesson + 1 < totalLessons
+    ? `/quiz/${moduleId}?${courseId ? `courseId=${courseId}&` : ''}lesson=${lesson + 1}`
+    : undefined
+
   return (
     <QuizClient
       questions={questions}
@@ -123,6 +132,11 @@ function QuizInner() {
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
+      lesson={mode !== 'smart' ? lesson : undefined}
+      totalLessons={mode !== 'smart' ? totalLessons : undefined}
+      nextLessonHref={nextLessonHref}
+      backHref={`/module/${moduleId}`}
+      headerLabel={mode !== 'smart' ? `Leçon ${lesson + 1}/${totalLessons}` : 'Quiz intelligent'}
     />
   )
 }
