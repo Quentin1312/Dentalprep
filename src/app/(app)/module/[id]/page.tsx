@@ -5,10 +5,10 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { MODULE_MAP, FASCICULES } from '@/lib/modules'
-import { useAppData } from '@/lib/app-context'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
+import ModuleParcours from '@/components/library/ModuleParcours'
 
 type Course = { id: string; title: string; page_count: number | null }
 type QuizQuestion = { id: string; course_id: string }
@@ -25,7 +25,6 @@ function Skel({ h }: { h: number }) {
 export default function ModulePage() {
   const { id } = useParams() as { id: string }
   const router = useRouter()
-  const { data: appData, refresh } = useAppData()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [flashcardCount, setFlashcardCount] = useState(0)
@@ -34,8 +33,6 @@ export default function ModulePage() {
   const [toReviewCount, setToReviewCount] = useState(0)
   const [courseProgress, setCourseProgress] = useState<Map<string, { total: number; attempted: number }>>(new Map())
   const [loading, setLoading] = useState(true)
-  const [confirmId, setConfirmId] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const mod = MODULE_MAP[id as ModuleId]
   const mFascicules = FASCICULES.filter(f => f.modules.includes(id as ModuleId))
@@ -97,22 +94,6 @@ export default function ModulePage() {
     load()
   }, [mod, load, router])
 
-  async function deleteCourse(courseId: string) {
-    if (!appData) return
-    setDeletingId(courseId)
-    const supabase = createClient()
-    try {
-      const { data: files } = await supabase.storage.from('course-images').list(`${appData.userId}/${courseId}`)
-      if (files?.length) {
-        await supabase.storage.from('course-images').remove(files.map(f => `${appData.userId}/${courseId}/${f.name}`))
-      }
-    } catch {}
-    await supabase.from('courses').delete().eq('id', courseId)
-    setCourses(prev => prev.filter(c => c.id !== courseId))
-    setDeletingId(null)
-    setConfirmId(null)
-    refresh()
-  }
 
   if (!mod) return null
 
@@ -237,122 +218,12 @@ export default function ModulePage() {
             <Skel h={72} /><Skel h={40} /><Skel h={72} /><Skel h={40} />
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {mFascicules.map((f, fi) => {
-              const course = courses.find(c => fasciculeN(c.title) === f.n)
-              const prog = course ? (courseProgress.get(course.id) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
-              const totalLessons = prog.total > 0 ? Math.ceil(prog.total / 10) : 0
-              const completedLessons = Math.floor(prog.attempted / 10)
-              const allDone = totalLessons > 0 && completedLessons >= totalLessons
-              const isCurrent = !allDone && !!course && totalLessons > 0
-              const nextLesson = Math.min(completedLessons, Math.max(0, totalLessons - 1))
-
-              const prevCourse = fi > 0 ? courses.find(c => fasciculeN(c.title) === mFascicules[fi - 1].n) : null
-              const prevProg = prevCourse ? (courseProgress.get(prevCourse.id) ?? { total: 0, attempted: 0 }) : { total: 0, attempted: 0 }
-              const prevDone = prevProg.total > 0 && Math.floor(prevProg.attempted / 10) >= Math.ceil(prevProg.total / 10)
-
-              // Winding positions: 0 → droite → droite → 0 → gauche → gauche → 0 ...
-              const xOffsets = [0, 64, 64, 0, -64, -64]
-              const xOff = xOffsets[fi % xOffsets.length]
-              const prevXOff = fi > 0 ? xOffsets[(fi - 1) % xOffsets.length] : 0
-
-              const bg = allDone
-                ? `linear-gradient(145deg, #16A34A 0%, #0E8C3E 100%)`
-                : isCurrent
-                  ? `linear-gradient(145deg, ${A.primary} 0%, #0850B8 100%)`
-                  : '#EAECF0'
-
-              return (
-                <div key={f.n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                  {/* Connecteur */}
-                  {fi > 0 && (
-                    <div style={{
-                      width: 4, height: 44, borderRadius: 2,
-                      background: prevDone ? '#16A34A' : '#D1D5DB',
-                      transform: `translateX(${(prevXOff + xOff) / 2}px)`,
-                      marginBottom: 0,
-                    }} />
-                  )}
-                  {/* Nœud */}
-                  <div style={{ transform: `translateX(${xOff}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {course ? (
-                      <Link href={`/quiz/${id}?courseId=${course.id}&lesson=${nextLesson}`} style={{ textDecoration: 'none' }}>
-                        <div style={{
-                          width: 76, height: 76, borderRadius: 38,
-                          background: bg,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: isCurrent
-                            ? '0 0 0 6px rgba(10,102,224,0.15), 0 6px 24px rgba(10,102,224,0.35)'
-                            : allDone
-                              ? '0 4px 16px rgba(22,163,74,0.35)'
-                              : '0 2px 8px rgba(0,0,0,0.1)',
-                          animation: isCurrent ? 'pulse-glow 2.4s ease-in-out infinite' : 'none',
-                          cursor: 'pointer',
-                        }}>
-                          {allDone
-                            ? <Icon name="check" size={32} color="#fff" strokeWidth={2.5} />
-                            : isCurrent
-                              ? <Icon name="bolt" size={30} color="#fff" />
-                              : <span style={{ fontSize: 20, fontWeight: 700, color: A.textMuted }}>{f.n}</span>
-                          }
-                        </div>
-                      </Link>
-                    ) : (
-                      <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none' }}>
-                        <div style={{
-                          width: 76, height: 76, borderRadius: 38,
-                          background: '#F3F4F6',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: `2.5px dashed #D1D5DB`,
-                          cursor: 'pointer',
-                        }}>
-                          <Icon name="camera" size={28} color="#9CA3AF" />
-                        </div>
-                      </Link>
-                    )}
-                    {/* Label */}
-                    <div style={{ marginTop: 10, textAlign: 'center', maxWidth: 130 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: A.text, lineHeight: 1.35 }}>{f.title}</div>
-                      <div style={{ fontSize: 11, fontWeight: 600, marginTop: 3,
-                        color: allDone ? '#16A34A' : isCurrent ? A.primary : '#9CA3AF' }}>
-                        {allDone ? '✓ Terminé' : course ? (totalLessons > 0 ? `${completedLessons}/${totalLessons} leçons` : 'Chargement…') : 'Non scanné'}
-                      </div>
-                      {/* Mini dots sous le label */}
-                      {course && totalLessons > 1 && (
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 6 }}>
-                          {Array.from({ length: totalLessons }).map((_, i) => (
-                            <div key={i} style={{
-                              width: i === (allDone ? totalLessons - 1 : completedLessons) ? 14 : 6,
-                              height: 6, borderRadius: 3,
-                              background: i < completedLessons ? '#16A34A' : i === completedLessons && !allDone ? A.primary : '#E5E7EB',
-                              transition: 'all .3s',
-                            }} />
-                          ))}
-                        </div>
-                      )}
-                      {/* Supprimer */}
-                      {course && (
-                        <div style={{ marginTop: 8 }}>
-                          {confirmId === course.id ? (
-                            <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                              <button onClick={() => setConfirmId(null)} style={{ padding: '3px 8px', borderRadius: 6, border: `0.5px solid ${A.border}`, background: A.bg, fontSize: 11, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>✕</button>
-                              <button onClick={() => deleteCourse(course.id)} disabled={deletingId === course.id} style={{ padding: '3px 8px', borderRadius: 6, border: 'none', background: A.red, fontSize: 11, color: '#fff', cursor: 'pointer', fontFamily: A.font, opacity: deletingId === course.id ? 0.6 : 1 }}>
-                                {deletingId === course.id ? '…' : 'Supprimer'}
-                              </button>
-                            </div>
-                          ) : (
-                            <button onClick={() => setConfirmId(course.id)} style={{ fontSize: 10, color: '#D1D5DB', background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font }}>
-                              supprimer
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <ModuleParcours
+            moduleId={id}
+            fascicules={mFascicules}
+            courses={courses}
+            courseProgress={courseProgress}
+          />
         )}
       </div>
     </div>

@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import { readFlashQuestions } from '@/lib/flash-store'
+import { createClient } from '@/lib/supabase/client'
+import ModuleParcours from '@/components/library/ModuleParcours'
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -17,6 +19,9 @@ export default function LibraryPage() {
   const { data, loading } = useAppData()
   const courses = data?.courses ?? []
   const [flashQCount, setFlashQCount] = useState(0)
+  const [courseProgress, setCourseProgress] = useState<Map<string, { total: number; attempted: number }>>(new Map())
+  const [expandedModule, setExpandedModule] = useState<string | null>(null)
+
   useEffect(() => { setFlashQCount(readFlashQuestions().length) }, [])
 
   const moduleIds = [...new Set(courses.map(c => c.module_id))]
@@ -25,14 +30,49 @@ export default function LibraryPage() {
   const globalUnlocked = flashQCount >= 5 && allModulesQuizzed
   const missingModules = moduleIds.filter(id => !attemptedModuleIds.has(id))
 
+  // Charge le compte de questions par cours pour calculer les leçons
+  const loadProgress = useCallback(async () => {
+    if (!data?.userId) return
+    const supabase = createClient()
+    const { data: qq } = await supabase.from('quiz_questions').select('id,course_id').eq('user_id', data.userId)
+    if (!qq) return
+    const questionToCourse = new Map(qq.map(q => [q.id as string, q.course_id as string]))
+    const qCountByCourse = new Map<string, number>()
+    for (const q of qq) qCountByCourse.set(q.course_id as string, (qCountByCourse.get(q.course_id as string) ?? 0) + 1)
+    const attemptedByCourse = new Map<string, Set<string>>()
+    for (const at of data.attempts ?? []) {
+      const cid = questionToCourse.get(at.question_id)
+      if (!cid) continue
+      const s = attemptedByCourse.get(cid) ?? new Set<string>()
+      s.add(at.question_id)
+      attemptedByCourse.set(cid, s)
+    }
+    const prog = new Map<string, { total: number; attempted: number }>()
+    for (const [cid, total] of qCountByCourse) prog.set(cid, { total, attempted: attemptedByCourse.get(cid)?.size ?? 0 })
+    setCourseProgress(prog)
+  }, [data?.userId, data?.attempts])
+
+  useEffect(() => { loadProgress() }, [loadProgress])
+
+  // Expand le premier module qui a des cours scannés par défaut
+  useEffect(() => {
+    if (expandedModule || !data) return
+    const firstWithCourses = MODULES.find(m => courses.some(c => c.module_id === m.id))
+    if (firstWithCourses) setExpandedModule(firstWithCourses.id)
+  }, [data, courses, expandedModule])
+
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+      <style>{`
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes parcours-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+        @keyframes parcours-fade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
 
       <div style={{ padding: '62px 20px 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 13, color: A.textMuted, fontWeight: 500 }}>Bibliothèque</div>
-          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>Mes fascicules</div>
+          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>Mon parcours</div>
         </div>
         <Link href="/quick-scan" style={{ width: 44, height: 44, borderRadius: 14, background: A.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
           <Icon name="plus" size={22} color="#fff" strokeWidth={2.2} />
@@ -75,84 +115,107 @@ export default function LibraryPage() {
         </div>
       </Link>
 
-      <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Modules avec parcours accordéon */}
+      <div style={{ padding: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {loading && !data
-          ? [1,2,3,4,5,6].map(i => (
-              <div key={i} style={{ height: 100, borderRadius: 16, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+          ? [1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} style={{ height: 76, borderRadius: 18, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
             ))
           : MODULES.map(m => {
               const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
               const mCourses = courses.filter(c => c.module_id === m.id)
               const scannedCount = mFascicules.filter(f => mCourses.some(c => fasciculeN(c.title) === f.n)).length
+              const isExpanded = expandedModule === m.id
+              const allScanned = scannedCount === mFascicules.length && mFascicules.length > 0
+
+              // Compte des leçons faites/totales pour ce module
+              const moduleLessons = mCourses.reduce((acc, c) => {
+                const p = courseProgress.get(c.id)
+                if (!p || p.total === 0) return acc
+                return {
+                  total: acc.total + Math.ceil(p.total / 10),
+                  done: acc.done + Math.floor(p.attempted / 10),
+                }
+              }, { total: 0, done: 0 })
 
               return (
-                <div key={m.id} style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, overflow: 'hidden', boxShadow: '0 1px 0 rgba(15,27,45,0.04),0 1px 3px rgba(15,27,45,0.06)' }}>
-                  {/* Module header */}
-                  <Link href={`/module/${m.id}`} style={{ textDecoration: 'none', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `0.5px solid ${A.border}` }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: A.primary }}>{m.id}</span>
+                <div key={m.id} style={{
+                  background: A.surface,
+                  borderRadius: 20,
+                  border: `0.5px solid ${A.border}`,
+                  overflow: 'hidden',
+                  boxShadow: isExpanded ? '0 8px 32px rgba(15,27,45,0.08)' : '0 1px 3px rgba(15,27,45,0.05)',
+                  transition: 'box-shadow .3s',
+                }}>
+                  {/* Header cliquable */}
+                  <button
+                    onClick={() => setExpandedModule(isExpanded ? null : m.id)}
+                    style={{
+                      width: '100%', padding: '16px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                      background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: A.font,
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 14,
+                      background: allScanned
+                        ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)'
+                        : `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      boxShadow: allScanned
+                        ? '0 4px 12px rgba(22,163,74,0.3)'
+                        : '0 4px 12px rgba(10,102,224,0.3)',
+                    }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>{m.id}</span>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
-                      <div style={{ fontSize: 11, color: A.textMuted, marginTop: 1 }}>{scannedCount}/{mFascicules.length} scanné{scannedCount > 1 ? 's' : ''}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
+                      <div style={{ fontSize: 11, color: A.textMuted, marginTop: 2 }}>
+                        {mFascicules.length > 0 && (
+                          <>
+                            {scannedCount}/{mFascicules.length} fascicule{mFascicules.length > 1 ? 's' : ''}
+                            {moduleLessons.total > 0 && ` · ${moduleLessons.done}/${moduleLessons.total} leçons`}
+                          </>
+                        )}
+                      </div>
                     </div>
-                    {scannedCount === mFascicules.length && mFascicules.length > 0 && (
+                    {allScanned && (
                       <Link
                         href={`/quiz/${m.id}?mode=smart`}
                         onClick={e => e.stopPropagation()}
-                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: A.primarySoft, border: `1px solid ${A.primary}30`, flexShrink: 0 }}
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 10, background: A.primarySoft, border: `1px solid ${A.primary}30`, flexShrink: 0, marginRight: 6 }}
                       >
-                        <Icon name="bolt" size={11} color={A.primary} />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: A.primary }}>Quiz complet</span>
+                        <Icon name="bolt" size={12} color={A.primary} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: A.primary }}>Smart</span>
                       </Link>
                     )}
-                    {scannedCount < mFascicules.length && <Icon name="chevronR" size={14} color={A.textDim} />}
-                  </Link>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 10,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform .25s',
+                      background: '#F3F4F6',
+                      flexShrink: 0,
+                    }}>
+                      <Icon name="chevronD" size={16} color={A.textMuted} />
+                    </div>
+                  </button>
 
-                  {/* Fascicules */}
-                  {mFascicules.map((f, fi) => {
-                    const course = mCourses.find(c => fasciculeN(c.title) === f.n)
-                    const isLast = fi === mFascicules.length - 1
-
-                    return (
-                      <div key={f.n} style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: isLast ? 'none' : `0.5px solid ${A.border}` }}>
-                        <div style={{ width: 24, height: 24, borderRadius: 7, background: course ? A.greenSoft : '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: course ? A.green : A.textDim }}>{f.n}</span>
-                        </div>
-
-                        {/* Title cliquable → détail fascicule */}
-                        {course ? (
-                          <Link href={`/fascicule/${course.id}`} style={{ flex: 1, minWidth: 0, textDecoration: 'none' }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
-                            <div style={{ fontSize: 11, color: A.green, marginTop: 1 }}>{course.page_count ?? 0} page{(course.page_count ?? 0) > 1 ? 's' : ''} · scanné</div>
-                          </Link>
-                        ) : (
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
-                            <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        {course ? (
-                          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                            <Link href={`/quiz/${m.id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: A.primarySoft, border: `0.5px solid ${A.primary}20` }}>
-                              <Icon name="target" size={11} color={A.primary} />
-                              <span style={{ fontSize: 11, fontWeight: 600, color: A.primary }}>Quiz</span>
-                            </Link>
-                            <Link href={`/fascicule/${course.id}`} style={{ textDecoration: 'none', width: 28, height: 28, borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Icon name="chevronR" size={12} color={A.textMuted} />
-                            </Link>
-                          </div>
-                        ) : (
-                          <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}` }}>
-                            <Icon name="camera" size={11} color={A.textMuted} />
-                            <span style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Scanner</span>
-                          </Link>
-                        )}
-                      </div>
-                    )
-                  })}
+                  {/* Parcours déployable */}
+                  {isExpanded && (
+                    <div style={{
+                      padding: '20px 16px 28px',
+                      borderTop: `0.5px solid ${A.border}`,
+                      animation: 'parcours-fade .3s ease-out',
+                    }}>
+                      <ModuleParcours
+                        moduleId={m.id}
+                        fascicules={mFascicules}
+                        courses={mCourses}
+                        courseProgress={courseProgress}
+                      />
+                    </div>
+                  )}
                 </div>
               )
             })
