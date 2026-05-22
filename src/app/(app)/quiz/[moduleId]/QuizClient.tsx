@@ -343,7 +343,7 @@ export default function QuizClient({
               const sel = picked === i
               const isCorr = showResult && i === q.correct_index
               const isWr = showResult && sel && i !== q.correct_index
-              let bg = A.surface, border = A.border
+              let bg: string = A.surface, border: string = A.border
               if (isCorr) { bg = A.greenSoft; border = A.green }
               else if (isWr) { bg = '#FEEBEB'; border = A.red }
               else if (sel) { bg = A.primarySoft; border = A.primary }
@@ -368,7 +368,7 @@ export default function QuizClient({
               const sel = picked === i
               const isCorr = showResult && i === q.correct_index
               const isWr = showResult && sel && i !== q.correct_index
-              let bg = A.surface, border = A.border, color = A.text
+              let bg: string = A.surface, border: string = A.border, color: string = A.text
               if (isCorr) { bg = A.greenSoft; border = A.green; color = A.green }
               else if (isWr) { bg = '#FEEBEB'; border = A.red; color = A.red }
               else if (sel) { bg = A.primarySoft; border = A.primary; color = A.primary }
@@ -484,7 +484,7 @@ export default function QuizClient({
                   const isSel = assocSelected?.side === 'left' && assocSelected.origIdx === origIdx
                   const isFlashOk = assocFlashCorrect === origIdx
                   const isFlashBad = assocFlashWrong?.left === origIdx
-                  let bg = A.surface, border = A.border
+                  let bg: string = A.surface, border: string = A.border
                   if (isFlashOk) { bg = A.greenSoft; border = A.green }
                   else if (isFlashBad) { bg = '#FEEBEB'; border = A.red }
                   else if (isSel) { bg = A.primarySoft; border = A.primary }
@@ -502,7 +502,7 @@ export default function QuizClient({
                   const isSel = assocSelected?.side === 'right' && assocSelected.origIdx === origIdx
                   const isFlashOk = assocFlashCorrect === origIdx
                   const isFlashBad = assocFlashWrong?.right === origIdx
-                  let bg = A.surface, border = A.border
+                  let bg: string = A.surface, border: string = A.border
                   if (isFlashOk) { bg = A.greenSoft; border = A.green }
                   else if (isFlashBad) { bg = '#FEEBEB'; border = A.red }
                   else if (isSel) { bg = A.primarySoft; border = A.primary }
