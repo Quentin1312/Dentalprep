@@ -61,7 +61,8 @@ export default function LibraryPage() {
   const moduleStats = MODULES.map(m => {
     const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
     const mCourses = courses.filter(c => c.module_id === m.id)
-    const scanned = mFascicules.filter(f => mCourses.some(c => fasciculeN(c.title) === f.n))
+    // A fascicule is "scanned" if a course with its number exists anywhere (any module)
+    const scanned = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n))
     const mAttempts = attempts.filter(a => a.module_id === m.id)
     const correct = mAttempts.filter(a => a.is_correct).length
     const acc = mAttempts.length > 0 ? correct / mAttempts.length : 0
@@ -145,7 +146,8 @@ export default function LibraryPage() {
         // First "current" = first not-scanned fascicule. Make others available/locked accordingly.
         let foundCurrent = false
         for (const f of mFascicules) {
-          const course = mCourses.find(c => fasciculeN(c.title) === f.n)
+          // Look in all courses (not just this module's) — a fascicule belongs to multiple modules
+          const course = courses.find(c => fasciculeN(c.title) === f.n)
           const isCurrent = !course && !foundCurrent
           if (isCurrent) foundCurrent = true
           nodes.push({ kind: 'fasc', fascicule: f, course, isCurrent })

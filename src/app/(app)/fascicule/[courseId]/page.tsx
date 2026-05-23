@@ -39,14 +39,8 @@ export default function FasciculePage() {
       Promise.all([
         supabase.from('flashcards').select('id').eq('course_id', courseId),
         supabase.from('quiz_questions').select('id').eq('course_id', courseId),
-        supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id)
-          .in('question_id',
-            supabase.from('quiz_questions').select('id').eq('course_id', courseId) as unknown as string[]
-          ),
       ]).then(async ([fc, qq]) => {
-        // Fetch attempts separately
-        const { data: qqs } = await supabase.from('quiz_questions').select('id').eq('course_id', courseId)
-        const qids = (qqs ?? []).map((q: { id: string }) => q.id)
+        const qids = (qq.data ?? []).map((q: { id: string }) => q.id)
         let attempts: { is_correct: boolean }[] = []
         if (qids.length > 0) {
           const { data: atts } = await supabase.from('quiz_attempts').select('is_correct')
