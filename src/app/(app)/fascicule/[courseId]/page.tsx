@@ -162,7 +162,7 @@ function FasciculeInner() {
 
         {/* Quiz intelligent — only if there are errors */}
         {mod && !loading && toReview > 0 && (
-          <Link href={`/quiz/${mod.id}?courseId=${courseId}&mode=smart`} style={{ textDecoration: 'none' }}>
+          <Link href={`/quiz/${mod.id}?courseId=${courseId}&mode=errors`} style={{ textDecoration: 'none' }}>
             <div style={{
               background: `linear-gradient(135deg, ${A.amber} 0%, #B45309 100%)`,
               borderRadius: 18, padding: '18px 20px',

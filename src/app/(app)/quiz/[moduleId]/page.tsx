@@ -33,7 +33,7 @@ function QuizInner() {
   const router = useRouter()
 
   const courseId = searchParams.get('courseId') ?? null
-  const mode = searchParams.get('mode') ?? 'normal' // 'normal' | 'smart'
+  const mode = searchParams.get('mode') ?? 'normal' // 'normal' | 'smart' | 'errors'
   const lesson = parseInt(searchParams.get('lesson') ?? '0', 10)
 
   const LESSON_SIZE = 10
@@ -81,7 +81,14 @@ function QuizInner() {
         setAttemptStats(stats)
 
         let sorted = raw
-        if (mode === 'smart') {
+        if (mode === 'errors') {
+          // ONLY questions the user has attempted and got wrong (accuracy < 60%)
+          sorted = raw.filter(q => {
+            const s = stats.get(q.id)
+            return s && s.total > 0 && s.ok / s.total < 0.6
+          })
+          setQuestions(sorted)
+        } else if (mode === 'smart') {
           sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
           const toReview = sorted.filter(q => smartSort(q, stats) === 0)
           const unseen = sorted.filter(q => smartSort(q, stats) === 1)
@@ -136,12 +143,12 @@ function QuizInner() {
       questions={questions}
       moduleId={moduleId}
       userId={userId!}
-      mode={mode as 'normal' | 'smart'}
+      mode={(mode === 'errors' ? 'smart' : mode) as 'normal' | 'smart'}
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
       backHref={`/library`}
-      headerLabel={mode !== 'smart' ? `Leçon ${lesson + 1}/${totalLessons}` : 'Quiz intelligent'}
+      headerLabel={mode === 'errors' ? 'Mes erreurs' : mode === 'smart' ? 'Quiz intelligent' : `Leçon ${lesson + 1}/${totalLessons}`}
     />
   )
 }
