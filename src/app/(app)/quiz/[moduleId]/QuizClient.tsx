@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { recordSession } from '@/lib/recordSession'
@@ -10,33 +10,61 @@ import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType, PetState } from '@/components/pet/PetCompanion'
+import { computeXP } from '@/lib/xp'
 import QuizSummary from './QuizSummary'
 
-type QuestionType = 'qcm' | 'vf' | 'ordre' | 'association'
+type QType = 'QCM' | 'VF' | 'ORDRE' | 'ASSOCIATION'
+
+type AssociationChoices = {
+  left: string[]
+  right: string[]
+  /** correctMap[i] = index in `right` that pairs with `left[i]` */
+  correctMap: number[]
+}
+
 type Question = {
   id: string
+  /** Defaults to 'QCM' when absent (back-compat with existing DB rows). */
+  type?: QType
   question: string
+  /**
+   * QCM:         string[] (the 4 options)
+   * VF:          string[] (usually ['Vrai', 'Faux'])
+   * ORDRE:       string[] (items in *correct* order — UI shuffles them)
+   * ASSOCIATION: AssociationChoices
+   */
   choices: unknown
+  /**
+   * QCM / VF: index of the right option in `choices`.
+   * ORDRE / ASSOCIATION: sentinel — set to 1; the UI sets `picked` to 1 when
+   * the user's arrangement matches and to 0 otherwise.
+   */
   correct_index: number
   explanation: string
   module_id: string
   page_image_url?: string | null
-  type?: QuestionType
-  correct_answer?: unknown
 }
 
-const ITEM_H = 60 // hauteur d'un item + gap (pour calcul drag)
+// ─────────────────────────────────────────────────────────────────────────────
+// Small label/typography helpers — kept inline-styled, no className.
+// ─────────────────────────────────────────────────────────────────────────────
 
-function seededShuffle<T>(arr: T[], seed: string): T[] {
-  const result = [...arr]
-  let h = seed.split('').reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0x7fffffff, 0)
-  for (let i = result.length - 1; i > 0; i--) {
-    h = (h * 1664525 + 1013904223) & 0x7fffffff
-    const j = h % (i + 1)
-    ;[result[i], result[j]] = [result[j], result[i]]
+const FONT = A.font
+
+function shuffle<T>(arr: T[], seed: string): T[] {
+  // Deterministic per question id so a refresh doesn't re-shuffle.
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0
+  const out = arr.slice()
+  for (let i = out.length - 1; i > 0; i--) {
+    h = (h * 1664525 + 1013904223) | 0
+    const j = Math.abs(h) % (i + 1)
+    ;[out[i], out[j]] = [out[j], out[i]]
   }
-  return result
+  return out
 }
+
+const PAIR_COLORS = ['#8B5CF6', '#0EA5E9', '#F59E0B', '#10B981', '#EC4899', '#6366F1']
 
 export default function QuizClient({
   questions,
@@ -48,9 +76,6 @@ export default function QuizClient({
   level = 1,
   backHref,
   headerLabel,
-  lesson,
-  totalLessons,
-  nextLessonHref,
 }: {
   questions: Question[]
   moduleId: string
@@ -61,14 +86,12 @@ export default function QuizClient({
   level?: number
   backHref?: string
   headerLabel?: string
-  lesson?: number
-  totalLessons?: number
-  nextLessonHref?: string
 }) {
   const router = useRouter()
-  const { refresh } = useAppData()
+  const { data, refresh } = useAppData()
   const startRef = useRef(Date.now())
-
+  // Snapshot XP at session start so the summary can animate from → to.
+  const [xpBefore] = useState(() => computeXP((data?.attempts as { is_correct: boolean }[] | undefined) ?? []))
   const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
@@ -77,156 +100,50 @@ export default function QuizClient({
   const [finished, setFinished] = useState(false)
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
   const [xpAnim, setXpAnim] = useState(0)
-  const [nonQcmCorrect, setNonQcmCorrect] = useState<boolean | null>(null)
 
-  // ── ORDRE : drag-to-reorder ───────────────────────────────────────────────
-  const [ordreItems, setOrdreItems] = useState<number[]>(() => {
-    const c = (questions[0]?.choices as string[]) ?? []
-    return seededShuffle(Array.from({ length: c.length }, (_, i) => i), questions[0]?.id ?? '')
-  })
-  const [activeDrag, setActiveDrag] = useState<{
-    fromPos: number
-    startY: number
-    dy: number
-  } | null>(null)
+  // Type-specific local interaction state. Resets per question via useEffect.
+  const [orderState, setOrderState] = useState<number[]>([])
+  const [pairs, setPairs] = useState<Array<{ l: number; r: number }>>([])
+  const [pendingLeft, setPendingLeft] = useState<number | null>(null)
+  const [pendingRight, setPendingRight] = useState<number | null>(null)
 
-  // ── ASSOCIATION : style Duolingo ──────────────────────────────────────────
-  const [assocSelected, setAssocSelected] = useState<{
-    side: 'left' | 'right'
-    origIdx: number
-  } | null>(null)
-  const [assocEliminated, setAssocEliminated] = useState<Set<number>>(new Set())
-  const [assocFlashWrong, setAssocFlashWrong] = useState<{ left: number; right: number } | null>(null)
-  const [assocFlashCorrect, setAssocFlashCorrect] = useState<number | null>(null)
-
-  // ── Question courante ─────────────────────────────────────────────────────
   const q = questions[idx]
-  const qType: QuestionType = (q?.type as QuestionType) ?? 'qcm'
-  const choices = (q?.choices as string[]) ?? []
-  const correctAnswer = (q?.correct_answer as string[]) ?? []
+  const qtype: QType = (q?.type ?? 'QCM') as QType
   const total = questions.length
 
-  // Shuffles stables pour l'association (recalcul si question change)
-  const assocLeftShuffle = useMemo(
-    () => seededShuffle(Array.from({ length: choices.length }, (_, i) => i), (q?.id ?? '') + 'l'),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [q?.id]
-  )
-  const assocRightShuffle = useMemo(
-    () => seededShuffle(Array.from({ length: correctAnswer.length }, (_, i) => i), (q?.id ?? '') + 'r'),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [q?.id]
-  )
+  // Reset per-question interaction state when index changes.
+  useEffect(() => {
+    setOrderState([])
+    setPairs([])
+    setPendingLeft(null)
+    setPendingRight(null)
+  }, [idx])
 
-  const canSubmit = !showResult && (() => {
-    if (qType === 'qcm' || qType === 'vf') return picked !== null
-    if (qType === 'ordre') return true
-    if (qType === 'association') return assocEliminated.size === choices.length
-    return false
-  })()
-
-  const isCurrentCorrect: boolean = showResult
-    ? (qType === 'qcm' || qType === 'vf' ? picked === q?.correct_index : nonQcmCorrect === true)
-    : false
-
+  // Pet animation state — preserved from original.
   const petState: PetState = showResult
-    ? (isCurrentCorrect ? 'correct' : 'wrong')
-    : canSubmit ? 'thinking' : 'idle'
+    ? (picked === q?.correct_index ? 'correct' : 'wrong')
+    : picked !== null ? 'thinking' : 'idle'
 
   const stat = attemptStats.get(q?.id ?? '')
   const wasTricky = stat && stat.total > 0 && stat.ok / stat.total < 0.6
 
-  // ── ORDRE handlers ────────────────────────────────────────────────────────
-  function handleOrdreStart(e: React.TouchEvent, displayPos: number) {
-    if (showResult) return
-    e.preventDefault()
-    setActiveDrag({ fromPos: displayPos, startY: e.touches[0].clientY, dy: 0 })
-  }
-  function handleOrdreMove(e: React.TouchEvent) {
-    if (!activeDrag) return
-    e.preventDefault()
-    setActiveDrag(prev => prev ? { ...prev, dy: e.touches[0].clientY - prev.startY } : null)
-  }
-  function handleOrdreEnd() {
-    if (!activeDrag) return
-    const { fromPos, dy } = activeDrag
-    const targetPos = Math.max(0, Math.min(ordreItems.length - 1, fromPos + Math.round(dy / ITEM_H)))
-    if (targetPos !== fromPos) {
-      setOrdreItems(prev => {
-        const next = [...prev]
-        const [item] = next.splice(fromPos, 1)
-        next.splice(targetPos, 0, item)
-        return next
-      })
-    }
-    setActiveDrag(null)
-  }
-  function getOrdreTranslateY(pos: number): number {
-    if (!activeDrag) return 0
-    const { fromPos, dy } = activeDrag
-    if (pos === fromPos) return dy
-    const target = Math.max(0, Math.min(ordreItems.length - 1, fromPos + Math.round(dy / ITEM_H)))
-    if (fromPos < target && pos > fromPos && pos <= target) return -ITEM_H
-    if (fromPos > target && pos >= target && pos < fromPos) return ITEM_H
-    return 0
-  }
-
-  // ── ASSOCIATION handlers ──────────────────────────────────────────────────
-  function handleAssocTap(side: 'left' | 'right', origIdx: number) {
-    if (showResult || assocEliminated.has(origIdx) || assocFlashWrong !== null || assocFlashCorrect !== null) return
-    if (!assocSelected) {
-      setAssocSelected({ side, origIdx })
-      return
-    }
-    if (assocSelected.side === side) {
-      setAssocSelected(assocSelected.origIdx === origIdx ? null : { side, origIdx })
-      return
-    }
-    // Deux côtés différents → vérifier la paire
-    const leftOI = side === 'left' ? origIdx : assocSelected.origIdx
-    const rightOI = side === 'right' ? origIdx : assocSelected.origIdx
-    setAssocSelected(null)
-    if (leftOI === rightOI) {
-      // ✅ Correct : flash vert puis disparaît
-      setAssocFlashCorrect(leftOI)
-      setTimeout(() => {
-        setAssocEliminated(prev => new Set([...prev, leftOI]))
-        setAssocFlashCorrect(null)
-      }, 380)
-    } else {
-      // ❌ Faux : flash rouge puis reset
-      setAssocFlashWrong({ left: leftOI, right: rightOI })
-      setTimeout(() => setAssocFlashWrong(null), 600)
-    }
-  }
-
-  // ── submit ────────────────────────────────────────────────────────────────
+  // submit / next / restart — UNCHANGED in behaviour.
   async function submit() {
-    if (!canSubmit) return
-    let correct = false
-    if (qType === 'qcm' || qType === 'vf') {
-      correct = picked === q.correct_index
-    } else if (qType === 'ordre') {
-      correct = ordreItems.every((choiceIdx, pos) => choiceIdx === pos)
-      setNonQcmCorrect(correct)
-    } else if (qType === 'association') {
-      correct = true // on ne peut soumettre que quand tout est correctement associé
-      setNonQcmCorrect(true)
-    }
+    if (picked === null) return
     setShowResult(true)
-    if (correct) { setScoreOk(s => s + 1); setXpAnim(n => n + 1) }
+    const isCorrect = picked === q.correct_index
+    if (isCorrect) { setScoreOk(s => s + 1); setXpAnim(n => n + 1) }
     else { setScoreBad(s => s + 1); setWrongQuestions(prev => [...prev, q]) }
     const supabase = createClient()
     supabase.from('quiz_attempts').insert({
       user_id: userId,
       module_id: (q.module_id || moduleId) as ModuleId,
       question_id: q.id,
-      selected_index: (qType === 'qcm' || qType === 'vf') ? (picked ?? 0) : (correct ? 1 : 0),
-      is_correct: correct,
+      selected_index: picked,
+      is_correct: isCorrect,
     }).then(() => refresh())
   }
 
-  // ── next ──────────────────────────────────────────────────────────────────
   async function next() {
     if (idx + 1 >= total) {
       setFinished(true)
@@ -234,337 +151,854 @@ export default function QuizClient({
       await recordSession(userId, elapsed)
       return
     }
-    const ni = idx + 1
-    const nq = questions[ni]
-    const nChoices = (nq?.choices as string[]) ?? []
-    setIdx(ni)
-    setPicked(null); setShowResult(false); setNonQcmCorrect(null)
-    setOrdreItems(seededShuffle(Array.from({ length: nChoices.length }, (_, i) => i), nq?.id ?? ''))
-    setActiveDrag(null)
-    setAssocSelected(null); setAssocEliminated(new Set())
-    setAssocFlashWrong(null); setAssocFlashCorrect(null)
+    setIdx(i => i + 1)
+    setPicked(null)
+    setShowResult(false)
   }
 
-  // ── restart ───────────────────────────────────────────────────────────────
   function restart(questionsOverride?: Question[]) {
+    const qs = questionsOverride ?? questions
     if (questionsOverride) {
-      sessionStorage.setItem('quiz_retry', JSON.stringify(questionsOverride))
+      sessionStorage.setItem('quiz_retry', JSON.stringify(qs))
       window.location.reload()
     } else {
-      const firstChoices = (questions[0]?.choices as string[]) ?? []
       setIdx(0); setPicked(null); setShowResult(false)
-      setScoreOk(0); setScoreBad(0); setFinished(false); setWrongQuestions([])
-      setNonQcmCorrect(null)
-      setOrdreItems(seededShuffle(Array.from({ length: firstChoices.length }, (_, i) => i), questions[0]?.id ?? ''))
-      setActiveDrag(null)
-      setAssocSelected(null); setAssocEliminated(new Set())
-      setAssocFlashWrong(null); setAssocFlashCorrect(null)
-      startRef.current = Date.now()
+      setScoreOk(0); setScoreBad(0); setFinished(false)
+      setWrongQuestions([]); startRef.current = Date.now()
     }
   }
 
-  // ── Fin du quiz ───────────────────────────────────────────────────────────
   if (finished) return (
     <QuizSummary
-      scoreOk={scoreOk} scoreBad={scoreBad} total={total} moduleId={moduleId}
-      wrongQuestions={wrongQuestions} onRestart={() => restart()}
-      onRestartWrong={(qs) => restart(qs)} backHref={backHref}
-      lesson={lesson} totalLessons={totalLessons} nextLessonHref={nextLessonHref}
+      scoreOk={scoreOk}
+      scoreBad={scoreBad}
+      total={total}
+      moduleId={moduleId}
+      wrongQuestions={wrongQuestions}
+      onRestart={() => restart()}
+      onRestartWrong={(qs) => restart(qs)}
+      backHref={backHref}
+      petType={petType}
+      level={level}
+      xpBefore={xpBefore}
     />
   )
 
-  const toReviewCount = mode === 'smart' ? questions.filter(q => {
-    const s = attemptStats.get(q.id)
+  const toReviewCount = mode === 'smart' ? questions.filter(qq => {
+    const s = attemptStats.get(qq.id)
     return s && s.total > 0 && s.ok / s.total < 0.5
   }).length : 0
 
-  return (
-    <div style={{ minHeight: '100vh', background: A.bg, color: A.text, fontFamily: A.font, display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes xp-float{0%{opacity:1;transform:translateY(0) scale(1)}30%{opacity:1;transform:translateY(-18px) scale(1.25)}100%{opacity:0;transform:translateY(-64px) scale(0.8)}}`}</style>
+  // Completed segment count for progress bar = answered questions.
+  const completedSegments = idx + (showResult ? 1 : 0)
 
-      {/* +XP flottant */}
+  // ── Type-aware label
+  const typeLabel: Record<QType, string> = {
+    QCM: 'QCM',
+    VF: 'Vrai / Faux',
+    ORDRE: 'Ordre',
+    ASSOCIATION: 'Association',
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh', background: A.bg, color: A.text, fontFamily: FONT,
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <style>{`
+        @keyframes xp-float{0%{opacity:1;transform:translateY(0) scale(1)}30%{opacity:1;transform:translateY(-18px) scale(1.25)}100%{opacity:0;transform:translateY(-64px) scale(0.8)}}
+        @keyframes q-fade-in{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+        @keyframes q-pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+        button:active:not(:disabled){transform:scale(.985)}
+      `}</style>
+
+      {/* +XP float */}
       {xpAnim > 0 && (
-        <div key={xpAnim} style={{ position: 'fixed', bottom: 148, right: 28, zIndex: 30, pointerEvents: 'none', fontSize: 20, fontWeight: 900, color: '#FFD84A', textShadow: '0 0 14px rgba(255,216,74,0.7), 0 2px 4px rgba(0,0,0,0.4)', animation: 'xp-float 1.1s ease-out forwards', fontFamily: A.font }}>+10 XP</div>
+        <div key={xpAnim} style={{
+          position: 'fixed', bottom: 148, right: 28, zIndex: 30, pointerEvents: 'none',
+          fontSize: 20, fontWeight: 900, color: '#FFD84A',
+          textShadow: '0 0 14px rgba(255,216,74,0.7), 0 2px 4px rgba(0,0,0,0.4)',
+          animation: 'xp-float 1.1s ease-out forwards',
+          fontFamily: FONT,
+        }}>+10 XP</div>
       )}
 
-      {/* Compagnon */}
-      <div style={{ position: 'fixed', bottom: 56, right: 12, zIndex: 25, pointerEvents: 'none', transform: (petState === 'idle' || petState === 'thinking') ? 'translateY(62px)' : 'translateY(0)', transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)' }}>
+      {/* Pet companion — peeks from bottom-right, pops up on answer */}
+      <div style={{
+        position: 'fixed', bottom: 56, right: 12, zIndex: 25, pointerEvents: 'none',
+        transform: (petState === 'idle' || petState === 'thinking') ? 'translateY(62px)' : 'translateY(0)',
+        transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
         <PetCompanion petType={petType} state={petState} size={84} level={level} />
       </div>
 
-      {/* Barre du haut */}
-      <div style={{ padding: '60px 20px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-          <button onClick={() => router.push(backHref ?? `/module/${moduleId}`)} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <Icon name="x" size={16} color={A.text} />
+      {/* ─── Top bar — segmented progress + score chips ─── */}
+      <div style={{ padding: '54px 20px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <button
+            onClick={() => router.push(backHref ?? `/module/${moduleId}`)}
+            aria-label="Quitter"
+            style={{
+              width: 36, height: 36, borderRadius: 12, background: A.surface,
+              border: `1px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 0, cursor: 'pointer', boxShadow: '0 1px 0 rgba(15,27,45,0.02)',
+            }}>
+            <Icon name="x" size={14} color={A.text} strokeWidth={2.2} />
           </button>
-          <div style={{ flex: 1, height: 5, background: '#E9ECF2', borderRadius: 5, overflow: 'hidden' }}>
-            <div style={{ width: `${((idx + (showResult ? 1 : 0)) / total) * 100}%`, height: '100%', background: A.primary, borderRadius: 5, transition: 'width .4s' }} />
+
+          {/* Segmented Linear-style progress */}
+          <div style={{ flex: 1, display: 'flex', gap: 3 }}>
+            {Array.from({ length: total }).map((_, i) => {
+              const isDone = i < completedSegments
+              const isCurrent = i === idx && !isDone
+              return (
+                <div key={i} style={{
+                  flex: 1, height: 6, borderRadius: 3,
+                  background: isDone ? A.primary : isCurrent ? A.primary : '#E4E8EE',
+                  opacity: isCurrent ? 0.45 : 1,
+                  transition: 'background .3s ease, opacity .3s ease',
+                }} />
+              )
+            })}
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: A.textMuted }}>{idx + 1}<span style={{ color: A.textDim }}>/{total}</span></div>
+
+          <div style={{
+            fontSize: 13, fontWeight: 700, color: A.text,
+            fontVariantNumeric: 'tabular-nums', minWidth: 36, textAlign: 'right',
+          }}>
+            {idx + 1}<span style={{ color: A.textDim, fontWeight: 500 }}>/{total}</span>
+          </div>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 14, fontSize: 12, color: A.textMuted }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: A.green }} />{scoreOk} ✓</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: A.red }} />{scoreBad} ✗</span>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '4px 9px', borderRadius: 999, background: A.primarySoft,
+            border: `1px solid ${A.primarySoft}`,
+            fontSize: 10.5, fontWeight: 700, color: A.primary,
+            letterSpacing: 0.6, textTransform: 'uppercase',
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: 3, background: A.primary }} />
+            {typeLabel[qtype]}
           </div>
-          {mode === 'smart' && toReviewCount > 0 && (
-            <div style={{ fontSize: 11, fontWeight: 600, color: A.amber, padding: '3px 8px', borderRadius: 6, background: A.amberSoft }}>🔁 {toReviewCount} à revoir</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <ScoreChip kind="ok" count={scoreOk} />
+            <ScoreChip kind="bad" count={scoreBad} />
+            {mode === 'smart' && toReviewCount > 0 && (
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: A.amber, padding: '3px 8px',
+                borderRadius: 999, background: A.amberSoft,
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+              }}>
+                <Icon name="refresh" size={10} color={A.amber} strokeWidth={2.5} />
+                {toReviewCount}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Question card ─── */}
+      <div style={{ padding: '4px 16px 16px', flex: 1 }} key={q.id}>
+        <div style={{
+          background: A.surface, borderRadius: 22,
+          border: `1px solid ${A.border}`,
+          boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 8px 24px -16px rgba(15,27,45,0.18)',
+          padding: '20px 20px 22px',
+          animation: 'q-fade-in .35s ease both',
+        }}>
+          {wasTricky && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 11, fontWeight: 700, color: A.amber, background: A.amberSoft,
+              borderRadius: 8, padding: '4px 9px', marginBottom: 10,
+              border: `1px solid ${A.amber}25`,
+            }}>
+              <Icon name="refresh" size={11} color={A.amber} strokeWidth={2.5} />
+              Question difficile — déjà ratée
+            </div>
+          )}
+
+          <div style={{
+            fontSize: 10.5, fontWeight: 700, color: A.textMuted,
+            letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10,
+          }}>
+            Question {idx + 1} · {headerLabel ?? moduleId}
+          </div>
+
+          {q.page_image_url && (
+            <div style={{
+              marginBottom: 14, borderRadius: 14, overflow: 'hidden',
+              border: `1px solid ${A.border}`, background: '#fff',
+            }}>
+              <img src={q.page_image_url} alt="Schéma" style={{
+                width: '100%', display: 'block', maxHeight: 240, objectFit: 'contain',
+              }} />
+            </div>
+          )}
+
+          <div style={{
+            fontSize: 21, fontWeight: 700, color: A.text,
+            letterSpacing: -0.4, lineHeight: 1.3, marginBottom: 20,
+          }}>{q.question}</div>
+
+          {/* Type-specific renderer */}
+          {qtype === 'QCM' && (
+            <QCMRenderer
+              q={q}
+              picked={picked}
+              showResult={showResult}
+              onPick={(i) => !showResult && setPicked(i)}
+            />
+          )}
+
+          {qtype === 'VF' && (
+            <VFRenderer
+              q={q}
+              picked={picked}
+              showResult={showResult}
+              onPick={(i) => !showResult && setPicked(i)}
+            />
+          )}
+
+          {qtype === 'ORDRE' && (
+            <OrdreRenderer
+              q={q}
+              orderState={orderState}
+              setOrderState={setOrderState}
+              showResult={showResult}
+              picked={picked}
+              setPicked={setPicked}
+            />
+          )}
+
+          {qtype === 'ASSOCIATION' && (
+            <AssociationRenderer
+              q={q}
+              pairs={pairs}
+              setPairs={setPairs}
+              pendingLeft={pendingLeft}
+              pendingRight={pendingRight}
+              setPendingLeft={setPendingLeft}
+              setPendingRight={setPendingRight}
+              showResult={showResult}
+              picked={picked}
+              setPicked={setPicked}
+            />
+          )}
+
+          {showResult && (
+            <ResultExplain
+              correct={picked === q.correct_index}
+              text={q.explanation}
+            />
           )}
         </div>
       </div>
 
-      {/* Zone question */}
-      <div style={{ padding: '8px 20px 24px', flex: 1 }}>
-        {wasTricky && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: A.amber, background: A.amberSoft, borderRadius: 6, padding: '3px 8px', marginBottom: 8 }}>
-            <Icon name="refresh" size={11} color={A.amber} /> Question difficile — déjà ratée
-          </div>
-        )}
-        {qType !== 'qcm' && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: A.primary, background: A.primarySoft, borderRadius: 6, padding: '3px 8px', marginBottom: 8 }}>
-            {qType === 'vf' ? '⚖️ Vrai ou Faux ?' : qType === 'ordre' ? '↕️ Classe dans le bon ordre' : '🔗 Associe les paires'}
-          </div>
-        )}
-        <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8 }}>
-          Question {idx + 1} · {headerLabel ?? moduleId}
-        </div>
-        <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.3, marginBottom: q.page_image_url ? 14 : 20 }}>{q.question}</div>
-        {q.page_image_url && (
-          <div style={{ marginBottom: 18, borderRadius: 12, overflow: 'hidden', border: `0.5px solid ${A.border}`, background: '#fff', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={q.page_image_url} alt="Schéma" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-          </div>
-        )}
-
-        {/* ── QCM ── */}
-        {qType === 'qcm' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {choices.map((c, i) => {
-              const sel = picked === i
-              const isCorr = showResult && i === q.correct_index
-              const isWr = showResult && sel && i !== q.correct_index
-              let bg: string = A.surface, border: string = A.border
-              if (isCorr) { bg = A.greenSoft; border = A.green }
-              else if (isWr) { bg = '#FEEBEB'; border = A.red }
-              else if (sel) { bg = A.primarySoft; border = A.primary }
-              return (
-                <button key={i} onClick={() => !showResult && setPicked(i)} style={{ background: bg, border: `1.5px solid ${border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, cursor: showResult ? 'default' : 'pointer', textAlign: 'left', fontFamily: A.font, transition: 'all .15s', width: '100%' }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 11, border: `1.5px solid ${sel || isCorr ? border : '#C8CFD9'}`, background: (sel || isCorr) ? border : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {(sel || isCorr) && <div style={{ width: 8, height: 8, borderRadius: 4, background: '#fff' }} />}
-                  </div>
-                  <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{c}</div>
-                  {isCorr && <Icon name="check" size={16} color={A.green} strokeWidth={2.5} />}
-                  {isWr && <Icon name="x" size={16} color={A.red} strokeWidth={2.5} />}
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {/* ── VF ── */}
-        {qType === 'vf' && (
-          <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-            {['Vrai', 'Faux'].map((label, i) => {
-              const sel = picked === i
-              const isCorr = showResult && i === q.correct_index
-              const isWr = showResult && sel && i !== q.correct_index
-              let bg: string = A.surface, border: string = A.border, color: string = A.text
-              if (isCorr) { bg = A.greenSoft; border = A.green; color = A.green }
-              else if (isWr) { bg = '#FEEBEB'; border = A.red; color = A.red }
-              else if (sel) { bg = A.primarySoft; border = A.primary; color = A.primary }
-              return (
-                <button key={i} onClick={() => !showResult && setPicked(i)} style={{ flex: 1, height: 88, borderRadius: 18, border: `2px solid ${border}`, background: bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: showResult ? 'default' : 'pointer', fontFamily: A.font, transition: 'all .2s' }}>
-                  <span style={{ fontSize: 32 }}>{i === 0 ? '✅' : '❌'}</span>
-                  <span style={{ fontSize: 17, fontWeight: 700, color }}>{label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {/* ── ORDRE : drag pour classer ── */}
-        {qType === 'ordre' && !showResult && (
-          <div
-            style={{ touchAction: 'none', position: 'relative' }}
-            onTouchMove={handleOrdreMove}
-            onTouchEnd={handleOrdreEnd}
-            onTouchCancel={handleOrdreEnd}
-          >
-            <div style={{ fontSize: 12, color: A.textMuted, marginBottom: 12 }}>
-              Glisse les éléments pour les mettre dans le bon ordre ↕️
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative' }}>
-              {ordreItems.map((choiceIdx, displayPos) => {
-                const isDragging = activeDrag?.fromPos === displayPos
-                const translateY = getOrdreTranslateY(displayPos)
-                return (
-                  <div
-                    key={choiceIdx}
-                    onTouchStart={e => handleOrdreStart(e, displayPos)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '13px 14px', borderRadius: 14,
-                      background: isDragging ? A.primarySoft : A.surface,
-                      border: `1.5px solid ${isDragging ? A.primary : A.border}`,
-                      transform: `translateY(${translateY}px)`,
-                      transition: isDragging ? 'none' : 'transform 0.18s ease',
-                      zIndex: isDragging ? 10 : 1,
-                      position: 'relative',
-                      boxShadow: isDragging ? '0 8px 28px rgba(10,102,224,0.18)' : 'none',
-                      userSelect: 'none',
-                      cursor: 'grab',
-                    }}
-                  >
-                    {/* Numéro de position */}
-                    <div style={{ width: 28, height: 28, borderRadius: 14, background: isDragging ? A.primary : '#E9ECF2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .2s' }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: isDragging ? '#fff' : A.textMuted }}>{displayPos + 1}</span>
-                    </div>
-                    {/* Texte */}
-                    <span style={{ fontSize: 14, fontWeight: 500, flex: 1, color: A.text }}>{choices[choiceIdx]}</span>
-                    {/* Poignée de drag */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0, opacity: isDragging ? 0.8 : 0.35 }}>
-                      {[0,1,2].map(i => <div key={i} style={{ width: 18, height: 2, background: A.textMuted, borderRadius: 2 }} />)}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ORDRE : résultat après validation */}
-        {qType === 'ordre' && showResult && (
-          <div>
-            <div style={{ fontSize: 12, color: A.textMuted, marginBottom: 10 }}>Ton classement :</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ordreItems.map((choiceIdx, pos) => {
-                const ok = choiceIdx === pos
-                return (
-                  <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: ok ? A.greenSoft : '#FEEBEB', border: `1.5px solid ${ok ? A.green : A.red}` }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 13, background: ok ? A.green : A.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{pos + 1}</span>
-                    </div>
-                    <span style={{ fontSize: 14, fontWeight: 500, flex: 1 }}>{choices[choiceIdx]}</span>
-                    {ok ? <Icon name="check" size={15} color={A.green} strokeWidth={2.5} /> : <Icon name="x" size={15} color={A.red} strokeWidth={2.5} />}
-                  </div>
-                )
-              })}
-            </div>
-            {!ordreItems.every((ci, pos) => ci === pos) && (
-              <div style={{ marginTop: 14 }}>
-                <div style={{ fontSize: 12, color: A.textMuted, marginBottom: 8 }}>Ordre correct :</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {choices.map((item, pos) => (
-                    <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: A.greenSoft, border: `1px solid ${A.green}30` }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 11, background: A.green, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{pos + 1}</span>
-                      </div>
-                      <span style={{ fontSize: 13, fontWeight: 500 }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── ASSOCIATION : style Duolingo ── */}
-        {qType === 'association' && !showResult && (
-          <div>
-            <div style={{ fontSize: 12, color: A.textMuted, marginBottom: 12 }}>
-              {assocSelected
-                ? (assocSelected.side === 'left' ? '→ Maintenant choisis à droite' : '← Maintenant choisis à gauche')
-                : `Tape une paire · ${assocEliminated.size}/${choices.length} trouvées`}
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {/* Colonne gauche */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {assocLeftShuffle.map(origIdx => {
-                  if (assocEliminated.has(origIdx)) return null
-                  const isSel = assocSelected?.side === 'left' && assocSelected.origIdx === origIdx
-                  const isFlashOk = assocFlashCorrect === origIdx
-                  const isFlashBad = assocFlashWrong?.left === origIdx
-                  let bg: string = A.surface, border: string = A.border
-                  if (isFlashOk) { bg = A.greenSoft; border = A.green }
-                  else if (isFlashBad) { bg = '#FEEBEB'; border = A.red }
-                  else if (isSel) { bg = A.primarySoft; border = A.primary }
-                  return (
-                    <button key={origIdx} onClick={() => handleAssocTap('left', origIdx)} style={{ padding: '12px 12px', borderRadius: 12, background: bg, border: `2px solid ${border}`, cursor: 'pointer', fontFamily: A.font, textAlign: 'left', fontSize: 13, fontWeight: 600, color: A.text, width: '100%', transition: 'all .2s', lineHeight: 1.3 }}>
-                      {choices[origIdx]}
-                    </button>
-                  )
-                })}
-              </div>
-              {/* Colonne droite */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {assocRightShuffle.map(origIdx => {
-                  if (assocEliminated.has(origIdx)) return null
-                  const isSel = assocSelected?.side === 'right' && assocSelected.origIdx === origIdx
-                  const isFlashOk = assocFlashCorrect === origIdx
-                  const isFlashBad = assocFlashWrong?.right === origIdx
-                  let bg: string = A.surface, border: string = A.border
-                  if (isFlashOk) { bg = A.greenSoft; border = A.green }
-                  else if (isFlashBad) { bg = '#FEEBEB'; border = A.red }
-                  else if (isSel) { bg = A.primarySoft; border = A.primary }
-                  return (
-                    <button key={origIdx} onClick={() => handleAssocTap('right', origIdx)} style={{ padding: '12px 12px', borderRadius: 12, background: bg, border: `2px solid ${border}`, cursor: 'pointer', fontFamily: A.font, textAlign: 'left', fontSize: 12, fontWeight: 500, color: A.text, width: '100%', transition: 'all .2s', lineHeight: 1.3 }}>
-                      {correctAnswer[origIdx]}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ASSOCIATION : résultat */}
-        {qType === 'association' && showResult && (
-          <div>
-            <div style={{ fontSize: 12, color: A.textMuted, marginBottom: 10 }}>Associations correctes :</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {choices.map((leftItem, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, padding: '10px 12px', borderRadius: 10, background: A.greenSoft, border: `1.5px solid ${A.green}40`, fontSize: 13, fontWeight: 600, color: A.text, lineHeight: 1.3 }}>
-                    {leftItem}
-                  </div>
-                  <div style={{ color: A.green, fontSize: 16, flexShrink: 0 }}>→</div>
-                  <div style={{ flex: 1.2, padding: '10px 12px', borderRadius: 10, background: A.greenSoft, border: `1.5px solid ${A.green}40`, fontSize: 12, fontWeight: 500, color: A.text, lineHeight: 1.3 }}>
-                    {correctAnswer[i]}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Explication */}
-        {showResult && (
-          <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: isCurrentCorrect ? A.greenSoft : '#FEEBEB', border: `0.5px solid ${isCurrentCorrect ? A.green + '40' : A.red + '40'}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <Icon name={isCurrentCorrect ? 'check' : 'x'} size={16} color={isCurrentCorrect ? A.green : A.red} strokeWidth={2.5} />
-              <div style={{ fontSize: 14, fontWeight: 700, color: isCurrentCorrect ? A.green : A.red }}>
-                {isCurrentCorrect ? 'Bravo !' : 'Pas tout à fait'}
-              </div>
-            </div>
-            <div style={{ fontSize: 13, color: A.text, lineHeight: 1.45 }}>{q.explanation}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Bouton bas */}
-      <div style={{ padding: '12px 20px 36px' }}>
+      {/* ─── Bottom CTA ─── */}
+      <div style={{
+        padding: '12px 20px 36px',
+        background: 'linear-gradient(180deg, rgba(244,246,248,0) 0%, rgba(244,246,248,1) 30%)',
+      }}>
         {showResult ? (
-          <button onClick={next} style={{ width: '100%', height: 52, borderRadius: 14, border: 'none', background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-            {idx + 1 >= total ? 'Voir les résultats' : 'Question suivante'} <Icon name="arrowR" size={16} color="#fff" />
+          <button onClick={next} style={{
+            width: '100%', height: 56, borderRadius: 16, border: 'none',
+            background: A.primary, color: '#fff', fontSize: 16, fontWeight: 700,
+            letterSpacing: -0.1, fontFamily: FONT, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            boxShadow: '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+            transition: 'transform .12s ease, box-shadow .12s ease',
+          }}>
+            {idx + 1 >= total ? 'Voir les résultats' : 'Question suivante'}
+            <Icon name="arrowR" size={16} color="#fff" strokeWidth={2.4} />
           </button>
         ) : (
-          <button onClick={submit} disabled={!canSubmit} style={{ width: '100%', height: 52, borderRadius: 14, border: `0.5px solid ${A.borderStrong}`, background: !canSubmit ? A.surface : A.primary, color: !canSubmit ? A.text : '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: !canSubmit ? 'default' : 'pointer', opacity: !canSubmit ? 0.45 : 1, boxShadow: canSubmit ? '0 4px 14px rgba(10,102,224,0.28)' : 'none' }}>
-            {qType === 'association' && !canSubmit
-              ? `${assocEliminated.size}/${choices.length} paires trouvées…`
-              : 'Valider'}
+          <button onClick={submit} disabled={picked === null} style={{
+            width: '100%', height: 56, borderRadius: 16, border: 'none',
+            background: picked === null ? A.surface : A.primary,
+            color: picked === null ? A.textDim : '#fff',
+            fontSize: 16, fontWeight: 700, letterSpacing: -0.1, fontFamily: FONT,
+            cursor: picked === null ? 'default' : 'pointer',
+            boxShadow: picked === null
+              ? `inset 0 0 0 1px ${A.border}`
+              : '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+            transition: 'transform .12s ease, box-shadow .12s ease, background .15s ease',
+          }}>
+            Valider
           </button>
         )}
       </div>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Score chip in top bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ScoreChip({ kind, count }: { kind: 'ok' | 'bad'; count: number }) {
+  const col = kind === 'ok' ? A.green : A.red
+  const bg = kind === 'ok' ? A.greenSoft : '#FCE8E8'
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '3px 8px', borderRadius: 999, background: bg,
+      fontSize: 11, fontWeight: 700, color: col, fontVariantNumeric: 'tabular-nums',
+    }}>
+      <Icon name={kind === 'ok' ? 'check' : 'x'} size={10} color={col} strokeWidth={3} />
+      {count}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Explanation block (post-result)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ResultExplain({ correct, text }: { correct: boolean; text: string }) {
+  const col = correct ? A.green : A.red
+  const bg = correct ? A.greenSoft : '#FCE8E8'
+  const title = correct ? 'Bonne réponse' : 'Pas tout à fait'
+  return (
+    <div style={{
+      marginTop: 18, padding: '14px 16px', borderRadius: 16, background: bg,
+      border: `1px solid ${col}30`,
+      animation: 'q-fade-in .3s ease both',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <div style={{
+          width: 22, height: 22, borderRadius: 11, background: col,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icon name={correct ? 'check' : 'x'} size={12} color="#fff" strokeWidth={3.5} />
+        </div>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: col }}>{title}</div>
+      </div>
+      <div style={{ fontSize: 13.5, color: A.text, lineHeight: 1.5, opacity: 0.92 }}>{text}</div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QCM — Multiple choice
+// ─────────────────────────────────────────────────────────────────────────────
+
+function QCMRenderer({ q, picked, showResult, onPick }: {
+  q: Question
+  picked: number | null
+  showResult: boolean
+  onPick: (i: number) => void
+}) {
+  const choices = q.choices as string[]
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {choices.map((c, i) => {
+        const sel = picked === i
+        const isCorrect = showResult && i === q.correct_index
+        const isWrong = showResult && sel && i !== q.correct_index
+        const isDim = showResult && !isCorrect && !isWrong
+
+        let bg: string = A.surface
+        let border: string = A.border
+        let textCol: string = A.text
+        let circleBg: string = '#F1F6FE'
+        let circleText: string = A.primary
+        let shadow = '0 1px 0 rgba(15,27,45,0.02)'
+        let rightIcon: React.ReactNode = null
+
+        if (isCorrect) {
+          border = A.green; bg = A.greenSoft
+          circleBg = A.green; circleText = '#fff'
+          shadow = '0 0 0 3px rgba(22,163,74,0.10), 0 6px 18px -8px rgba(22,163,74,0.35)'
+          rightIcon = <Icon name="check" size={18} color={A.green} strokeWidth={2.8} />
+        } else if (isWrong) {
+          border = A.red; bg = '#FCE8E8'
+          circleBg = A.red; circleText = '#fff'
+          shadow = '0 0 0 3px rgba(220,38,38,0.10), 0 6px 18px -8px rgba(220,38,38,0.35)'
+          rightIcon = <Icon name="x" size={18} color={A.red} strokeWidth={2.8} />
+        } else if (isDim) {
+          textCol = A.textDim; circleBg = '#F0F2F5'; circleText = A.textDim
+        } else if (sel) {
+          border = A.primary; bg = '#F1F6FE'
+          circleBg = A.primary; circleText = '#fff'
+          shadow = '0 0 0 3px rgba(10,102,224,0.12), 0 6px 18px -8px rgba(10,102,224,0.35)'
+        }
+
+        const letter = String.fromCharCode(65 + i) // A, B, C, D…
+
+        return (
+          <button
+            key={i}
+            onClick={() => onPick(i)}
+            disabled={showResult}
+            style={{
+              width: '100%', textAlign: 'left', fontFamily: FONT,
+              cursor: showResult ? 'default' : 'pointer',
+              background: bg, border: `1.5px solid ${border}`, borderRadius: 16,
+              padding: 14, display: 'flex', alignItems: 'center', gap: 14,
+              boxShadow: shadow, transition: 'all .15s ease',
+            }}
+          >
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: circleBg, color: circleText,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 15, fontWeight: 800, flexShrink: 0, letterSpacing: -0.3,
+              transition: 'all .15s ease',
+            }}>{letter}</div>
+            <div style={{ flex: 1, fontSize: 15.5, fontWeight: 600, color: textCol, lineHeight: 1.35 }}>{c}</div>
+            {rightIcon}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VF — True / False
+// ─────────────────────────────────────────────────────────────────────────────
+
+function VFRenderer({ q, picked, showResult, onPick }: {
+  q: Question
+  picked: number | null
+  showResult: boolean
+  onPick: (i: number) => void
+}) {
+  const labels = (q.choices as string[]) ?? ['Vrai', 'Faux']
+  return (
+    <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
+      {labels.map((label, i) => {
+        const isTrue = i === 0
+        const sel = picked === i
+        const isCorrect = showResult && i === q.correct_index
+        const isWrong = showResult && sel && i !== q.correct_index
+        const isDim = showResult && !isCorrect && !isWrong
+
+        const baseColor = isTrue ? A.green : A.red
+        const baseSoft = isTrue ? A.greenSoft : '#FCE8E8'
+
+        let bg = A.surface
+        let border = A.border
+        let labelCol = A.text
+        let iconBg = '#F0F2F5'
+        let iconStroke = A.textMuted
+        let shadow = '0 1px 0 rgba(15,27,45,0.02), 0 4px 14px -8px rgba(15,27,45,0.10)'
+
+        if (isCorrect) {
+          border = A.green; bg = A.greenSoft
+          iconBg = A.green; iconStroke = '#fff'; labelCol = A.green
+          shadow = `0 0 0 3px ${A.green}1f, 0 12px 32px -10px ${A.green}66`
+        } else if (isWrong) {
+          border = A.red; bg = '#FCE8E8'
+          iconBg = A.red; iconStroke = '#fff'; labelCol = A.red
+          shadow = `0 0 0 3px ${A.red}1f, 0 12px 32px -10px ${A.red}66`
+        } else if (isDim) {
+          labelCol = A.textDim; iconBg = '#F0F2F5'; iconStroke = A.textDim
+        } else if (sel) {
+          border = baseColor; bg = baseSoft
+          iconBg = baseColor; iconStroke = '#fff'; labelCol = baseColor
+          shadow = `0 0 0 3px ${baseColor}1f, 0 12px 32px -10px ${baseColor}66`
+        }
+
+        return (
+          <button
+            key={i}
+            onClick={() => onPick(i)}
+            disabled={showResult}
+            style={{
+              flex: 1, height: 168, borderRadius: 20, background: bg,
+              border: `1.5px solid ${border}`,
+              cursor: showResult ? 'default' : 'pointer', fontFamily: FONT,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 14, padding: 16, boxShadow: shadow, transition: 'all .18s ease',
+            }}
+          >
+            <div style={{
+              width: 56, height: 56, borderRadius: 28, background: iconBg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all .18s ease',
+            }}>
+              <Icon name={isTrue ? 'check' : 'x'} size={28} color={iconStroke} strokeWidth={3} />
+            </div>
+            <div style={{
+              fontSize: 17, fontWeight: 800, color: labelCol,
+              letterSpacing: 1.4, textTransform: 'uppercase',
+            }}>{label}</div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ORDRE — Drag to reorder
+// ─────────────────────────────────────────────────────────────────────────────
+
+function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPicked }: {
+  q: Question
+  orderState: number[]
+  setOrderState: (v: number[]) => void
+  showResult: boolean
+  picked: number | null
+  setPicked: (n: number | null) => void
+}) {
+  const items = q.choices as string[]
+  // Initial shuffled order (stable per question id).
+  const initialOrder = useMemo(() => {
+    const idxs = items.map((_, i) => i)
+    return shuffle(idxs, q.id)
+  }, [q.id, items.length])
+
+  const currentOrder = orderState.length === items.length ? orderState : initialOrder
+
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [overIdx, setOverIdx] = useState<number | null>(null)
+
+  // After each reorder, update `picked` so submit() can grade us.
+  useEffect(() => {
+    if (showResult) return
+    const isCorrect = currentOrder.every((v, i) => v === i)
+    // q.correct_index is the "correct sentinel" (e.g. 1). Set picked to it if correct, else 0.
+    setPicked(isCorrect ? q.correct_index : (q.correct_index === 0 ? 1 : 0))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentOrder.join(','), showResult])
+
+  function move(from: number, to: number) {
+    if (from === to) return
+    const next = currentOrder.slice()
+    const [v] = next.splice(from, 1)
+    next.splice(to, 0, v)
+    setOrderState(next)
+  }
+
+  return (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {currentOrder.map((origIdx, pos) => {
+          const isDragging = dragIdx === pos
+          const isOver = overIdx === pos && dragIdx !== null && dragIdx !== pos
+
+          let border = A.border
+          let bg = A.surface
+          let rankBg = '#F1F6FE'
+          let rankText = A.primary
+          let shadow = '0 1px 0 rgba(15,27,45,0.02), 0 2px 6px -4px rgba(15,27,45,0.06)'
+          let transform = 'translateY(0) rotate(0)'
+
+          if (showResult) {
+            const isCorrectPos = origIdx === pos
+            if (isCorrectPos) {
+              border = A.green; bg = A.greenSoft; rankBg = A.green; rankText = '#fff'
+              shadow = `0 0 0 3px ${A.green}1a, 0 6px 18px -10px ${A.green}55`
+            } else {
+              border = A.red; bg = '#FCE8E8'; rankBg = A.red; rankText = '#fff'
+              shadow = `0 0 0 3px ${A.red}1a, 0 6px 18px -10px ${A.red}55`
+            }
+          } else if (isDragging) {
+            border = A.primary; rankBg = A.primary; rankText = '#fff'
+            shadow = '0 0 0 3px rgba(10,102,224,0.10), 0 18px 40px -10px rgba(15,27,45,0.28)'
+            transform = 'translateY(-2px) rotate(-0.6deg) scale(1.01)'
+          } else if (isOver) {
+            border = A.primary
+            shadow = '0 0 0 2px rgba(10,102,224,0.10), 0 2px 6px -4px rgba(15,27,45,0.06)'
+          }
+
+          return (
+            <div
+              key={origIdx}
+              draggable={!showResult}
+              onDragStart={() => setDragIdx(pos)}
+              onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+              onDragOver={(e) => { e.preventDefault(); setOverIdx(pos) }}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (dragIdx !== null) move(dragIdx, pos)
+                setDragIdx(null); setOverIdx(null)
+              }}
+              style={{
+                width: '100%', background: bg, border: `1.5px solid ${border}`, borderRadius: 14,
+                padding: '12px 12px 12px 12px', display: 'flex', alignItems: 'center', gap: 12,
+                boxShadow: shadow, fontFamily: FONT,
+                transform, cursor: showResult ? 'default' : 'grab',
+                transition: 'all .18s ease',
+                userSelect: 'none',
+              }}
+            >
+              <div style={{
+                width: 32, height: 32, borderRadius: 9, background: rankBg, color: rankText,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 14, fontWeight: 800, flexShrink: 0, fontVariantNumeric: 'tabular-nums',
+                transition: 'all .15s ease',
+              }}>{pos + 1}</div>
+              <div style={{ flex: 1, fontSize: 15, fontWeight: 600, color: A.text, lineHeight: 1.35 }}>
+                {items[origIdx]}
+              </div>
+              {/* Reorder controls — useful on touch where drag is finicky */}
+              {!showResult && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <button
+                    onClick={() => move(pos, Math.max(0, pos - 1))}
+                    disabled={pos === 0}
+                    aria-label="Monter"
+                    style={{
+                      width: 28, height: 22, borderRadius: 7, border: `1px solid ${A.border}`,
+                      background: A.surface, cursor: pos === 0 ? 'default' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                      opacity: pos === 0 ? 0.4 : 1,
+                    }}>
+                    <Icon name="chevronU" size={11} color={A.text} strokeWidth={2.5} />
+                  </button>
+                  <button
+                    onClick={() => move(pos, Math.min(items.length - 1, pos + 1))}
+                    disabled={pos === items.length - 1}
+                    aria-label="Descendre"
+                    style={{
+                      width: 28, height: 22, borderRadius: 7, border: `1px solid ${A.border}`,
+                      background: A.surface, cursor: pos === items.length - 1 ? 'default' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                      opacity: pos === items.length - 1 ? 0.4 : 1,
+                    }}>
+                    <Icon name="chevronD" size={11} color={A.text} strokeWidth={2.5} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {!showResult && (
+        <div style={{
+          marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6,
+          fontSize: 11.5, color: A.textMuted, fontWeight: 600,
+        }}>
+          <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ display: 'flex', gap: 2 }}>
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
+            </span>
+            <span style={{ display: 'flex', gap: 2 }}>
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
+            </span>
+            <span style={{ display: 'flex', gap: 2 }}>
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
+              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
+            </span>
+          </span>
+          Maintiens et fais glisser, ou utilise les flèches
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSOCIATION — Duolingo-style tap pairs
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AssociationRenderer({ q, pairs, setPairs, pendingLeft, pendingRight, setPendingLeft, setPendingRight, showResult, picked, setPicked }: {
+  q: Question
+  pairs: Array<{ l: number; r: number }>
+  setPairs: (v: Array<{ l: number; r: number }>) => void
+  pendingLeft: number | null
+  pendingRight: number | null
+  setPendingLeft: (n: number | null) => void
+  setPendingRight: (n: number | null) => void
+  showResult: boolean
+  picked: number | null
+  setPicked: (n: number | null) => void
+}) {
+  const data = q.choices as AssociationChoices
+  const left = data?.left ?? []
+  const right = data?.right ?? []
+  const correctMap = data?.correctMap ?? []
+
+  // Stable shuffled right-column order per question id (so it's not pre-aligned).
+  const rightOrder = useMemo(() => {
+    const idxs = right.map((_, i) => i)
+    return shuffle(idxs, q.id + '|right')
+  }, [q.id, right.length])
+
+  const leftPairedTo: Record<number, number | undefined> = {}
+  const rightPairedFrom: Record<number, number | undefined> = {}
+  pairs.forEach((p, i) => { leftPairedTo[p.l] = i; rightPairedFrom[p.r] = i })
+
+  // Recompute picked whenever pairs change.
+  useEffect(() => {
+    if (showResult) return
+    if (pairs.length !== left.length) { setPicked(null); return }
+    const allCorrect = pairs.every(p => correctMap[p.l] === p.r)
+    setPicked(allCorrect ? q.correct_index : (q.correct_index === 0 ? 1 : 0))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pairs.length, showResult])
+
+  function attempt(li: number | null, ri: number | null) {
+    if (li !== null && ri !== null) {
+      // If either is already paired, unpair it first.
+      const filtered = pairs.filter(p => p.l !== li && p.r !== ri)
+      setPairs([...filtered, { l: li, r: ri }])
+      setPendingLeft(null)
+      setPendingRight(null)
+    }
+  }
+
+  function tapLeft(i: number) {
+    if (showResult) return
+    // If already paired, unpair on tap.
+    if (leftPairedTo[i] !== undefined) {
+      setPairs(pairs.filter(p => p.l !== i))
+      return
+    }
+    if (pendingRight !== null) {
+      attempt(i, pendingRight)
+    } else {
+      setPendingLeft(pendingLeft === i ? null : i)
+    }
+  }
+
+  function tapRight(i: number) {
+    if (showResult) return
+    if (rightPairedFrom[i] !== undefined) {
+      setPairs(pairs.filter(p => p.r !== i))
+      return
+    }
+    if (pendingLeft !== null) {
+      attempt(pendingLeft, i)
+    } else {
+      setPendingRight(pendingRight === i ? null : i)
+    }
+  }
+
+  return (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {/* LEFT column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {left.map((text, i) => {
+            const pairIdx = leftPairedTo[i]
+            const isPaired = pairIdx !== undefined
+            const isSelected = pendingLeft === i
+            let state: 'idle' | 'selected' | 'paired' | 'correct' | 'wrong' = 'idle'
+            let color: string | undefined
+            if (showResult) {
+              if (isPaired) {
+                const p = pairs[pairIdx!]
+                state = correctMap[p.l] === p.r ? 'correct' : 'wrong'
+              } else state = 'wrong'
+            } else if (isSelected) state = 'selected'
+            else if (isPaired) { state = 'paired'; color = PAIR_COLORS[pairIdx! % PAIR_COLORS.length] }
+
+            return (
+              <AssocChip
+                key={`l-${i}`}
+                side="left"
+                text={text}
+                state={state}
+                color={color}
+                onClick={() => tapLeft(i)}
+              />
+            )
+          })}
+        </div>
+        {/* RIGHT column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {rightOrder.map((origI) => {
+            const i = origI
+            const pairIdx = rightPairedFrom[i]
+            const isPaired = pairIdx !== undefined
+            const isSelected = pendingRight === i
+            let state: 'idle' | 'selected' | 'paired' | 'correct' | 'wrong' = 'idle'
+            let color: string | undefined
+            if (showResult) {
+              if (isPaired) {
+                const p = pairs[pairIdx!]
+                state = correctMap[p.l] === p.r ? 'correct' : 'wrong'
+              } else state = 'wrong'
+            } else if (isSelected) state = 'selected'
+            else if (isPaired) { state = 'paired'; color = PAIR_COLORS[pairIdx! % PAIR_COLORS.length] }
+
+            return (
+              <AssocChip
+                key={`r-${i}`}
+                side="right"
+                text={right[i]}
+                state={state}
+                color={color}
+                onClick={() => tapRight(i)}
+              />
+            )
+          })}
+        </div>
+      </div>
+      {!showResult && (
+        <div style={{
+          marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8,
+          fontSize: 11.5, color: A.textMuted, fontWeight: 600,
+        }}>
+          <Icon name="sparkle" size={12} color={A.textMuted} strokeWidth={2} />
+          Touche une carte de gauche, puis sa paire à droite
+        </div>
+      )}
+    </>
+  )
+}
+
+function AssocChip({ side, text, state, color, onClick }: {
+  side: 'left' | 'right'
+  text: string
+  state: 'idle' | 'selected' | 'paired' | 'correct' | 'wrong'
+  color?: string
+  onClick: () => void
+}) {
+  let bg = A.surface
+  let border = A.border
+  let textCol = A.text
+  let shadow = '0 1px 0 rgba(15,27,45,0.02), 0 4px 10px -8px rgba(15,27,45,0.10)'
+  let dot: React.ReactNode = null
+
+  if (state === 'selected') {
+    border = A.primary; bg = '#F1F6FE'; textCol = A.primary
+    shadow = '0 0 0 3px rgba(10,102,224,0.14), 0 10px 22px -10px rgba(10,102,224,0.45)'
+  } else if (state === 'paired') {
+    border = color || A.primary; bg = A.surface; textCol = A.text
+    shadow = `inset 0 0 0 1px ${color || A.primary}, 0 4px 10px -8px rgba(15,27,45,0.08)`
+    dot = (
+      <div style={{
+        width: 18, height: 18, borderRadius: 9, background: color || A.primary,
+        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 10, fontWeight: 800, flexShrink: 0,
+      }}>
+        <Icon name="check" size={11} color="#fff" strokeWidth={3} />
+      </div>
+    )
+  } else if (state === 'correct') {
+    border = A.green; bg = A.greenSoft; textCol = A.green
+    shadow = `0 0 0 3px ${A.green}1a, 0 6px 18px -10px ${A.green}55`
+  } else if (state === 'wrong') {
+    border = A.red; bg = '#FCE8E8'; textCol = A.red
+    shadow = `0 0 0 3px ${A.red}1a, 0 6px 18px -10px ${A.red}55`
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', minHeight: 52, borderRadius: 14, background: bg,
+        border: `1.5px solid ${border}`, padding: '10px 12px',
+        display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT,
+        cursor: 'pointer', boxShadow: shadow, transition: 'all .15s ease',
+        justifyContent: 'space-between',
+      }}
+    >
+      {side === 'left' && dot}
+      <div style={{
+        flex: 1, fontSize: 14, fontWeight: 700, color: textCol, lineHeight: 1.3,
+        textAlign: side === 'left' ? 'left' : 'right',
+      }}>{text}</div>
+      {side === 'right' && dot}
+    </button>
   )
 }

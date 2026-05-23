@@ -10,29 +10,26 @@ import Icon from '@/components/ui/Icon'
 type Flashcard = { id: string; concept: string; definition: string }
 type Status = 'known' | 'review'
 
-const BATCH = 10
-
 export default function FlashcardsClient({ flashcards: rawCards, moduleId, userId }: { flashcards: Flashcard[]; moduleId: string; userId: string }) {
   const router = useRouter()
   const startRef = useRef(Date.now())
+  // progress map loaded from DB: flashcard_id → status
   const [progress, setProgress] = useState<Record<string, Status>>({})
   const [progressLoaded, setProgressLoaded] = useState(false)
+  // current session state
   const [sessionProgress, setSessionProgress] = useState<Record<string, Status>>({})
-  const [batch, setBatch] = useState(0)
   const [idx, setIdx] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [done, setDone] = useState(false)
 
   // Sort: review-first, then unseen, then known — only after progress loaded
-  const allCards = progressLoaded
+  const flashcards = progressLoaded
     ? [...rawCards].sort((a, b) => {
         const order = (s: Status | undefined) => s === 'review' ? 0 : s === undefined ? 1 : 2
         return order(progress[a.id]) - order(progress[b.id])
       })
     : rawCards
 
-  const totalBatches = Math.ceil(allCards.length / BATCH)
-  const flashcards = allCards.slice(batch * BATCH, (batch + 1) * BATCH)
   const total = flashcards.length
   const card = flashcards[idx]
 
@@ -74,16 +71,6 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
   const sessionKnown = Object.values(sessionProgress).filter(s => s === 'known').length
   const sessionReview = Object.values(sessionProgress).filter(s => s === 'review').length
   const totalKnown = Object.values({ ...progress, ...sessionProgress }).filter(s => s === 'known').length
-  const hasNextBatch = batch + 1 < totalBatches
-
-  function nextBatch() {
-    setBatch(b => b + 1)
-    setIdx(0)
-    setFlipped(false)
-    setSessionProgress({})
-    setDone(false)
-    startRef.current = Date.now()
-  }
 
   if (!progressLoaded) return (
     <div style={{ minHeight: '100vh', background: A.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -94,44 +81,23 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
 
   if (done) return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', background: A.bg, fontFamily: A.font, textAlign: 'center' }}>
-      {/* Dots progression */}
-      {totalBatches > 1 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 28 }}>
-          {Array.from({ length: totalBatches }).map((_, i) => (
-            <div key={i} style={{
-              width: i === batch ? 22 : 8, height: 8, borderRadius: 4,
-              background: i < batch ? A.green : i === batch ? A.primary : '#E1E5EC',
-              transition: 'all .3s',
-            }} />
-          ))}
-        </div>
-      )}
       <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${A.green} 0%, #0E8C3E 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 12px 32px rgba(22,163,74,0.32)' }}>
         <Icon name="check" size={40} color="#fff" strokeWidth={2.5} />
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>
-        {hasNextBatch ? `Leçon ${batch + 1}/${totalBatches} terminée !` : 'Toutes les cartes vues !'}
-      </div>
+      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Session terminée !</div>
       <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 6 }}>
-        <span style={{ color: A.green, fontWeight: 600 }}>{sessionKnown} sues</span> · <span style={{ color: A.amber, fontWeight: 600 }}>{sessionReview} à revoir</span>
+        <span style={{ color: A.green, fontWeight: 600 }}>{sessionKnown} sues</span> · <span style={{ color: A.amber, fontWeight: 600 }}>{sessionReview} à revoir</span> cette session
       </div>
       <div style={{ fontSize: 13, color: A.primary, fontWeight: 600, marginBottom: 28 }}>
-        {totalKnown}/{allCards.length} cartes maîtrisées au total
+        {totalKnown}/{total} cartes maîtrisées au total
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 }}>
-        {hasNextBatch && (
-          <button onClick={nextBatch} style={{ height: 54, borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`, color: '#fff', fontSize: 16, fontWeight: 700, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 6px 20px rgba(10,102,224,0.35)' }}>
-            Leçon {batch + 2}/{totalBatches} →
-          </button>
-        )}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => { setIdx(0); setFlipped(false); setSessionProgress({}); setDone(false); startRef.current = Date.now() }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
-            Recommencer
-          </button>
-          <button onClick={() => router.push(`/quiz/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: hasNextBatch ? A.surface : A.primary, border: hasNextBatch ? `0.5px solid ${A.borderStrong}` : 'none', color: hasNextBatch ? A.text : '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: hasNextBatch ? 'none' : '0 4px 14px rgba(10,102,224,0.28)' }}>
-            Faire le quiz
-          </button>
-        </div>
+      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
+        <button onClick={() => { setIdx(0); setFlipped(false); setSessionProgress({}); setDone(false); startRef.current = Date.now() }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
+          Recommencer
+        </button>
+        <button onClick={() => router.push(`/quiz/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+          Faire le quiz
+        </button>
       </div>
     </div>
   )
@@ -145,9 +111,7 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
           <Icon name="x" size={16} color={A.text} />
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>
-            {totalBatches > 1 ? `Leçon ${batch + 1}/${totalBatches}` : `Flashcards ${moduleId}`}
-          </div>
+          <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>Flashcards {moduleId}</div>
           <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{idx + 1}<span style={{ color: A.textDim }}>/{total}</span></div>
         </div>
         <div style={{ display: 'flex', gap: 10, fontSize: 12 }}>
@@ -157,10 +121,11 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
       </div>
 
       <div style={{ padding: '0 20px 10px', display: 'flex', gap: 4 }}>
-        {flashcards.map((fc, i) => {
-          const s = sessionProgress[fc.id]
+        {Array.from({ length: total }).map((_, i) => {
+          const cid = flashcards[i].id
+          const s = sessionProgress[cid]
           const bg = s === 'known' ? A.green : s === 'review' ? A.amber : i === idx ? A.primary + '88' : '#E1E5EC'
-          return <div key={fc.id} style={{ flex: 1, height: 3, borderRadius: 2, background: bg }} />
+          return <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: bg }} />
         })}
       </div>
 

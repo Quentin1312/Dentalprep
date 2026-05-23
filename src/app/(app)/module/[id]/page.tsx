@@ -5,13 +5,12 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { MODULE_MAP, FASCICULES } from '@/lib/modules'
+import { useAppData } from '@/lib/app-context'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
-import ModuleParcours from '@/components/library/ModuleParcours'
 
-type Course = { id: string; title: string; page_count: number | null; module_id?: string }
-type QuizQuestion = { id: string; course_id: string }
+type Course = { id: string; title: string; page_count: number | null }
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -25,14 +24,16 @@ function Skel({ h }: { h: number }) {
 export default function ModulePage() {
   const { id } = useParams() as { id: string }
   const router = useRouter()
+  const { data: appData, refresh } = useAppData()
 
   const [courses, setCourses] = useState<Course[]>([])
   const [flashcardCount, setFlashcardCount] = useState(0)
   const [accuracy, setAccuracy] = useState<number | null>(null)
   const [totalAttempts, setTotalAttempts] = useState(0)
   const [toReviewCount, setToReviewCount] = useState(0)
-  const [courseProgress, setCourseProgress] = useState<Map<string, { total: number; attempted: number }>>(new Map())
   const [loading, setLoading] = useState(true)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const mod = MODULE_MAP[id as ModuleId]
   const mFascicules = FASCICULES.filter(f => f.modules.includes(id as ModuleId))
@@ -43,28 +44,15 @@ export default function ModulePage() {
     if (!user) { router.replace('/auth/login'); return }
     const mid = id as ModuleId
 
-    // Fetch all user courses (shared fascicules may have a different module_id)
-    const [{ data: allC }, { data: f }] = await Promise.all([
-      supabase.from('courses').select('id,title,page_count,module_id').eq('user_id', user.id).order('created_at', { ascending: false }),
+    const [{ data: c }, { data: f }, { data: a }, { data: qq }, { data: atts }] = await Promise.all([
+      supabase.from('courses').select('id,title,page_count').eq('user_id', user.id).eq('module_id', mid).order('created_at', { ascending: false }),
       supabase.from('flashcards').select('id').eq('user_id', user.id).eq('module_id', mid),
-    ])
-
-    // Filter courses by fascicule-number match (handles shared fascicules)
-    const mFasNums = new Set(FASCICULES.filter(f => f.modules.includes(mid)).map(f => f.n))
-    const c = (allC ?? []).filter(course => {
-      if (course.module_id === mid) return true
-      const n = course.title.match(/Fascicule\s+(\d+)/i)
-      return n !== null && mFasNums.has(parseInt(n[1]))
-    })
-    const relevantCourseIds = c.map(course => course.id)
-
-    const [{ data: qq }, { data: a }, { data: atts }] = await Promise.all([
-      supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
+      supabase.from('quiz_questions').select('id').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', mid),
     ])
 
-    setCourses(c)
+    setCourses(c ?? [])
     setFlashcardCount(f?.length ?? 0)
     const att = a ?? []
     setTotalAttempts(att.length)
@@ -76,28 +64,11 @@ export default function ModulePage() {
       const s = statsByQ.get(at.question_id) ?? { ok: 0, total: 0 }
       statsByQ.set(at.question_id, { ok: s.ok + (at.is_correct ? 1 : 0), total: s.total + 1 })
     }
-    const qqData = (qq ?? []) as QuizQuestion[]
-    const toReview = qqData.filter(q => {
+    const toReview = (qq ?? []).filter(q => {
       const s = statsByQ.get(q.id)
       return !s || s.total === 0 || s.ok / s.total < 0.6
     }).length
     setToReviewCount(toReview)
-
-    // Calcul progression leçons par cours
-    const questionToCourse = new Map(qqData.map(q => [q.id, q.course_id]))
-    const qCountByCourse = new Map<string, number>()
-    for (const q of qqData) qCountByCourse.set(q.course_id, (qCountByCourse.get(q.course_id) ?? 0) + 1)
-    const attemptedByCourse = new Map<string, Set<string>>()
-    for (const at of atts ?? []) {
-      const cid = questionToCourse.get(at.question_id)
-      if (!cid) continue
-      const s = attemptedByCourse.get(cid) ?? new Set<string>()
-      s.add(at.question_id)
-      attemptedByCourse.set(cid, s)
-    }
-    const prog = new Map<string, { total: number; attempted: number }>()
-    for (const [cid, total] of qCountByCourse) prog.set(`${mid}:${cid}`, { total, attempted: attemptedByCourse.get(cid)?.size ?? 0 })
-    setCourseProgress(prog)
 
     setLoading(false)
   }, [id, router])
@@ -107,6 +78,22 @@ export default function ModulePage() {
     load()
   }, [mod, load, router])
 
+  async function deleteCourse(courseId: string) {
+    if (!appData) return
+    setDeletingId(courseId)
+    const supabase = createClient()
+    try {
+      const { data: files } = await supabase.storage.from('course-images').list(`${appData.userId}/${courseId}`)
+      if (files?.length) {
+        await supabase.storage.from('course-images').remove(files.map(f => `${appData.userId}/${courseId}/${f.name}`))
+      }
+    } catch {}
+    await supabase.from('courses').delete().eq('id', courseId)
+    setCourses(prev => prev.filter(c => c.id !== courseId))
+    setDeletingId(null)
+    setConfirmId(null)
+    refresh()
+  }
 
   if (!mod) return null
 
@@ -118,10 +105,7 @@ export default function ModulePage() {
 
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
-      <style>{`
-        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(10,102,224,0.45)}50%{box-shadow:0 0 0 14px rgba(10,102,224,0)}}
-      `}</style>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
 
       <div style={{ padding: '62px 20px 0' }}>
         <Link href="/library" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: A.textMuted, fontWeight: 500, textDecoration: 'none', marginBottom: 16 }}>
@@ -223,20 +207,56 @@ export default function ModulePage() {
         </div>
       </div>
 
-      {/* Parcours */}
+      {/* Fascicules du module */}
       <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 20 }}>Parcours</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 10 }}>Fascicules</div>
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            <Skel h={72} /><Skel h={40} /><Skel h={72} /><Skel h={40} />
-          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><Skel h={66} /><Skel h={66} /></div>
         ) : (
-          <ModuleParcours
-            moduleId={id}
-            fascicules={mFascicules}
-            courses={courses}
-            courseProgress={courseProgress}
-          />
+          <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,27,45,0.06)' }}>
+            {mFascicules.map((f, fi) => {
+              const course = courses.find(c => fasciculeN(c.title) === f.n)
+              const isLast = fi === mFascicules.length - 1
+              return (
+                <div key={f.n} style={{ padding: '12px 14px', borderBottom: isLast ? 'none' : `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: course ? A.greenSoft : '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: course ? A.green : A.textDim }}>{f.n}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
+                    {course
+                      ? <div style={{ fontSize: 11, color: A.green, marginTop: 1 }}>{course.page_count ?? 0} pages · scanné</div>
+                      : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>}
+                  </div>
+                  {course ? (
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <Link href={`/quiz/${id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: A.primarySoft, border: `0.5px solid ${A.primary}20` }}>
+                        <Icon name="target" size={11} color={A.primary} />
+                        <span style={{ fontSize: 11, fontWeight: 600, color: A.primary }}>Quiz</span>
+                      </Link>
+                      {confirmId === course.id ? (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => setConfirmId(null)} style={{ padding: '5px 8px', borderRadius: 8, border: `0.5px solid ${A.border}`, background: A.bg, fontSize: 11, fontWeight: 600, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>✕</button>
+                          <button onClick={() => deleteCourse(course.id)} disabled={deletingId === course.id} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', background: A.red, fontSize: 11, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: A.font, opacity: deletingId === course.id ? 0.6 : 1 }}>
+                            {deletingId === course.id ? '…' : 'Sup.'}
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setConfirmId(course.id)} style={{ width: 28, height: 28, borderRadius: 8, background: '#FEF2F2', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                          <Icon name="trash" size={12} color={A.red} />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}` }}>
+                      <Icon name="camera" size={11} color={A.textMuted} />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Scanner</span>
+                    </Link>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>

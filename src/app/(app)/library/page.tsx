@@ -1,251 +1,249 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { useAppData } from '@/lib/app-context'
-import { MODULES, FASCICULES } from '@/lib/modules'
-import { A } from '@/lib/theme'
-import Icon from '@/components/ui/Icon'
-import { readFlashQuestions } from '@/lib/flash-store'
-import { createClient } from '@/lib/supabase/client'
-import ModuleParcours from '@/components/library/ModuleParcours'
+import { MODULES, FASCICULES, type Module, type Fascicule } from '@/lib/modules'
+import type { ModuleId } from '@/types/database'
+import { useThemeBg, themeBgStyle, THEMES } from '@/lib/theme-bg'
+import {
+  PathSystemStyles, PathNode, PathRow, ModuleBanner, ModuleBreak, ModuleRail,
+  type RailModule, type ModuleBreakVariant,
+} from '@/components/ui/PathSystem'
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
   return m ? parseInt(m[1]) : null
 }
 
+// Per-module visual identity (color + icon)
+const MOD_STYLE: Record<ModuleId, { accent: string; icon: 'bookOpen' | 'tooth' | 'warn' | 'mask' | 'eye' | 'target' }> = {
+  M1: { accent: '#0A66E0', icon: 'bookOpen' },
+  M2: { accent: '#0D9488', icon: 'tooth' },
+  M3: { accent: '#7C3AED', icon: 'warn' },
+  M4: { accent: '#E11D48', icon: 'mask' },
+  M5: { accent: '#D97706', icon: 'eye' },
+  M6: { accent: '#5B21B6', icon: 'target' },
+}
+
+// Fascicule topic → icon (rough mapping by keywords)
+function iconForFascicule(title: string): 'book' | 'tooth' | 'syringe' | 'pill' | 'warn' | 'mask' | 'dental' | 'eye' | 'heart' {
+  const t = title.toLowerCase()
+  if (t.includes('anesth')) return 'syringe'
+  if (t.includes('pharma')) return 'pill'
+  if (t.includes('patholog')) return 'warn'
+  if (t.includes('microbio') || t.includes('hygi') || t.includes('stéril')) return 'mask'
+  if (t.includes('imager') || t.includes('radio')) return 'eye'
+  if (t.includes('fauteuil') || t.includes('dent')) return 'dental'
+  if (t.includes('urgence') || t.includes('afgsu')) return 'heart'
+  if (t.includes('anatomie')) return 'tooth'
+  return 'book'
+}
+
+// Amplitude sequence for the zigzag — reset per module
+const POS_SEQ = [0, -1, -1, 0, 1, 1, 0, -1]
+function amplitudeAt(i: number): number {
+  return POS_SEQ[i % POS_SEQ.length]
+}
+
+const BREAK_ROTATION: ModuleBreakVariant[] = ['cat', 'yarn', 'bowl', 'cat', 'yarn']
+
 export default function LibraryPage() {
+  const router = useRouter()
   const { data, loading } = useAppData()
+  const [themeId] = useThemeBg()
+  const theme = THEMES[themeId]
   const courses = data?.courses ?? []
-  const [flashQCount, setFlashQCount] = useState(0)
-  const [courseProgress, setCourseProgress] = useState<Map<string, { total: number; attempted: number }>>(new Map())
-  const [expandedModule, setExpandedModule] = useState<string | null>(null)
-  const initialExpandRef = useRef(false)
+  const attempts = data?.attempts ?? []
 
-  useEffect(() => { setFlashQCount(readFlashQuestions().length) }, [])
+  // Compute per-module stats once
+  const moduleStats = MODULES.map(m => {
+    const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
+    const mCourses = courses.filter(c => c.module_id === m.id)
+    const scanned = mFascicules.filter(f => mCourses.some(c => fasciculeN(c.title) === f.n))
+    const mAttempts = attempts.filter(a => a.module_id === m.id)
+    const correct = mAttempts.filter(a => a.is_correct).length
+    const acc = mAttempts.length > 0 ? correct / mAttempts.length : 0
+    return { m, mFascicules, mCourses, scannedCount: scanned.length, attempts: mAttempts.length, accuracy: acc }
+  })
 
-  const moduleIds = [...new Set(courses.map(c => c.module_id))]
-  const attemptedModuleIds = new Set((data?.attempts ?? []).map(a => a.module_id))
-  const allModulesQuizzed = moduleIds.length > 0 && moduleIds.every(id => attemptedModuleIds.has(id))
-  const globalUnlocked = flashQCount >= 5 && allModulesQuizzed
-  const missingModules = moduleIds.filter(id => !attemptedModuleIds.has(id))
+  // Rail data
+  const railModules: RailModule[] = moduleStats.map(({ m, scannedCount, mFascicules, accuracy }) => {
+    const status: RailModule['status'] = scannedCount === mFascicules.length && mFascicules.length > 0
+      ? 'done'
+      : scannedCount > 0 ? 'active' : 'open'
+    return {
+      id: m.id, label: m.label.split(' ').slice(0, 2).join(' '),
+      accent: MOD_STYLE[m.id].accent, icon: MOD_STYLE[m.id].icon,
+      done: scannedCount, total: mFascicules.length || 1,
+      status,
+    }
+  })
 
-  // Accuracy par module depuis les tentatives du contexte
-  const accuracyByModule = new Map<string, number>()
-  const _stats = new Map<string, { ok: number; total: number }>()
-  for (const a of data?.attempts ?? []) {
-    const s = _stats.get(a.module_id) ?? { ok: 0, total: 0 }
-    _stats.set(a.module_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+  // Active module: the first non-fully-scanned module that has at least one scan, fallback to first
+  const activeMod = moduleStats.find(s => s.scannedCount > 0 && s.scannedCount < s.mFascicules.length)?.m
+    ?? moduleStats.find(s => s.scannedCount === 0)?.m
+    ?? MODULES[0]
+
+  function scrollTo(modId: string) {
+    if (typeof document === 'undefined') return
+    const el = document.getElementById(`mod-${modId}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-  for (const [mid, s] of _stats) accuracyByModule.set(mid, Math.round(s.ok / s.total * 100))
-
-  // Charge le compte de questions par (module_id:course_id) pour les leçons par module
-  const loadProgress = useCallback(async () => {
-    if (!data?.userId) return
-    const supabase = createClient()
-    const { data: qq } = await supabase.from('quiz_questions').select('id,course_id,module_id').eq('user_id', data.userId)
-    if (!qq) return
-    // key = "moduleId:courseId"
-    const questionToKey = new Map(qq.map(q => [q.id as string, `${q.module_id}:${q.course_id}`]))
-    const qCountByKey = new Map<string, number>()
-    for (const q of qq) {
-      const key = `${q.module_id}:${q.course_id}`
-      qCountByKey.set(key, (qCountByKey.get(key) ?? 0) + 1)
-    }
-    const attemptedByKey = new Map<string, Set<string>>()
-    for (const at of data.attempts ?? []) {
-      const key = questionToKey.get(at.question_id)
-      if (!key) continue
-      const s = attemptedByKey.get(key) ?? new Set<string>()
-      s.add(at.question_id)
-      attemptedByKey.set(key, s)
-    }
-    const prog = new Map<string, { total: number; attempted: number }>()
-    for (const [key, total] of qCountByKey) prog.set(key, { total, attempted: attemptedByKey.get(key)?.size ?? 0 })
-    setCourseProgress(prog)
-  }, [data?.userId, data?.attempts])
-
-  useEffect(() => { loadProgress() }, [loadProgress])
-
-  // Expand le premier module qui a des cours scannés — uniquement au premier chargement
-  useEffect(() => {
-    if (initialExpandRef.current || !data) return
-    initialExpandRef.current = true
-    const firstWithCourses = MODULES.find(m => courses.some(c => c.module_id === m.id))
-    if (firstWithCourses) setExpandedModule(firstWithCourses.id)
-  }, [data, courses])
 
   return (
-    <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
-      <style>{`
-        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-        @keyframes parcours-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-        @keyframes parcours-fade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-      `}</style>
+    <div style={{
+      minHeight: '100%', ...themeBgStyle(themeId),
+      fontFamily: '-apple-system, "SF Pro Text", system-ui, sans-serif',
+      paddingBottom: 120,
+    }}>
+      <PathSystemStyles />
 
-      <div style={{ padding: '62px 20px 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 13, color: A.textMuted, fontWeight: 500 }}>Bibliothèque</div>
-          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>Mon parcours</div>
-        </div>
-        <Link href="/quick-scan" style={{ width: 44, height: 44, borderRadius: 14, background: A.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-          <Icon name="plus" size={22} color="#fff" strokeWidth={2.2} />
-        </Link>
+      {/* Page header */}
+      <div style={{ padding: '54px 16px 4px' }}>
+        <div style={{
+          fontSize: 11, color: theme.textMuted, fontWeight: 800,
+          letterSpacing: 0.6, textTransform: 'uppercase',
+        }}>Bonjour</div>
+        <div style={{
+          fontSize: 26, fontWeight: 800, letterSpacing: -0.6, color: theme.text, marginTop: 1,
+        }}>Ton parcours</div>
       </div>
 
-      {/* Quiz Global banner */}
-      <Link href="/global-quiz" style={{ textDecoration: 'none', display: 'block', margin: '16px 20px 0' }}>
-        <div style={{ background: globalUnlocked ? `linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%)` : A.surface, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: globalUnlocked ? '0 4px 20px rgba(124,58,237,0.28)' : 'none', border: globalUnlocked ? 'none' : `0.5px solid ${A.border}` }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: globalUnlocked ? 'rgba(255,255,255,0.18)' : '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="sparkle" size={20} color={globalUnlocked ? '#fff' : '#7C3AED'} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: globalUnlocked ? '#fff' : A.text }}>Quiz Global {globalUnlocked ? '' : '🔒'}</div>
-            <div style={{ fontSize: 12, color: globalUnlocked ? 'rgba(255,255,255,0.75)' : A.textMuted, marginTop: 1 }}>
-              {globalUnlocked
-                ? `${flashQCount} questions · tous modules débloqué`
-                : missingModules.length > 0
-                  ? `Quiz manquant : ${missingModules.join(', ')}`
-                  : flashQCount < 5
-                    ? `Fais des Quiz Flash (${flashQCount}/5 questions)`
-                    : 'Fais le quiz de chaque module'}
-            </div>
-          </div>
-          <Icon name="chevronR" size={16} color={globalUnlocked ? 'rgba(255,255,255,0.7)' : A.textDim} />
+      {/* Module rail */}
+      <ModuleRail modules={railModules} activeId={activeMod.id} onPick={scrollTo} />
+
+      {/* Loading skeleton */}
+      {loading && !data && (
+        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[120, 180, 120, 180].map((h, i) => (
+            <div key={i} style={{
+              height: h, borderRadius: 18,
+              background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)',
+              backgroundSize: '200% 100%', animation: 'dp-shimmer 1.4s infinite',
+            }} />
+          ))}
         </div>
-      </Link>
+      )}
 
-      {/* Quick scan banner */}
-      <Link href="/quick-scan" style={{ textDecoration: 'none', display: 'block', margin: '10px 20px 0' }}>
-        <div style={{ background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 14px rgba(10,102,224,0.22)' }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="camera" size={20} color="#fff" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Quiz Flash</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>Photo → quiz instantané par IA</div>
-          </div>
-          <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
-        </div>
-      </Link>
+      {/* The full zigzag path */}
+      {!loading && moduleStats.map(({ m, mFascicules, mCourses, scannedCount, accuracy }, mIdx) => {
+        const accent = MOD_STYLE[m.id].accent
+        const modIcon = MOD_STYLE[m.id].icon
+        const isFullyScanned = scannedCount === mFascicules.length && mFascicules.length > 0
+        const isActive = m.id === activeMod.id
 
-      {/* Modules avec parcours accordéon */}
-      <div style={{ padding: '24px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {loading && !data
-          ? [1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} style={{ height: 76, borderRadius: 18, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
-            ))
-          : MODULES.map(m => {
-              const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
-              const mFasNums = new Set(mFascicules.map(f => f.n))
-              const mCourses = courses.filter(c => {
-                if (c.module_id === m.id) return true
-                const n = c.title.match(/Fascicule\s+(\d+)/i)
-                return n !== null && mFasNums.has(parseInt(n[1]))
-              })
-              const scannedCount = mFascicules.filter(f => mCourses.some(c => fasciculeN(c.title) === f.n)).length
-              const isExpanded = expandedModule === m.id
-              const allScanned = scannedCount === mFascicules.length && mFascicules.length > 0
+        // Build node list: each fascicule + boss quiz at end
+        const nodes: Array<{
+          kind: 'fasc' | 'boss'
+          fascicule?: Fascicule
+          course?: { id: string; module_id: string; title: string; page_count: number | null }
+          isCurrent?: boolean
+        }> = []
 
-              // Compte des leçons faites/totales pour ce module (clé "moduleId:courseId")
-              const moduleLessons = mCourses.reduce((acc, c) => {
-                const p = courseProgress.get(`${m.id}:${c.id}`)
-                if (!p || p.total === 0) return acc
-                return {
-                  total: acc.total + Math.ceil(p.total / 10),
-                  done: acc.done + Math.floor(p.attempted / 10),
-                }
-              }, { total: 0, done: 0 })
-
-              return (
-                <div key={m.id} style={{
-                  background: A.surface,
-                  borderRadius: 20,
-                  border: `0.5px solid ${A.border}`,
-                  overflow: 'hidden',
-                  boxShadow: isExpanded ? '0 8px 32px rgba(15,27,45,0.08)' : '0 1px 3px rgba(15,27,45,0.05)',
-                  transition: 'box-shadow .3s',
-                }}>
-                  {/* Header cliquable */}
-                  <button
-                    onClick={() => setExpandedModule(isExpanded ? null : m.id)}
-                    style={{
-                      width: '100%', padding: '16px 16px', display: 'flex', alignItems: 'center', gap: 12,
-                      background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: A.font,
-                      textAlign: 'left',
-                    }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 14,
-                      background: allScanned
-                        ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)'
-                        : `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                      boxShadow: allScanned
-                        ? '0 4px 12px rgba(22,163,74,0.3)'
-                        : '0 4px 12px rgba(10,102,224,0.3)',
-                    }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>{m.id}</span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
-                      <div style={{ fontSize: 11, color: A.textMuted, marginTop: 2 }}>
-                        {mFascicules.length > 0 && (
-                          <>
-                            {scannedCount}/{mFascicules.length} fascicule{mFascicules.length > 1 ? 's' : ''}
-                            {moduleLessons.total > 0 && ` · ${moduleLessons.done}/${moduleLessons.total} leçons`}
-                            {accuracyByModule.has(m.id) && (
-                              <span style={{ color: (accuracyByModule.get(m.id) ?? 0) >= 75 ? '#16A34A' : '#D97706', fontWeight: 600 }}>
-                                {` · ${accuracyByModule.get(m.id)}%`}
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    {allScanned && (
-                      <Link
-                        href={`/quiz/${m.id}?mode=smart`}
-                        onClick={e => e.stopPropagation()}
-                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 10, background: A.primarySoft, border: `1px solid ${A.primary}30`, flexShrink: 0, marginRight: 6 }}
-                      >
-                        <Icon name="bolt" size={12} color={A.primary} />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: A.primary }}>Smart</span>
-                      </Link>
-                    )}
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 10,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)',
-                      transition: 'transform .25s',
-                      background: '#F3F4F6',
-                      flexShrink: 0,
-                    }}>
-                      <Icon name="chevronD" size={16} color={A.textMuted} />
-                    </div>
-                  </button>
-
-                  {/* Parcours déployable */}
-                  {isExpanded && (
-                    <div style={{
-                      padding: '20px 16px 28px',
-                      borderTop: `0.5px solid ${A.border}`,
-                      animation: 'parcours-fade .3s ease-out',
-                    }}>
-                      <ModuleParcours
-                        moduleId={m.id}
-                        fascicules={mFascicules}
-                        courses={mCourses}
-                        courseProgress={courseProgress}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            })
+        // First "current" = first not-scanned fascicule. Make others available/locked accordingly.
+        let foundCurrent = false
+        for (const f of mFascicules) {
+          const course = mCourses.find(c => fasciculeN(c.title) === f.n)
+          const isCurrent = !course && !foundCurrent
+          if (isCurrent) foundCurrent = true
+          nodes.push({ kind: 'fasc', fascicule: f, course, isCurrent })
         }
-      </div>
+        // Add boss quiz node at end (regardless of scan state, it's always there)
+        nodes.push({ kind: 'boss' })
+
+        return (
+          <div key={m.id} id={`mod-${m.id}`}>
+            <ModuleBanner
+              moduleId={m.id}
+              label={m.label}
+              sublabel={m.description}
+              accent={accent}
+              icon={modIcon}
+              doneNodes={scannedCount}
+              totalNodes={mFascicules.length}
+              isActive={isActive}
+              onClick={() => router.push(`/module/${m.id}`)}
+            />
+
+            {nodes.map((node, i) => {
+              const pos = amplitudeAt(i)
+              const from = i > 0 ? amplitudeAt(i - 1) : undefined
+
+              if (node.kind === 'fasc') {
+                const f = node.fascicule!
+                const course = node.course
+                // Un-scanned but next-up = 'current' (pulsing). Other un-scanned = 'available'.
+                // Scanned = 'completed'.
+                const state = course ? 'completed' : node.isCurrent ? 'current' : 'available'
+                const icon = course ? iconForFascicule(f.title) : 'camera'
+                const href = course ? `/fascicule/${course.id}` : `/upload?fascicule=${f.n}`
+                const shortTitle = f.title.length > 26 ? f.title.slice(0, 24) + '…' : f.title
+                return (
+                  <PathRow key={`f-${m.id}-${f.n}`} pos={pos} from={from}>
+                    <Link href={href} style={{ textDecoration: 'none' }}>
+                      <PathNode
+                        state={state}
+                        icon={icon}
+                        accent={accent}
+                        label={shortTitle}
+                        sublabel={course ? `${course.page_count ?? 0} p. · scanné` : 'À scanner'}
+                      />
+                    </Link>
+                  </PathRow>
+                )
+              }
+              // Boss quiz node
+              const bossState = scannedCount === 0
+                ? 'locked'
+                : isFullyScanned && accuracy >= 0.75
+                  ? 'completed'
+                  : 'available'
+              const href = `/quiz/${m.id}${isFullyScanned ? '?mode=smart' : ''}`
+              return (
+                <PathRow key={`boss-${m.id}`} pos={pos} from={from}>
+                  <Link href={bossState === 'locked' ? '#' : href} style={{ textDecoration: 'none', pointerEvents: bossState === 'locked' ? 'none' : 'auto' }}>
+                    <PathNode
+                      state={bossState}
+                      icon="target"
+                      isBoss
+                      accent={accent}
+                      label="Quiz du module"
+                      sublabel={accuracy > 0 ? `${Math.round(accuracy * 100)}% • ${nodesAttempts(attempts, m.id)} tentés` : undefined}
+                    />
+                  </Link>
+                </PathRow>
+              )
+            })}
+
+            {/* Module break decoration between modules (skip after last) */}
+            {mIdx < moduleStats.length - 1 && (
+              <ModuleBreak variant={BREAK_ROTATION[mIdx % BREAK_ROTATION.length]} />
+            )}
+          </div>
+        )
+      })}
+
+      {/* Final exam boss */}
+      {!loading && (
+        <div style={{ padding: '22px 16px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            padding: '6px 12px', borderRadius: 10,
+            background: 'linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)',
+            color: '#fff', fontSize: 10, fontWeight: 900, letterSpacing: 1.2,
+            textTransform: 'uppercase',
+            boxShadow: '0 8px 18px -6px rgba(124,58,237,0.55), inset 0 1px 0 rgba(255,255,255,0.25)',
+          }}>★ Examen final CNQAOS ★</div>
+          <Link href="/global-quiz" style={{ textDecoration: 'none' }}>
+            <PathNode state="locked" icon="trophy" isBoss label="Examen blanc" sublabel="Conditions réelles" accent="#7C3AED" />
+          </Link>
+        </div>
+      )}
     </div>
   )
+}
+
+function nodesAttempts(attempts: { module_id: string }[], modId: string): number {
+  return attempts.filter(a => a.module_id === modId).length
 }

@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "PowerShell(& py -c \"import os; files = [f for f in os.listdir\\(r'C:\\\\Users\\\\quent\\\\Downloads'\\) if 'natomie' in f or 'natomie' in f.lower\\(\\)]; print\\(files\\)\")",
-      "PowerShell($env:PYTHONUTF8=1; & py -c \"import os; files = [f for f in os.listdir\\(r'C:\\\\Users\\\\quent\\\\Downloads'\\) if 'natomie' in f.lower\\(\\)]; print\\(files\\)\")"
+      "PowerShell($env:PYTHONUTF8=1; & py -c \"import os; files = [f for f in os.listdir\\(r'C:\\\\Users\\\\quent\\\\Downloads'\\) if 'natomie' in f.lower\\(\\)]; print\\(files\\)\")",
+      "PowerShell(py \"C:\\\\Users\\\\quent\\\\Downloads\\\\insert_fascicule_6.py\")",
+      "Bash(py -c \"import os; print\\(os.listdir\\('fascicule_11'\\)\\)\")",
+      "Bash(py insert_fascicule10.py)",
+      "Bash(py insert_fascicule11.py)",
+      "Bash(py insert_fascicule15.py)",
+      "Bash(py -c ' *)",
+      "Bash(py insert_bb_05.py)",
+      "Bash(git commit -m 'fix\\(quiz\\): refonte ORDRE drag-to-reorder et ASSOCIATION style Duolingo *)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix\\(quiz\\): typage explicite string sur bg/border pour eviter erreur as const *)"
     ]
   }
 }

@@ -3,20 +3,26 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import PetCompanion, { PET_NAMES } from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
-import { computeXP, xpProgress } from '@/lib/xp'
+import { computeXP, xpProgress, LEVEL_THRESHOLDS } from '@/lib/xp'
 import { readFlashXP } from '@/lib/flash-store'
 import { computeBadges } from '@/lib/badges'
 import type { Badge } from '@/lib/badges'
+import { useThemeBg, themeBgStyle, THEMES, type ThemeBgId } from '@/lib/theme-bg'
+import {
+  PathSystemStyles, SectionLabel, SleepingCat, shade, PathIcon,
+} from '@/components/ui/PathSystem'
 
 type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null }
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
 
 export default function ProfilePage() {
   const router = useRouter()
+  const [themeId, setThemeBgFn] = useThemeBg()
+  const theme = THEMES[themeId]
+
   const [profile, setProfile] = useState<Profile | null>(null)
   const [email, setEmail] = useState('')
   const [attempts, setAttempts] = useState<Attempt[]>([])
@@ -56,7 +62,10 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('profiles').update({ full_name: name, exam_date: examDate || null, daily_goal_minutes: goal, updated_at: new Date().toISOString() }).eq('id', user.id)
+    await supabase.from('profiles').update({
+      full_name: name, exam_date: examDate || null,
+      daily_goal_minutes: goal, updated_at: new Date().toISOString(),
+    }).eq('id', user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -67,181 +76,361 @@ export default function ProfilePage() {
     router.replace('/auth/login')
   }
 
-  const initials = (name || email).slice(0, 2).toUpperCase()
-  const totalAttempts = attempts.length
-  const correctAttempts = attempts.filter(a => a.is_correct).length
-  const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0
   const xp = computeXP(attempts) + flashXpBonus
   const xpInfo = xpProgress(xp)
   const badges: Badge[] = computeBadges(attempts, profile?.streak ?? 0)
-  const unlockedCount = badges.filter(b => b.unlocked).length
-
-  const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 12, border: `1px solid ${A.border}`, background: A.bg, fontSize: 15, color: A.text, fontFamily: A.font, outline: 'none' }
+  const accent = xpInfo.color
+  const xpPct = Math.max(0, Math.min(100, xpInfo.pct))
 
   return (
-    <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes xp-fill{from{width:0}to{width:var(--xp-pct)}}`}</style>
-      <div style={{ padding: '62px 20px 0' }}>
-        <div style={{ fontSize: 13, color: A.textMuted, fontWeight: 500 }}>Mon compte</div>
-        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>Profil</div>
+    <div style={{
+      minHeight: '100%', ...themeBgStyle(themeId),
+      fontFamily: '-apple-system, "SF Pro Text", system-ui, sans-serif',
+      paddingBottom: 120,
+    }}>
+      <PathSystemStyles />
+
+      <div style={{ padding: '54px 16px 6px' }}>
+        <div style={{ fontSize: 11, color: theme.textMuted, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+          Mon compte
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.6, color: theme.text, marginTop: 1 }}>
+          Profil
+        </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: '20px 20px 0' }}>
-          <div style={{ borderRadius: 20, height: 180, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+        <div style={{ padding: '12px 16px' }}>
+          <div style={{
+            height: 220, borderRadius: 22,
+            background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)',
+            backgroundSize: '200% 100%', animation: 'dp-shimmer 1.4s infinite',
+          }} />
         </div>
       ) : (
         <>
-          {/* Hero card */}
-          <div style={{ padding: '20px 20px 0' }}>
-            <div style={{ background: `linear-gradient(135deg,${A.primary} 0%,${A.primaryDark} 100%)`, borderRadius: 20, padding: 20, color: '#fff', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 30px rgba(10,102,224,0.28)' }}>
-              <div style={{ position: 'absolute', right: -30, top: -30, width: 140, height: 140, border: '18px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>{initials}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: -0.3 }}>{name || 'Mon profil'}</div>
-                  <div style={{ fontSize: 13, opacity: 0.75, marginTop: 2 }}>{email}</div>
-                </div>
+          {/* Hero — dark card with sleeping cat + level + XP */}
+          <div style={{ padding: '8px 16px 0' }}>
+            <div style={{
+              position: 'relative',
+              borderRadius: 22,
+              background: 'linear-gradient(135deg, #1B1730 0%, #0F1424 100%)',
+              padding: '20px 18px 18px',
+              boxShadow: '0 14px 30px -12px rgba(15,27,45,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+              overflow: 'hidden',
+              color: '#fff',
+            }}>
+              <div style={{ position: 'absolute', right: -10, top: 8 }}>
+                <SleepingCat size={94} cushionColor="#5B21B6" />
               </div>
-              <div style={{ display: 'flex', marginTop: 18, borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 16 }}>
-                {[{ v: profile?.streak ?? 0, l: 'jours streak' }, { v: totalAttempts, l: 'questions' }, { v: `${accuracy}%`, l: 'précision' }].map((s, i) => (
-                  <div key={i} style={{ flex: 1, textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.15)' : 'none' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700 }}>{s.v}</div>
-                    <div style={{ fontSize: 11, opacity: 0.75, marginTop: 2 }}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* XP & Level */}
-          <div style={{ padding: '16px 20px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Niveau & XP</div>
-            <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, padding: '16px 18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-                {/* Pet mini */}
-                <div style={{ flexShrink: 0, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <PetCompanion petType={petType} state="idle" size={52} hideName level={xpInfo.level} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: xpInfo.color, letterSpacing: -0.5 }}>
-                      Niv. {xpInfo.level}
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: xpInfo.color }}>{xpInfo.name}</div>
-                  </div>
-                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
-                    {xp} XP total · {xpInfo.level < 5 ? `${xpInfo.levelEnd - xp} XP avant le prochain niveau` : 'Niveau maximum atteint !'}
-                  </div>
-                </div>
-              </div>
-              {/* XP bar */}
-              <div style={{ height: 10, background: '#E9ECF2', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
+              <div style={{
+                fontSize: 26, fontWeight: 800, letterSpacing: -0.6, lineHeight: 1.1,
+                textShadow: '0 1px 2px rgba(0,0,0,0.20)', maxWidth: '60%',
+              }}>{name || 'Mon profil'}</div>
+              <div style={{
+                fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500,
+                maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>{email}</div>
+
+              <div style={{ marginTop: 18 }}>
                 <div style={{
-                  height: '100%',
-                  width: `${xpInfo.pct}%`,
-                  background: `linear-gradient(90deg, ${xpInfo.color}, ${xpInfo.color}CC)`,
-                  borderRadius: 6,
-                  transition: 'width 1s cubic-bezier(0.34,1.2,0.64,1)',
-                  boxShadow: `0 0 8px ${xpInfo.color}66`,
-                }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 10, color: A.textDim }}>
-                <span>{xpInfo.levelStart} XP</span>
-                <span style={{ fontWeight: 600, color: A.textMuted }}>{xpInfo.pct}%</span>
-                <span>{xpInfo.level < 5 ? `${xpInfo.levelEnd} XP` : '∞'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Badges */}
-          <div style={{ padding: '16px 20px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' }}>Badges</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: A.primary }}>{unlockedCount}/{badges.length} débloqués</div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-              {badges.map(b => (
-                <div key={b.id} style={{
-                  background: b.unlocked ? A.surface : A.bg,
-                  border: `0.5px solid ${b.unlocked ? A.borderStrong : A.border}`,
-                  borderRadius: 14,
-                  padding: '12px 6px 10px',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                  opacity: b.unlocked ? 1 : 0.38,
-                  filter: b.unlocked ? undefined : 'grayscale(100%)',
-                  boxShadow: b.unlocked ? '0 2px 8px rgba(15,27,45,0.06)' : 'none',
-                  position: 'relative',
-                  overflow: 'hidden',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8,
                 }}>
-                  {b.unlocked && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{
-                      position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                      background: `linear-gradient(90deg, ${A.primary}, ${A.primaryDark})`,
-                      borderRadius: '14px 14px 0 0',
-                    }} />
-                  )}
-                  <div style={{ fontSize: 26, lineHeight: 1 }}>{b.emoji}</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: b.unlocked ? A.text : A.textDim, textAlign: 'center', lineHeight: 1.2, letterSpacing: 0.1 }}>
-                    {b.name}
+                      width: 26, height: 26, borderRadius: 8,
+                      background: `linear-gradient(135deg, ${accent} 0%, ${shade(accent, -25)} 100%)`,
+                      color: '#fff', fontSize: 12, fontWeight: 900,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.3), 0 2px 6px ${accent}66`,
+                    }}>{xpInfo.level}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: -0.2 }}>
+                      {xpInfo.name}
+                    </div>
                   </div>
+                  <div style={{
+                    fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.85)',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>{xp} XP</div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pet — read-only, locked after setup */}
-          <div style={{ padding: '16px 20px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Compagnon</div>
-            <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64 }}>
-                <PetCompanion petType={petType} state="idle" size={56} hideName level={xpInfo.level} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 17, fontWeight: 700, color: A.text, letterSpacing: -0.3 }}>{PET_NAMES[petType]}</div>
-                <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
-                  Niveau {xpInfo.level} · {xpInfo.name}
+                <div style={{
+                  height: 10, borderRadius: 6, background: 'rgba(255,255,255,0.10)',
+                  position: 'relative', overflow: 'hidden',
+                  boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.30)',
+                }}>
+                  <div style={{
+                    width: `${xpPct}%`, height: '100%',
+                    background: `linear-gradient(90deg, ${accent} 0%, ${shade(accent, 25)} 100%)`,
+                    borderRadius: 6,
+                    boxShadow: `0 0 10px ${accent}88`,
+                    transition: 'width 1s cubic-bezier(0.34,1.2,0.64,1)',
+                  }} />
                 </div>
-              </div>
-              <div style={{ flexShrink: 0, background: A.bg, border: `0.5px solid ${A.border}`, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: A.textDim, fontWeight: 600 }}>Définitif</div>
-            </div>
-          </div>
-
-          <div style={{ padding: '16px 20px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>Paramètres</div>
-            <div style={{ background: A.surface, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 0 rgba(15,27,45,0.04),0 1px 3px rgba(15,27,45,0.06)', border: `0.5px solid ${A.border}` }}>
-              <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${A.border}` }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: A.textMuted, marginBottom: 6 }}>Prénom</div>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Votre prénom" style={inputStyle} />
-              </div>
-              <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${A.border}` }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: A.textMuted, marginBottom: 6 }}>Date d&apos;examen</div>
-                <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)} style={inputStyle} />
-              </div>
-              <div style={{ padding: '14px 16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Objectif quotidien</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: A.primary }}>{goal} min</div>
+                <div style={{
+                  marginTop: 5, fontSize: 10.5, color: 'rgba(255,255,255,0.55)',
+                  fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {xpInfo.level < LEVEL_THRESHOLDS.length
+                    ? `${xpInfo.levelEnd - xp} XP avant niv. ${xpInfo.level + 1}`
+                    : 'Niveau maximum atteint !'}
                 </div>
-                <input type="range" min="10" max="120" step="5" value={goal} onChange={e => setGoal(Number(e.target.value))} style={{ width: '100%', accentColor: A.primary }} />
               </div>
             </div>
           </div>
 
-          <div style={{ padding: '16px 20px 0' }}>
-            <button onClick={handleSave} disabled={saving} style={{ width: '100%', height: 52, borderRadius: 14, border: 'none', background: saved ? A.green : A.primary, color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: `0 4px 14px ${saved ? 'rgba(22,163,74,0.28)' : 'rgba(10,102,224,0.28)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {saved ? <><Icon name="check" size={18} color="#fff" strokeWidth={2.5} /> Enregistré !</> : saving ? 'Enregistrement…' : 'Enregistrer'}
+          {/* Badges — horizontal scroll */}
+          <BadgesRow badges={badges} />
+
+          {/* Pet section */}
+          <PetSection name={PET_NAMES[petType]} petType={petType} level={xpInfo.level} />
+
+          {/* Theme picker */}
+          <ThemePicker active={themeId} onPick={setThemeBgFn} />
+
+          {/* Settings */}
+          <SettingsCard
+            name={name} setName={setName}
+            examDate={examDate} setExamDate={setExamDate}
+            goal={goal} setGoal={setGoal}
+          />
+
+          {/* CTAs */}
+          <div style={{ padding: '14px 16px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={handleSave} disabled={saving} style={{
+              height: 54, borderRadius: 16, border: 'none',
+              background: saved ? '#16A34A' : '#0A66E0', color: '#fff',
+              fontSize: 15, fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              letterSpacing: -0.1,
+              boxShadow: saved
+                ? '0 10px 24px -6px rgba(22,163,74,0.55), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -3px 0 rgba(14,112,54,0.5)'
+                : '0 10px 24px -6px rgba(10,102,224,0.55), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -3px 0 rgba(8,80,181,0.5)',
+            }}>
+              {saved ? (
+                <><Icon name="check" size={16} color="#fff" strokeWidth={2.6} /> Enregistré !</>
+              ) : saving ? 'Enregistrement…' : (
+                <><Icon name="check" size={16} color="#fff" strokeWidth={2.6} /> Enregistrer</>
+              )}
             </button>
-          </div>
-          <div style={{ padding: '10px 20px 0' }}>
-            <button onClick={handleLogout} style={{ width: '100%', height: 52, borderRadius: 14, border: `1.5px solid ${A.red}20`, background: '#FEF2F2', color: A.red, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
+            <button onClick={handleLogout} style={{
+              height: 50, borderRadius: 14,
+              border: `1.5px solid #FCA5A5`,
+              background: '#FEF2F2', color: '#DC2626',
+              fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+            }}>
               Se déconnecter
             </button>
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BadgesRow({ badges }: { badges: Badge[] }) {
+  const unlocked = badges.filter(b => b.unlocked).length
+  return (
+    <div style={{ padding: '14px 0 0' }}>
+      <div style={{ padding: '0 16px' }}>
+        <SectionLabel right={`${unlocked} / ${badges.length}`}>Trophées</SectionLabel>
+      </div>
+      <div className="dp-rail" style={{
+        display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px 4px',
+      }}>
+        {badges.map(b => (
+          <div key={b.id} style={{
+            flexShrink: 0, width: 60, height: 60, borderRadius: 14,
+            background: b.unlocked ? '#fff' : '#F4F6F8',
+            border: `1px solid ${b.unlocked ? '#E4E8EE' : '#E4E8EE'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 26,
+            opacity: b.unlocked ? 1 : 0.5,
+            filter: b.unlocked ? undefined : 'grayscale(70%)',
+            boxShadow: b.unlocked
+              ? '0 1px 0 rgba(15,27,45,0.04), 0 4px 10px -8px rgba(15,27,45,0.30), inset 0 -2px 0 rgba(15,27,45,0.05)'
+              : 'inset 0 -1px 0 rgba(0,0,0,0.04)',
+            position: 'relative',
+          }}>
+            {b.emoji}
+            {!b.unlocked && (
+              <div style={{
+                position: 'absolute', top: 4, right: 4,
+                width: 14, height: 14, borderRadius: 7,
+                background: '#fff', border: `1px solid #E4E8EE`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <PathIcon name="lock" size={7} color="#8A95A5" strokeWidth={2.8} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PetSection({ name, petType, level }: { name: string; petType: PetType; level: number }) {
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <SectionLabel>Mon compagnon</SectionLabel>
+      <div style={{
+        position: 'relative',
+        background: 'linear-gradient(135deg, #FFE5C2 0%, #FFD082 100%)',
+        border: `1px solid #F59E0B40`,
+        borderRadius: 18, padding: '14px 16px',
+        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 8px 20px -10px rgba(245,158,11,0.45), inset 0 -3px 0 rgba(180,80,9,0.15), inset 0 1px 0 rgba(255,255,255,0.5)',
+        overflow: 'hidden', minHeight: 96,
+      }}>
+        <div style={{ position: 'absolute', right: 16, bottom: -2 }}>
+          <PetCompanion petType={petType} state="idle" size={92} hideName level={level} />
+        </div>
+        <div style={{
+          fontSize: 11, fontWeight: 800, color: '#9F5A04',
+          letterSpacing: 0.6, textTransform: 'uppercase',
+        }}>Niveau {level} · Compagnon</div>
+        <div style={{
+          fontSize: 22, fontWeight: 800, color: '#7A4F1F',
+          letterSpacing: -0.4, marginTop: 4, lineHeight: 1.1,
+        }}>{name}</div>
+        <div style={{
+          fontSize: 12, color: '#9F5A04', marginTop: 6, fontWeight: 600,
+          maxWidth: 180, lineHeight: 1.35,
+        }}>
+          T&apos;accompagne dans ton parcours.<br/>Choix définitif.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ThemePicker({ active, onPick }: { active: ThemeBgId; onPick: (id: ThemeBgId) => void }) {
+  const list: ThemeBgId[] = ['white', 'cream', 'lavender', 'mint']
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <SectionLabel>Apparence</SectionLabel>
+      <div style={{
+        background: '#fff', border: `1px solid #E4E8EE`, borderRadius: 18,
+        padding: '14px 14px 16px',
+        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
+      }}>
+        <div style={{ fontSize: 12, color: '#5A6675', marginBottom: 10, fontWeight: 600 }}>
+          Choisis le fond de l&apos;application
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          {list.map(id => {
+            const t = THEMES[id]
+            const isActive = id === active
+            return (
+              <div key={id} onClick={() => onPick(id)} style={{ position: 'relative', cursor: 'pointer' }}>
+                <div style={{
+                  height: 64, borderRadius: 12,
+                  backgroundColor: t.bg,
+                  backgroundImage: t.bgGradient,
+                  border: isActive ? `2.5px solid #0A66E0` : `1px solid ${t.border}`,
+                  boxShadow: isActive
+                    ? `0 0 0 3px rgba(10,102,224,0.13), 0 6px 14px -6px rgba(15,27,45,0.20)`
+                    : '0 1px 0 rgba(15,27,45,0.03)',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                  {isActive && (
+                    <div style={{
+                      position: 'absolute', bottom: 4, right: 4,
+                      width: 20, height: 20, borderRadius: 10,
+                      background: '#0A66E0', color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 2px 5px rgba(10,102,224,0.45)',
+                    }}>
+                      <PathIcon name="check" size={12} color="#fff" strokeWidth={3.2} />
+                    </div>
+                  )}
+                </div>
+                <div style={{
+                  marginTop: 5, textAlign: 'center', fontSize: 10.5, fontWeight: 700,
+                  color: isActive ? '#0A66E0' : '#0F1B2D', letterSpacing: -0.1,
+                }}>{t.name}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SettingsCard({
+  name, setName, examDate, setExamDate, goal, setGoal,
+}: {
+  name: string; setName: (v: string) => void
+  examDate: string; setExamDate: (v: string) => void
+  goal: number; setGoal: (v: number) => void
+}) {
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <SectionLabel>Préférences</SectionLabel>
+      <div style={{
+        background: '#fff', borderRadius: 18, overflow: 'hidden',
+        border: `1px solid #E4E8EE`,
+        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
+      }}>
+        {/* Name */}
+        <div style={{ padding: '14px 16px', borderBottom: `1px solid #E4E8EE` }}>
+          <div style={{
+            fontSize: 10.5, fontWeight: 700, color: '#5A6675',
+            letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8,
+          }}>Prénom</div>
+          <input
+            type="text" value={name} onChange={e => setName(e.target.value)}
+            placeholder="Votre prénom"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '12px 14px', borderRadius: 12,
+              background: '#F9FAFC', border: `1px solid #E4E8EE`,
+              fontSize: 15, fontWeight: 600, color: '#0F1B2D',
+              fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+        </div>
+        {/* Exam date */}
+        <div style={{ padding: '14px 16px', borderBottom: `1px solid #E4E8EE` }}>
+          <div style={{
+            fontSize: 10.5, fontWeight: 700, color: '#5A6675',
+            letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8,
+          }}>Date d&apos;examen</div>
+          <input
+            type="date" value={examDate} onChange={e => setExamDate(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '12px 14px', borderRadius: 12,
+              background: '#F9FAFC', border: `1px solid #E4E8EE`,
+              fontSize: 15, fontWeight: 600, color: '#0F1B2D',
+              fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+        </div>
+        {/* Daily goal */}
+        <div style={{ padding: '14px 16px' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8,
+          }}>
+            <div style={{
+              fontSize: 10.5, fontWeight: 700, color: '#5A6675',
+              letterSpacing: 0.4, textTransform: 'uppercase',
+            }}>Objectif quotidien</div>
+            <div style={{
+              fontSize: 13, fontWeight: 900, color: '#0A66E0',
+              fontVariantNumeric: 'tabular-nums',
+            }}>{goal} min</div>
+          </div>
+          <input
+            type="range" min={10} max={120} step={5} value={goal}
+            onChange={e => setGoal(Number(e.target.value))}
+            style={{ width: '100%', accentColor: '#0A66E0' }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
