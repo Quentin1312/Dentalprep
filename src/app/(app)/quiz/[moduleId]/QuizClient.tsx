@@ -649,7 +649,6 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
 }) {
   const raw = q.choices
   const items: string[] = Array.isArray(raw) ? raw : typeof raw === 'string' ? JSON.parse(raw) : []
-  // Initial shuffled order (stable per question id).
   const initialOrder = useMemo(() => {
     const idxs = items.map((_, i) => i)
     return shuffle(idxs, q.id)
@@ -657,14 +656,17 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
 
   const currentOrder = orderState.length === items.length ? orderState : initialOrder
 
+  // Mouse drag state
   const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [overIdx, setOverIdx] = useState<number | null>(null)
 
-  // After each reorder, update `picked` so submit() can grade us.
+  // Touch drag state
+  const touchFrom = useRef<number | null>(null)
+  const [touchOver, setTouchOver] = useState<number | null>(null)
+
   useEffect(() => {
     if (showResult) return
     const isCorrect = currentOrder.every((v, i) => v === i)
-    // q.correct_index is the "correct sentinel" (e.g. 1). Set picked to it if correct, else 0.
     setPicked(isCorrect ? q.correct_index : (q.correct_index === 0 ? 1 : 0))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentOrder.join(','), showResult])
@@ -677,12 +679,35 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
     setOrderState(next)
   }
 
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchFrom.current === null) return
+    e.preventDefault()
+    const touch = e.touches[0]
+    const el = document.elementFromPoint(touch.clientX, touch.clientY)
+    const item = el?.closest('[data-order-pos]') as HTMLElement | null
+    if (item) {
+      const p = parseInt(item.getAttribute('data-order-pos') ?? '-1')
+      if (p >= 0) setTouchOver(p)
+    }
+  }
+
+  function handleTouchEnd() {
+    if (touchFrom.current !== null && touchOver !== null && touchFrom.current !== touchOver) {
+      move(touchFrom.current, touchOver)
+    }
+    touchFrom.current = null
+    setTouchOver(null)
+  }
+
+  const activeDrag = dragIdx ?? touchFrom.current
+  const activeOver = overIdx ?? touchOver
+
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {currentOrder.map((origIdx, pos) => {
-          const isDragging = dragIdx === pos
-          const isOver = overIdx === pos && dragIdx !== null && dragIdx !== pos
+          const isDragging = activeDrag === pos
+          const isOver = activeOver === pos && activeDrag !== null && activeDrag !== pos
 
           let border: string = A.border
           let bg: string = A.surface
@@ -703,15 +728,17 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
           } else if (isDragging) {
             border = A.primary; rankBg = A.primary; rankText = '#fff'
             shadow = '0 0 0 3px rgba(10,102,224,0.10), 0 18px 40px -10px rgba(15,27,45,0.28)'
-            transform = 'translateY(-2px) rotate(-0.6deg) scale(1.01)'
+            transform = 'translateY(-2px) rotate(-0.6deg) scale(1.02)'
           } else if (isOver) {
             border = A.primary
-            shadow = '0 0 0 2px rgba(10,102,224,0.10), 0 2px 6px -4px rgba(15,27,45,0.06)'
+            shadow = '0 0 0 2px rgba(10,102,224,0.18), 0 2px 6px -4px rgba(15,27,45,0.06)'
+            transform = 'translateY(2px)'
           }
 
           return (
             <div
               key={origIdx}
+              data-order-pos={pos}
               draggable={!showResult}
               onDragStart={() => setDragIdx(pos)}
               onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
@@ -721,13 +748,16 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
                 if (dragIdx !== null) move(dragIdx, pos)
                 setDragIdx(null); setOverIdx(null)
               }}
+              onTouchStart={() => { if (!showResult) touchFrom.current = pos }}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               style={{
                 width: '100%', background: bg, border: `1.5px solid ${border}`, borderRadius: 14,
-                padding: '12px 12px 12px 12px', display: 'flex', alignItems: 'center', gap: 12,
+                padding: '12px', display: 'flex', alignItems: 'center', gap: 12,
                 boxShadow: shadow, fontFamily: FONT,
-                transform, cursor: showResult ? 'default' : 'grab',
-                transition: 'all .18s ease',
-                userSelect: 'none',
+                transform, cursor: showResult ? 'default' : isDragging ? 'grabbing' : 'grab',
+                transition: isDragging ? 'box-shadow .15s ease' : 'all .18s ease',
+                userSelect: 'none', touchAction: 'none',
               }}
             >
               <div style={{
@@ -739,32 +769,31 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
               <div style={{ flex: 1, fontSize: 15, fontWeight: 600, color: A.text, lineHeight: 1.35 }}>
                 {items[origIdx]}
               </div>
-              {/* Reorder controls — useful on touch where drag is finicky */}
               {!showResult && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <button
-                    onClick={() => move(pos, Math.max(0, pos - 1))}
+                    onClick={(e) => { e.stopPropagation(); move(pos, Math.max(0, pos - 1)) }}
                     disabled={pos === 0}
                     aria-label="Monter"
                     style={{
-                      width: 28, height: 22, borderRadius: 7, border: `1px solid ${A.border}`,
+                      width: 32, height: 26, borderRadius: 7, border: `1px solid ${A.border}`,
                       background: A.surface, cursor: pos === 0 ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                      opacity: pos === 0 ? 0.4 : 1,
+                      opacity: pos === 0 ? 0.35 : 1,
                     }}>
-                    <Icon name="chevronU" size={11} color={A.text} strokeWidth={2.5} />
+                    <Icon name="chevronU" size={13} color={A.text} strokeWidth={2.5} />
                   </button>
                   <button
-                    onClick={() => move(pos, Math.min(items.length - 1, pos + 1))}
+                    onClick={(e) => { e.stopPropagation(); move(pos, Math.min(items.length - 1, pos + 1)) }}
                     disabled={pos === items.length - 1}
                     aria-label="Descendre"
                     style={{
-                      width: 28, height: 22, borderRadius: 7, border: `1px solid ${A.border}`,
+                      width: 32, height: 26, borderRadius: 7, border: `1px solid ${A.border}`,
                       background: A.surface, cursor: pos === items.length - 1 ? 'default' : 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                      opacity: pos === items.length - 1 ? 0.4 : 1,
+                      opacity: pos === items.length - 1 ? 0.35 : 1,
                     }}>
-                    <Icon name="chevronD" size={11} color={A.text} strokeWidth={2.5} />
+                    <Icon name="chevronD" size={13} color={A.text} strokeWidth={2.5} />
                   </button>
                 </div>
               )}
@@ -777,21 +806,8 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
           marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6,
           fontSize: 11.5, color: A.textMuted, fontWeight: 600,
         }}>
-          <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ display: 'flex', gap: 2 }}>
-              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
-              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
-            </span>
-            <span style={{ display: 'flex', gap: 2 }}>
-              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
-              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
-            </span>
-            <span style={{ display: 'flex', gap: 2 }}>
-              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
-              <span style={{ width: 3, height: 3, borderRadius: 2, background: A.textMuted }} />
-            </span>
-          </span>
-          Maintiens et fais glisser, ou utilise les flèches
+          <Icon name="refresh" size={12} color={A.textMuted} strokeWidth={2} />
+          Glisse ou utilise les flèches pour réordonner
         </div>
       )}
     </>
