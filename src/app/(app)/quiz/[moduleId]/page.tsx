@@ -133,9 +133,6 @@ function QuizInner() {
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
-      lesson={mode !== 'smart' ? lesson : undefined}
-      totalLessons={mode !== 'smart' ? totalLessons : undefined}
-      nextLessonHref={nextLessonHref}
       backHref={`/module/${moduleId}`}
       headerLabel={mode !== 'smart' ? `Leçon ${lesson + 1}/${totalLessons}` : 'Quiz intelligent'}
     />
