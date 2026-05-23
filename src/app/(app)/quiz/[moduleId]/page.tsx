@@ -140,7 +140,7 @@ function QuizInner() {
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
-      backHref={courseId ? `/fascicule/${courseId}` : `/library`}
+      backHref={`/library`}
       headerLabel={mode !== 'smart' ? `Leçon ${lesson + 1}/${totalLessons}` : 'Quiz intelligent'}
     />
   )

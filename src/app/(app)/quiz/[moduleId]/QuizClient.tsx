@@ -704,17 +704,42 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Direction hint banner */}
+      {!showResult && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 14px', marginBottom: 12,
+          background: A.primarySoft, borderRadius: 12,
+          border: `1px solid ${A.primary}25`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, background: A.primary, color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 800,
+            }}>1</div>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: A.primary, letterSpacing: 0.3 }}>
+              PREMIER en haut ↑
+            </span>
+          </div>
+          <span style={{ fontSize: 11, color: A.textMuted, fontWeight: 600 }}>
+            Dernier en bas ↓
+          </span>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, position: 'relative' }}>
         {currentOrder.map((origIdx, pos) => {
           const isDragging = activeDrag === pos
           const isOver = activeOver === pos && activeDrag !== null && activeDrag !== pos
 
           let border: string = A.border
           let bg: string = A.surface
-          let rankBg: string = '#F1F6FE'
-          let rankText: string = A.primary
+          let rankBg: string = A.primary
+          let rankText: string = '#fff'
           let shadow: string = '0 1px 0 rgba(15,27,45,0.02), 0 2px 6px -4px rgba(15,27,45,0.06)'
-          let transform: string = 'translateY(0) rotate(0)'
+          let transform: string = 'translateY(0)'
+          let opacity = 1
 
           if (showResult) {
             const isCorrectPos = origIdx === pos
@@ -726,13 +751,14 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
               shadow = `0 0 0 3px ${A.red}1a, 0 6px 18px -10px ${A.red}55`
             }
           } else if (isDragging) {
-            border = A.primary; rankBg = A.primary; rankText = '#fff'
-            shadow = '0 0 0 3px rgba(10,102,224,0.10), 0 18px 40px -10px rgba(15,27,45,0.28)'
-            transform = 'translateY(-2px) rotate(-0.6deg) scale(1.02)'
+            border = A.primary
+            shadow = '0 0 0 3px rgba(10,102,224,0.18), 0 22px 44px -10px rgba(15,27,45,0.36)'
+            transform = 'scale(1.03)'
+            opacity = 0.92
           } else if (isOver) {
             border = A.primary
-            shadow = '0 0 0 2px rgba(10,102,224,0.18), 0 2px 6px -4px rgba(15,27,45,0.06)'
-            transform = 'translateY(2px)'
+            shadow = `0 0 0 3px ${A.primary}25, 0 4px 10px -4px rgba(15,27,45,0.08)`
+            transform = activeDrag !== null && activeDrag < pos ? 'translateY(6px)' : 'translateY(-6px)'
           }
 
           return (
@@ -752,64 +778,82 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
               style={{
-                width: '100%', background: bg, border: `1.5px solid ${border}`, borderRadius: 14,
-                padding: '12px', display: 'flex', alignItems: 'center', gap: 12,
+                width: '100%', background: bg, border: `2px solid ${border}`, borderRadius: 14,
+                padding: '12px 10px 12px 12px', display: 'flex', alignItems: 'center', gap: 12,
                 boxShadow: shadow, fontFamily: FONT,
-                transform, cursor: showResult ? 'default' : isDragging ? 'grabbing' : 'grab',
-                transition: isDragging ? 'box-shadow .15s ease' : 'all .18s ease',
+                transform, opacity,
+                cursor: showResult ? 'default' : isDragging ? 'grabbing' : 'grab',
+                transition: isDragging ? 'transform .12s ease, opacity .12s ease' : 'all .22s cubic-bezier(0.2,0.7,0.2,1)',
                 userSelect: 'none', touchAction: 'none',
               }}
             >
+              {/* Position badge with explicit ordinal */}
               <div style={{
-                width: 32, height: 32, borderRadius: 9, background: rankBg, color: rankText,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 14, fontWeight: 800, flexShrink: 0, fontVariantNumeric: 'tabular-nums',
-                transition: 'all .15s ease',
-              }}>{pos + 1}</div>
-              <div style={{ flex: 1, fontSize: 15, fontWeight: 600, color: A.text, lineHeight: 1.35 }}>
+                width: 40, height: 40, borderRadius: 10, background: rankBg, color: rankText,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+                boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25)',
+              }}>
+                <div style={{ fontSize: 15, fontWeight: 900, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{pos + 1}</div>
+                <div style={{ fontSize: 7.5, fontWeight: 800, letterSpacing: 0.4, marginTop: 1, opacity: 0.85 }}>
+                  {pos === 0 ? '1ER' : `${pos + 1}E`}
+                </div>
+              </div>
+
+              <div style={{ flex: 1, fontSize: 15, fontWeight: 600, color: A.text, lineHeight: 1.3 }}>
                 {items[origIdx]}
               </div>
+
               {!showResult && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); move(pos, Math.max(0, pos - 1)) }}
-                    disabled={pos === 0}
-                    aria-label="Monter"
-                    style={{
-                      width: 32, height: 26, borderRadius: 7, border: `1px solid ${A.border}`,
-                      background: A.surface, cursor: pos === 0 ? 'default' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                      opacity: pos === 0 ? 0.35 : 1,
-                    }}>
-                    <Icon name="chevronU" size={13} color={A.text} strokeWidth={2.5} />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); move(pos, Math.min(items.length - 1, pos + 1)) }}
-                    disabled={pos === items.length - 1}
-                    aria-label="Descendre"
-                    style={{
-                      width: 32, height: 26, borderRadius: 7, border: `1px solid ${A.border}`,
-                      background: A.surface, cursor: pos === items.length - 1 ? 'default' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                      opacity: pos === items.length - 1 ? 0.35 : 1,
-                    }}>
-                    <Icon name="chevronD" size={13} color={A.text} strokeWidth={2.5} />
-                  </button>
-                </div>
+                <>
+                  {/* Up/Down arrows */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); move(pos, Math.max(0, pos - 1)) }}
+                      disabled={pos === 0}
+                      aria-label="Monter"
+                      style={{
+                        width: 34, height: 28, borderRadius: 8, border: `1px solid ${A.border}`,
+                        background: pos === 0 ? '#F4F6F8' : A.surface,
+                        cursor: pos === 0 ? 'default' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        opacity: pos === 0 ? 0.4 : 1,
+                      }}>
+                      <Icon name="chevronU" size={14} color={A.text} strokeWidth={2.6} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); move(pos, Math.min(items.length - 1, pos + 1)) }}
+                      disabled={pos === items.length - 1}
+                      aria-label="Descendre"
+                      style={{
+                        width: 34, height: 28, borderRadius: 8, border: `1px solid ${A.border}`,
+                        background: pos === items.length - 1 ? '#F4F6F8' : A.surface,
+                        cursor: pos === items.length - 1 ? 'default' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        opacity: pos === items.length - 1 ? 0.4 : 1,
+                      }}>
+                      <Icon name="chevronD" size={14} color={A.text} strokeWidth={2.6} />
+                    </button>
+                  </div>
+                  {/* Drag handle */}
+                  <div style={{
+                    width: 18, display: 'flex', flexDirection: 'column', gap: 3,
+                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    opacity: 0.5,
+                  }}>
+                    {[0,1,2].map(i => (
+                      <div key={i} style={{ display: 'flex', gap: 3 }}>
+                        <span style={{ width: 3, height: 3, borderRadius: 1.5, background: A.textMuted }} />
+                        <span style={{ width: 3, height: 3, borderRadius: 1.5, background: A.textMuted }} />
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           )
         })}
       </div>
-      {!showResult && (
-        <div style={{
-          marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6,
-          fontSize: 11.5, color: A.textMuted, fontWeight: 600,
-        }}>
-          <Icon name="refresh" size={12} color={A.textMuted} strokeWidth={2} />
-          Glisse ou utilise les flèches pour réordonner
-        </div>
-      )}
     </>
   )
 }

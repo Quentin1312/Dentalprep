@@ -10,7 +10,7 @@ import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
-type Stats = { flashcards: number; questions: number; attempts: number; accuracy: number | null }
+type Stats = { flashcards: number; questions: number; attempts: number; accuracy: number | null; toReview: number }
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -41,18 +41,31 @@ export default function FasciculePage() {
         supabase.from('quiz_questions').select('id').eq('course_id', courseId),
       ]).then(async ([fc, qq]) => {
         const qids = (qq.data ?? []).map((q: { id: string }) => q.id)
-        let attempts: { is_correct: boolean }[] = []
+        let attempts: { question_id: string; is_correct: boolean }[] = []
         if (qids.length > 0) {
-          const { data: atts } = await supabase.from('quiz_attempts').select('is_correct')
+          const { data: atts } = await supabase.from('quiz_attempts').select('question_id,is_correct')
             .eq('user_id', user.id).in('question_id', qids)
           attempts = atts ?? []
         }
         const ok = attempts.filter(a => a.is_correct).length
+
+        // Per-question stats to know which questions need review (acc < 60%)
+        const perQ = new Map<string, { ok: number; total: number }>()
+        for (const a of attempts) {
+          const s = perQ.get(a.question_id) ?? { ok: 0, total: 0 }
+          perQ.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+        }
+        const toReview = qids.filter(id => {
+          const s = perQ.get(id)
+          return s && s.total > 0 && s.ok / s.total < 0.6
+        }).length
+
         setStats({
           flashcards: fc.data?.length ?? 0,
           questions: qq.data?.length ?? 0,
           attempts: attempts.length,
           accuracy: attempts.length > 0 ? Math.round((ok / attempts.length) * 100) : null,
+          toReview,
         })
         setLoading(false)
       })
@@ -81,113 +94,123 @@ export default function FasciculePage() {
     return null
   }
 
-  const accuracy = stats?.accuracy
-  const accuracyColor = accuracy !== null && accuracy !== undefined
-    ? accuracy >= 75 ? A.green : A.amber
-    : A.textDim
+  const accuracy = stats?.accuracy ?? null
+  const toReview = stats?.toReview ?? 0
 
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
 
-      {/* Header */}
-      <div style={{ padding: '62px 20px 0' }}>
-        <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: A.textMuted, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font, marginBottom: 16, padding: 0 }}>
-          <Icon name="chevronL" size={14} color={A.textMuted} /> Bibliothèque
-        </button>
+      {/* Compact header */}
+      <div style={{ padding: '54px 20px 0' }}>
+        <Link href="/library" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: A.textMuted, fontWeight: 500, textDecoration: 'none', marginBottom: 12 }}>
+          <Icon name="chevronL" size={13} color={A.textMuted} /> Bibliothèque
+        </Link>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: A.primarySoft, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: A.primary }}>{mod?.id}</span>
-            <span style={{ fontSize: 16, fontWeight: 800, color: A.primary, lineHeight: 1 }}>{fN}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: A.primarySoft, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 9, fontWeight: 800, color: A.primary, letterSpacing: 0.4 }}>{mod?.id}</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: A.primary, lineHeight: 1 }}>{fN}</span>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>{mod?.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.4, lineHeight: 1.2, marginTop: 2 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: A.text, letterSpacing: -0.4, lineHeight: 1.2 }}>
               {fascicule?.title ?? course?.title ?? '…'}
             </div>
-            <div style={{ fontSize: 12, color: A.textMuted, marginTop: 3 }}>{course?.page_count ?? 0} page{(course?.page_count ?? 0) > 1 ? 's' : ''} scannée{(course?.page_count ?? 0) > 1 ? 's' : ''}</div>
+            <div style={{ fontSize: 11.5, color: A.textMuted, marginTop: 2, fontWeight: 500 }}>
+              {course?.page_count ?? 0} page{(course?.page_count ?? 0) > 1 ? 's' : ''}
+              {accuracy !== null && <> · <span style={{ color: accuracy >= 75 ? A.green : A.amber, fontWeight: 700 }}>{accuracy}%</span></>}
+              {stats && stats.attempts > 0 && <> · {stats.attempts} tentées</>}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div style={{ padding: '16px 20px 0', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-        {[
-          { label: 'Flashcards', value: loading ? '…' : String(stats?.flashcards ?? 0), color: A.primary },
-          { label: 'Questions', value: loading ? '…' : String(stats?.questions ?? 0), color: A.primary },
-          { label: 'Score quiz', value: loading ? '…' : accuracy !== null && accuracy !== undefined ? `${accuracy}%` : '—', color: accuracyColor },
-        ].map(s => (
-          <div key={s.label} style={{ background: A.surface, borderRadius: 14, padding: '14px 10px', textAlign: 'center', border: `0.5px solid ${A.border}` }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 11, color: A.textMuted, marginTop: 2 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Actions */}
-      <div style={{ padding: '16px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Big action cards */}
+      <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Quiz complet — main action */}
         {mod && (
           <Link href={`/quiz/${mod.id}?courseId=${courseId}`} style={{ textDecoration: 'none' }}>
-            <div style={{ background: A.primary, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="target" size={22} color="#fff" />
+            <div style={{
+              background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
+              borderRadius: 18, padding: '20px',
+              display: 'flex', alignItems: 'center', gap: 14,
+              boxShadow: '0 10px 24px -6px rgba(10,102,224,0.45), inset 0 1px 0 rgba(255,255,255,0.20)',
+            }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.18)' }}>
+                <Icon name="target" size={26} color="#fff" />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Quiz fascicule</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-                  {loading ? '…' : `${stats?.questions ?? 0} questions`}
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Quiz</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.78)', marginTop: 2, fontWeight: 600 }}>
+                  {loading ? '…' : `${stats?.questions ?? 0} questions · QCM, V/F, ordre, association`}
                 </div>
               </div>
-              <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
+              <Icon name="chevronR" size={18} color="rgba(255,255,255,0.85)" strokeWidth={2.4} />
             </div>
           </Link>
         )}
 
+        {/* Quiz intelligent — only if there are errors */}
+        {mod && !loading && toReview > 0 && (
+          <Link href={`/quiz/${mod.id}?courseId=${courseId}&mode=smart`} style={{ textDecoration: 'none' }}>
+            <div style={{
+              background: `linear-gradient(135deg, ${A.amber} 0%, #B45309 100%)`,
+              borderRadius: 18, padding: '18px 20px',
+              display: 'flex', alignItems: 'center', gap: 14,
+              boxShadow: '0 8px 20px -6px rgba(180,83,9,0.45), inset 0 1px 0 rgba(255,255,255,0.20)',
+            }}>
+              <div style={{ width: 48, height: 48, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.18)' }}>
+                <Icon name="refresh" size={22} color="#fff" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', letterSpacing: -0.2 }}>Refaire les erreurs</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>
+                  {toReview} question{toReview > 1 ? 's' : ''} à retravailler
+                </div>
+              </div>
+              <Icon name="chevronR" size={16} color="rgba(255,255,255,0.85)" strokeWidth={2.4} />
+            </div>
+          </Link>
+        )}
+
+        {/* Flashcards */}
         {mod && (
           <Link href={`/flashcards/${mod.id}`} style={{ textDecoration: 'none' }}>
-            <div style={{ background: A.surface, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, border: `0.5px solid ${A.border}`, boxShadow: '0 1px 3px rgba(15,27,45,0.06)' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 13, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+              background: A.surface, borderRadius: 18, padding: '18px 20px',
+              display: 'flex', alignItems: 'center', gap: 14,
+              border: `1px solid ${A.border}`,
+              boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.12)',
+            }}>
+              <div style={{ width: 48, height: 48, borderRadius: 13, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon name="cards" size={22} color={A.primary} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: A.text }}>Flashcards</div>
-                <div style={{ fontSize: 12, color: A.textMuted }}>
-                  {loading ? '…' : `${stats?.flashcards ?? 0} cartes`}
+                <div style={{ fontSize: 15.5, fontWeight: 800, color: A.text, letterSpacing: -0.2 }}>Flashcards</div>
+                <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2, fontWeight: 600 }}>
+                  {loading ? '…' : `${stats?.flashcards ?? 0} carte${(stats?.flashcards ?? 0) > 1 ? 's' : ''}`}
                 </div>
               </div>
-              <Icon name="chevronR" size={16} color={A.textDim} />
+              <Icon name="chevronR" size={16} color={A.textDim} strokeWidth={2.2} />
             </div>
           </Link>
         )}
       </div>
 
-      {/* Score history hint */}
-      {!loading && stats && stats.attempts > 0 && (
-        <div style={{ margin: '14px 20px 0', padding: '12px 14px', borderRadius: 12, background: accuracy !== null && accuracy !== undefined && accuracy >= 75 ? A.greenSoft : A.amberSoft, border: `0.5px solid ${accuracyColor}30` }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: accuracyColor }}>
-            {accuracy !== null && accuracy !== undefined && accuracy >= 75 ? '✓ Fascicule maîtrisé' : '↗ En cours de révision'}
-          </div>
-          <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
-            {stats.attempts} réponse{stats.attempts > 1 ? 's' : ''} enregistrée{stats.attempts > 1 ? 's' : ''} · {accuracy}% de réussite
-          </div>
-        </div>
-      )}
-
-      {/* Delete */}
-      <div style={{ padding: '24px 20px 0' }}>
+      {/* Tiny delete link */}
+      <div style={{ padding: '36px 20px 0', display: 'flex', justifyContent: 'center' }}>
         {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: A.red, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font, padding: 0 }}>
-            <Icon name="trash" size={14} color={A.red} /> Supprimer ce fascicule
+          <button onClick={() => setConfirmDelete(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: A.textDim, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font, padding: '6px 10px' }}>
+            <Icon name="trash" size={12} color={A.textDim} /> Supprimer ce fascicule
           </button>
         ) : (
-          <div style={{ background: '#FEF2F2', borderRadius: 14, padding: '14px 16px', border: `0.5px solid ${A.red}30` }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: A.red, marginBottom: 10 }}>
+          <div style={{ background: '#FEF2F2', borderRadius: 14, padding: '14px 16px', border: `1px solid ${A.red}30`, width: '100%' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: A.red, marginBottom: 10 }}>
               Supprimer ce fascicule et toutes ses données ?
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, height: 40, borderRadius: 10, border: `0.5px solid ${A.border}`, background: A.surface, fontSize: 13, fontWeight: 600, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>Annuler</button>
-              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, height: 40, borderRadius: 10, border: 'none', background: A.red, fontSize: 13, fontWeight: 600, color: '#fff', cursor: deleting ? 'default' : 'pointer', fontFamily: A.font, opacity: deleting ? 0.6 : 1 }}>
+              <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, height: 40, borderRadius: 10, border: `1px solid ${A.border}`, background: A.surface, fontSize: 13, fontWeight: 600, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>Annuler</button>
+              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, height: 40, borderRadius: 10, border: 'none', background: A.red, fontSize: 13, fontWeight: 700, color: '#fff', cursor: deleting ? 'default' : 'pointer', fontFamily: A.font, opacity: deleting ? 0.6 : 1 }}>
                 {deleting ? 'Suppression…' : 'Supprimer'}
               </button>
             </div>
