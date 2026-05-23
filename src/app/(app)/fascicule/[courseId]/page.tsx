@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { FASCICULES, MODULE_MAP } from '@/lib/modules'
@@ -17,10 +17,16 @@ function fasciculeN(title: string): number | null {
   return m ? parseInt(m[1]) : null
 }
 
-export default function FasciculePage() {
+function FasciculeInner() {
   const { courseId } = useParams() as { courseId: string }
+  const searchParams = useSearchParams()
   const router = useRouter()
   const { data: appData, refresh } = useAppData()
+
+  // The "viewing module" — set when navigating from a specific module path in the library.
+  // Falls back to the course's stored module_id. This lets fascicule pages show module-specific
+  // counts even though one course can be shared across multiple modules.
+  const viewModuleId = (searchParams.get('module') as ModuleId | null) ?? null
 
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -30,15 +36,19 @@ export default function FasciculePage() {
   const course = appData?.courses.find(c => c.id === courseId)
   const fN = course ? fasciculeN(course.title) : null
   const fascicule = fN !== null ? FASCICULES.find(f => f.n === fN) : null
-  const mod = course ? MODULE_MAP[course.module_id as ModuleId] : null
+  // Prefer URL module (so M2/M3/M4 views show their own data); fall back to course's stored module
+  const modId = viewModuleId ?? (course?.module_id as ModuleId | undefined)
+  const mod = modId ? MODULE_MAP[modId] : null
 
   useEffect(() => {
+    if (!modId) return
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       Promise.all([
-        supabase.from('flashcards').select('id').eq('course_id', courseId),
-        supabase.from('quiz_questions').select('id').eq('course_id', courseId),
+        // Filter by both course AND module so each module shows only its own slice
+        supabase.from('flashcards').select('id').eq('course_id', courseId).eq('module_id', modId),
+        supabase.from('quiz_questions').select('id').eq('course_id', courseId).eq('module_id', modId),
       ]).then(async ([fc, qq]) => {
         const qids = (qq.data ?? []).map((q: { id: string }) => q.id)
         let attempts: { question_id: string; is_correct: boolean }[] = []
@@ -70,7 +80,7 @@ export default function FasciculePage() {
         setLoading(false)
       })
     })
-  }, [courseId, router])
+  }, [courseId, modId, router])
 
   async function handleDelete() {
     if (!appData) return
@@ -219,4 +229,8 @@ export default function FasciculePage() {
       </div>
     </div>
   )
+}
+
+export default function FasciculePage() {
+  return <Suspense><FasciculeInner /></Suspense>
 }

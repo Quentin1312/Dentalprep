@@ -180,7 +180,7 @@ export default function LibraryPage() {
                 // Scanned = 'completed'.
                 const state = course ? 'completed' : node.isCurrent ? 'current' : 'available'
                 const icon = course ? iconForFascicule(f.title) : 'camera'
-                const href = course ? `/fascicule/${course.id}` : `/upload?fascicule=${f.n}`
+                const href = course ? `/fascicule/${course.id}?module=${m.id}` : `/upload?fascicule=${f.n}`
                 const shortTitle = f.title.length > 26 ? f.title.slice(0, 24) + '…' : f.title
                 return (
                   <PathRow key={`f-${m.id}-${f.n}`} pos={pos} from={from}>
