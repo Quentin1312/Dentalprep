@@ -490,7 +490,8 @@ function QCMRenderer({ q, picked, showResult, onPick }: {
   showResult: boolean
   onPick: (i: number) => void
 }) {
-  const choices = q.choices as string[]
+  const raw = q.choices
+  const choices: string[] = Array.isArray(raw) ? raw : typeof raw === 'string' ? JSON.parse(raw) : []
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {choices.map((c, i) => {
@@ -566,7 +567,8 @@ function VFRenderer({ q, picked, showResult, onPick }: {
   showResult: boolean
   onPick: (i: number) => void
 }) {
-  const labels = (q.choices as string[]) ?? ['Vrai', 'Faux']
+  const rawVf = q.choices
+  const labels: string[] = Array.isArray(rawVf) ? rawVf : typeof rawVf === 'string' ? JSON.parse(rawVf) : ['Vrai', 'Faux']
   return (
     <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
       {labels.map((label, i) => {
@@ -645,7 +647,8 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
   picked: number | null
   setPicked: (n: number | null) => void
 }) {
-  const items = q.choices as string[]
+  const raw = q.choices
+  const items: string[] = Array.isArray(raw) ? raw : typeof raw === 'string' ? JSON.parse(raw) : []
   // Initial shuffled order (stable per question id).
   const initialOrder = useMemo(() => {
     const idxs = items.map((_, i) => i)
@@ -811,7 +814,8 @@ function AssociationRenderer({ q, pairs, setPairs, pendingLeft, pendingRight, se
   picked: number | null
   setPicked: (n: number | null) => void
 }) {
-  const data = q.choices as AssociationChoices
+  const rawData = q.choices
+  const data: AssociationChoices = (typeof rawData === 'string' ? JSON.parse(rawData) : rawData) as AssociationChoices
   const left = data?.left ?? []
   const right = data?.right ?? []
   const correctMap = data?.correctMap ?? []

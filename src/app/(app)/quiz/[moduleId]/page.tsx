@@ -10,7 +10,7 @@ import type { ModuleId } from '@/types/database'
 import { useAppData } from '@/lib/app-context'
 import { computeXP, xpToLevel } from '@/lib/xp'
 
-type Question = { id: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
+type Question = { id: string; type?: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
 type AttemptStat = { question_id: string; is_correct: boolean }
 
 function Skel({ h }: { h: number }) {
@@ -65,7 +65,13 @@ function QuizInner() {
         q.order('created_at'),
         supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', moduleId as ModuleId),
       ]).then(([{ data: qs }, { data: atts }]) => {
-        const raw = qs ?? []
+        // Normalise each row: parse choices if it came back as a string,
+        // and ensure `type` is uppercase so the renderers match.
+        const raw = (qs ?? []).map((row: Question) => ({
+          ...row,
+          choices: typeof row.choices === 'string' ? JSON.parse(row.choices) : row.choices,
+          type: row.type ? (row.type as string).toUpperCase() : undefined,
+        }))
         const stats = new Map<string, { ok: number; total: number }>()
         for (const a of atts ?? [] as AttemptStat[]) {
           const s = stats.get(a.question_id) ?? { ok: 0, total: 0 }
