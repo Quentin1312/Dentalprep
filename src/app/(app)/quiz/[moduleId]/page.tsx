@@ -10,7 +10,8 @@ import type { ModuleId } from '@/types/database'
 import { useAppData } from '@/lib/app-context'
 import { computeXP, xpToLevel } from '@/lib/xp'
 
-type Question = { id: string; type?: string; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
+type QType = 'QCM' | 'VF' | 'ORDRE' | 'ASSOCIATION'
+type Question = { id: string; type?: QType; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
 type AttemptStat = { question_id: string; is_correct: boolean }
 
 function Skel({ h }: { h: number }) {
@@ -70,7 +71,7 @@ function QuizInner() {
         const raw = (qs ?? []).map((row: Question) => ({
           ...row,
           choices: typeof row.choices === 'string' ? JSON.parse(row.choices) : row.choices,
-          type: row.type ? (row.type as string).toUpperCase() : undefined,
+          type: row.type ? ((row.type as string).toUpperCase() as QType) : undefined,
         }))
         const stats = new Map<string, { ok: number; total: number }>()
         for (const a of atts ?? [] as AttemptStat[]) {
