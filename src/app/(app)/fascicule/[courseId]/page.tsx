@@ -126,11 +126,13 @@ function FasciculeInner() {
             <div style={{ fontSize: 18, fontWeight: 800, color: A.text, letterSpacing: -0.4, lineHeight: 1.2 }}>
               {fascicule?.title ?? course?.title ?? '…'}
             </div>
-            <div style={{ fontSize: 11.5, color: A.textMuted, marginTop: 2, fontWeight: 500 }}>
-              {course?.page_count ?? 0} page{(course?.page_count ?? 0) > 1 ? 's' : ''}
-              {accuracy !== null && <> · <span style={{ color: accuracy >= 75 ? A.green : A.amber, fontWeight: 700 }}>{accuracy}%</span></>}
-              {stats && stats.attempts > 0 && <> · {stats.attempts} tentées</>}
-            </div>
+            {(accuracy !== null || (stats && stats.attempts > 0)) && (
+              <div style={{ fontSize: 11.5, color: A.textMuted, marginTop: 2, fontWeight: 500 }}>
+                {accuracy !== null && <span style={{ color: accuracy >= 75 ? A.green : A.amber, fontWeight: 700 }}>{accuracy}%</span>}
+                {accuracy !== null && stats && stats.attempts > 0 && ' · '}
+                {stats && stats.attempts > 0 && <>{stats.attempts} question{stats.attempts > 1 ? 's' : ''} tentée{stats.attempts > 1 ? 's' : ''}</>}
+              </div>
+            )}
           </div>
         </div>
       </div>

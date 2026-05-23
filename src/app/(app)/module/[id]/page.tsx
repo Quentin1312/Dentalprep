@@ -226,7 +226,7 @@ export default function ModulePage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
                     {course
-                      ? <div style={{ fontSize: 11, color: A.green, marginTop: 1 }}>{course.page_count ?? 0} pages · scanné</div>
+                      ? <div style={{ fontSize: 11, color: A.green, marginTop: 1, fontWeight: 600 }}>Scanné ✓</div>
                       : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>}
                   </div>
                   {course ? (

@@ -190,7 +190,7 @@ export default function LibraryPage() {
                         icon={icon}
                         accent={accent}
                         label={shortTitle}
-                        sublabel={course ? `${course.page_count ?? 0} p. · scanné` : 'À scanner'}
+                        sublabel={course ? 'Scanné' : 'À scanner'}
                       />
                     </Link>
                   </PathRow>
