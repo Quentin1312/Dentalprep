@@ -800,11 +800,19 @@ function AssociationRenderer({ q, pairs, setPairs, pendingLeft, pendingRight, se
   picked: number | null
   setPicked: (n: number | null) => void
 }) {
-  const rawData = q.choices
-  const data: AssociationChoices = (typeof rawData === 'string' ? JSON.parse(rawData) : rawData) as AssociationChoices
-  const left = data?.left ?? []
-  const right = data?.right ?? []
-  const correctMap = data?.correctMap ?? []
+  // Defensive parsing — choices may be: object {left,right,correctMap}, JSON string,
+  // double-stringified, or contain snake_case 'correct_map'. Handle all shapes.
+  let parsed: unknown = q.choices
+  if (typeof parsed === 'string') { try { parsed = JSON.parse(parsed) } catch {} }
+  if (typeof parsed === 'string') { try { parsed = JSON.parse(parsed) } catch {} }
+  const obj = (parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : {})
+  const left: string[] = Array.isArray(obj.left) ? (obj.left as string[]) : []
+  const right: string[] = Array.isArray(obj.right) ? (obj.right as string[]) : []
+  const correctMap: number[] = Array.isArray(obj.correctMap)
+    ? (obj.correctMap as number[])
+    : Array.isArray(obj.correct_map)
+    ? (obj.correct_map as number[])
+    : []
 
   // Stable shuffled right-column order per question id (so it's not pre-aligned).
   const rightOrder = useMemo(() => {
@@ -860,6 +868,33 @@ function AssociationRenderer({ q, pairs, setPairs, pendingLeft, pendingRight, se
     } else {
       setPendingRight(pendingRight === i ? null : i)
     }
+  }
+
+  // If data isn't well-formed (no left or no right), show a visible diagnostic
+  // instead of a blank renderer.
+  if (left.length === 0 || right.length === 0) {
+    return (
+      <div style={{
+        padding: 16, background: '#FCE8E8', borderRadius: 12,
+        border: `1px solid ${A.red}30`, fontFamily: FONT,
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: A.red, marginBottom: 6 }}>
+          Question d&apos;association mal formatée
+        </div>
+        <div style={{ fontSize: 12, color: A.text, opacity: 0.8, marginBottom: 8 }}>
+          Les données <code>choices</code> n&apos;ont pas la forme attendue {`{left, right, correctMap}`}. Saute cette question.
+        </div>
+        <button
+          onClick={() => setPicked(q.correct_index === 0 ? 1 : 0)}
+          style={{
+            fontSize: 12, fontWeight: 600, color: '#fff', background: A.red,
+            border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+            fontFamily: FONT,
+          }}>
+          Marquer comme erreur et continuer
+        </button>
+      </div>
+    )
   }
 
   return (

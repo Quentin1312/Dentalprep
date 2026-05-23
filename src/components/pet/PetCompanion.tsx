@@ -301,7 +301,8 @@ export default function PetCompanion({
 
   const scale = size / 80
   const glowColor = LEVEL_GLOW[Math.min(level, 5)] ?? 'transparent'
-  const hasAura = level >= 3
+  // Aura disabled — the purple ring was distracting. Only keep crown/orbit for high levels.
+  const hasAura = false
   const hasCrown = level >= 4
   const hasOrbit = level >= 5
 

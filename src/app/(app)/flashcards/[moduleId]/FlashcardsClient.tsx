@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { recordSession } from '@/lib/recordSession'
@@ -22,13 +22,20 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
   const [flipped, setFlipped] = useState(false)
   const [done, setDone] = useState(false)
 
-  // Sort: review-first, then unseen, then known — only after progress loaded
-  const flashcards = progressLoaded
-    ? [...rawCards].sort((a, b) => {
-        const order = (s: Status | undefined) => s === 'review' ? 0 : s === undefined ? 1 : 2
-        return order(progress[a.id]) - order(progress[b.id])
-      })
-    : rawCards
+  // Sort ONCE when progress finishes loading; keep stable for the rest of the session
+  // so the progression bar positions don't shuffle as the user marks cards.
+  const [initialProgress, setInitialProgress] = useState<Record<string, Status> | null>(null)
+  useEffect(() => {
+    if (progressLoaded && initialProgress === null) setInitialProgress(progress)
+  }, [progressLoaded, progress, initialProgress])
+
+  const flashcards = useMemo(() => {
+    if (!initialProgress) return rawCards
+    return [...rawCards].sort((a, b) => {
+      const order = (s: Status | undefined) => s === 'review' ? 0 : s === undefined ? 1 : 2
+      return order(initialProgress[a.id]) - order(initialProgress[b.id])
+    })
+  }, [rawCards, initialProgress])
 
   const total = flashcards.length
   const card = flashcards[idx]
@@ -120,12 +127,24 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 10px', display: 'flex', gap: 4 }}>
+      <div style={{ padding: '0 20px 10px', display: 'grid', gridTemplateColumns: `repeat(${total}, 1fr)`, gap: 3 }}>
         {Array.from({ length: total }).map((_, i) => {
-          const cid = flashcards[i].id
-          const s = sessionProgress[cid]
-          const bg = s === 'known' ? A.green : s === 'review' ? A.amber : i === idx ? A.primary + '88' : '#E1E5EC'
-          return <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: bg }} />
+          const cid = flashcards[i]?.id
+          if (!cid) return <div key={i} />
+          const s = sessionProgress[cid] ?? progress[cid]
+          const isCurrent = i === idx
+          const bg = isCurrent
+            ? A.primary
+            : s === 'known' ? A.green
+            : s === 'review' ? A.amber
+            : '#E1E5EC'
+          return (
+            <div key={i} style={{
+              minWidth: 0, height: 5, borderRadius: 3, background: bg,
+              boxShadow: isCurrent ? `0 0 0 2px ${A.primary}33` : 'none',
+              transition: 'background .25s ease',
+            }} />
+          )
         })}
       </div>
 
