@@ -228,16 +228,6 @@ export function PathNode({
           </div>
         )}
 
-        {isBoss && state !== 'completed' && (
-          <div style={{
-            position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
-            background: '#0E1424', color: '#fff',
-            fontSize: 9.5, fontWeight: 800, letterSpacing: 1,
-            padding: '3px 8px', borderRadius: 6,
-            textTransform: 'uppercase', whiteSpace: 'nowrap',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-          }}>Quiz module</div>
-        )}
       </div>
 
       {label && (
@@ -284,8 +274,8 @@ export function CurveConnector({ from, to }: { from: number; to: number }) {
       }}>
       <path
         d={`M ${x1} 0 Q ${cx} 32 ${x2} 64`}
-        fill="none" stroke="#BCC3CE" strokeWidth="4"
-        strokeDasharray="4 9" strokeLinecap="round" opacity="0.85"
+        fill="none" stroke="#D8DCE4" strokeWidth="2.5"
+        strokeDasharray="5 8" strokeLinecap="round" opacity="0.55"
       />
     </svg>
   )
@@ -301,7 +291,7 @@ export function PathRow({
   children,
   left,
   right,
-  height = 124,
+  height = 160,
 }: {
   pos?: number
   from?: number
@@ -379,11 +369,7 @@ export type ModuleBreakVariant = 'cat' | 'yarn' | 'bowl'
 
 export function ModuleBreak({ variant = 'cat' }: { variant?: ModuleBreakVariant }) {
   return (
-    <div style={{ position: 'relative', padding: '14px 16px 8px', minHeight: 160 }}>
-      <div style={{ position: 'absolute', top: 6, right: 6, bottom: 8, width: 120 }}>
-        <ToothPathConnector height={144} />
-      </div>
-
+    <div style={{ position: 'relative', padding: '14px 16px 8px', minHeight: 140 }}>
       <div style={{
         position: 'relative', maxWidth: 200,
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6,

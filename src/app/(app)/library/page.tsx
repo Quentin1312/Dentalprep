@@ -47,7 +47,7 @@ function amplitudeAt(i: number): number {
   return POS_SEQ[i % POS_SEQ.length]
 }
 
-const BREAK_ROTATION: ModuleBreakVariant[] = ['cat', 'yarn', 'bowl', 'cat', 'yarn']
+const BREAK_ROTATION: ModuleBreakVariant[] = ['cat', 'cat', 'cat', 'cat', 'cat']
 
 export default function LibraryPage() {
   const router = useRouter()
