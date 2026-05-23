@@ -10,7 +10,7 @@ import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
-type Course = { id: string; title: string; page_count: number | null }
+type Course = { id: string; title: string; page_count: number | null; module_id?: string }
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -45,7 +45,8 @@ export default function ModulePage() {
     const mid = id as ModuleId
 
     const [{ data: c }, { data: f }, { data: a }, { data: qq }, { data: atts }] = await Promise.all([
-      supabase.from('courses').select('id,title,page_count').eq('user_id', user.id).eq('module_id', mid).order('created_at', { ascending: false }),
+      // Fetch ALL user courses (not filtered by module) so fascicules shared across modules show as scanned
+      supabase.from('courses').select('id,title,page_count,module_id').eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.from('flashcards').select('id').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_questions').select('id').eq('user_id', user.id).eq('module_id', mid),
@@ -200,7 +201,7 @@ export default function ModulePage() {
               <div style={{ width: 40, height: 40, borderRadius: 12, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
                 <Icon name="target" size={20} color={A.primary} />
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: A.text, marginBottom: 3 }}>Quiz QCM</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: A.text, marginBottom: 3 }}>Quiz</div>
               <div style={{ fontSize: 11, color: A.textMuted }}>{loading ? '…' : accuracy !== null ? `${accuracy}% réussite` : 'Non tenté'}</div>
             </div>
           </Link>
