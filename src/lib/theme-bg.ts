@@ -111,7 +111,7 @@ export function setThemeBg(id: ThemeBgId): void {
 
 /** React hook — returns [currentThemeId, setThemeBg]. */
 export function useThemeBg(): [ThemeBgId, (id: ThemeBgId) => void] {
-  const id = useSyncExternalStore(subscribe, read, () => 'white')
+  const id = useSyncExternalStore(subscribe, read, () => 'white') as ThemeBgId
   return [id, setThemeBg]
 }
 
