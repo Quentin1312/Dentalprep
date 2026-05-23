@@ -656,14 +656,6 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
 
   const currentOrder = orderState.length === items.length ? orderState : initialOrder
 
-  // Mouse drag state
-  const [dragIdx, setDragIdx] = useState<number | null>(null)
-  const [overIdx, setOverIdx] = useState<number | null>(null)
-
-  // Touch drag state
-  const touchFrom = useRef<number | null>(null)
-  const [touchOver, setTouchOver] = useState<number | null>(null)
-
   useEffect(() => {
     if (showResult) return
     const isCorrect = currentOrder.every((v, i) => v === i)
@@ -678,29 +670,6 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
     next.splice(to, 0, v)
     setOrderState(next)
   }
-
-  function handleTouchMove(e: React.TouchEvent) {
-    if (touchFrom.current === null) return
-    e.preventDefault()
-    const touch = e.touches[0]
-    const el = document.elementFromPoint(touch.clientX, touch.clientY)
-    const item = el?.closest('[data-order-pos]') as HTMLElement | null
-    if (item) {
-      const p = parseInt(item.getAttribute('data-order-pos') ?? '-1')
-      if (p >= 0) setTouchOver(p)
-    }
-  }
-
-  function handleTouchEnd() {
-    if (touchFrom.current !== null && touchOver !== null && touchFrom.current !== touchOver) {
-      move(touchFrom.current, touchOver)
-    }
-    touchFrom.current = null
-    setTouchOver(null)
-  }
-
-  const activeDrag = dragIdx ?? touchFrom.current
-  const activeOver = overIdx ?? touchOver
 
   return (
     <>
@@ -728,18 +697,13 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, position: 'relative' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {currentOrder.map((origIdx, pos) => {
-          const isDragging = activeDrag === pos
-          const isOver = activeOver === pos && activeDrag !== null && activeDrag !== pos
-
           let border: string = A.border
           let bg: string = A.surface
           let rankBg: string = A.primary
           let rankText: string = '#fff'
           let shadow: string = '0 1px 0 rgba(15,27,45,0.02), 0 2px 6px -4px rgba(15,27,45,0.06)'
-          let transform: string = 'translateY(0)'
-          let opacity = 1
 
           if (showResult) {
             const isCorrectPos = origIdx === pos
@@ -750,41 +714,17 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
               border = A.red; bg = '#FCE8E8'; rankBg = A.red; rankText = '#fff'
               shadow = `0 0 0 3px ${A.red}1a, 0 6px 18px -10px ${A.red}55`
             }
-          } else if (isDragging) {
-            border = A.primary
-            shadow = '0 0 0 3px rgba(10,102,224,0.18), 0 22px 44px -10px rgba(15,27,45,0.36)'
-            transform = 'scale(1.03)'
-            opacity = 0.92
-          } else if (isOver) {
-            border = A.primary
-            shadow = `0 0 0 3px ${A.primary}25, 0 4px 10px -4px rgba(15,27,45,0.08)`
-            transform = activeDrag !== null && activeDrag < pos ? 'translateY(6px)' : 'translateY(-6px)'
           }
 
           return (
             <div
               key={origIdx}
-              data-order-pos={pos}
-              draggable={!showResult}
-              onDragStart={() => setDragIdx(pos)}
-              onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
-              onDragOver={(e) => { e.preventDefault(); setOverIdx(pos) }}
-              onDrop={(e) => {
-                e.preventDefault()
-                if (dragIdx !== null) move(dragIdx, pos)
-                setDragIdx(null); setOverIdx(null)
-              }}
-              onTouchStart={() => { if (!showResult) touchFrom.current = pos }}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
               style={{
                 width: '100%', background: bg, border: `2px solid ${border}`, borderRadius: 14,
                 padding: '12px 10px 12px 12px', display: 'flex', alignItems: 'center', gap: 12,
                 boxShadow: shadow, fontFamily: FONT,
-                transform, opacity,
-                cursor: showResult ? 'default' : isDragging ? 'grabbing' : 'grab',
-                transition: isDragging ? 'transform .12s ease, opacity .12s ease' : 'all .22s cubic-bezier(0.2,0.7,0.2,1)',
-                userSelect: 'none', touchAction: 'none',
+                transition: 'all .22s cubic-bezier(0.2,0.7,0.2,1)',
+                userSelect: 'none',
               }}
             >
               {/* Position badge with explicit ordinal */}
@@ -805,50 +745,36 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
               </div>
 
               {!showResult && (
-                <>
-                  {/* Up/Down arrows */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); move(pos, Math.max(0, pos - 1)) }}
-                      disabled={pos === 0}
-                      aria-label="Monter"
-                      style={{
-                        width: 34, height: 28, borderRadius: 8, border: `1px solid ${A.border}`,
-                        background: pos === 0 ? '#F4F6F8' : A.surface,
-                        cursor: pos === 0 ? 'default' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                        opacity: pos === 0 ? 0.4 : 1,
-                      }}>
-                      <Icon name="chevronU" size={14} color={A.text} strokeWidth={2.6} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); move(pos, Math.min(items.length - 1, pos + 1)) }}
-                      disabled={pos === items.length - 1}
-                      aria-label="Descendre"
-                      style={{
-                        width: 34, height: 28, borderRadius: 8, border: `1px solid ${A.border}`,
-                        background: pos === items.length - 1 ? '#F4F6F8' : A.surface,
-                        cursor: pos === items.length - 1 ? 'default' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                        opacity: pos === items.length - 1 ? 0.4 : 1,
-                      }}>
-                      <Icon name="chevronD" size={14} color={A.text} strokeWidth={2.6} />
-                    </button>
-                  </div>
-                  {/* Drag handle */}
-                  <div style={{
-                    width: 18, display: 'flex', flexDirection: 'column', gap: 3,
-                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    opacity: 0.5,
-                  }}>
-                    {[0,1,2].map(i => (
-                      <div key={i} style={{ display: 'flex', gap: 3 }}>
-                        <span style={{ width: 3, height: 3, borderRadius: 1.5, background: A.textMuted }} />
-                        <span style={{ width: 3, height: 3, borderRadius: 1.5, background: A.textMuted }} />
-                      </div>
-                    ))}
-                  </div>
-                </>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <button
+                    onClick={() => move(pos, Math.max(0, pos - 1))}
+                    disabled={pos === 0}
+                    aria-label="Monter"
+                    style={{
+                      width: 40, height: 32, borderRadius: 9, border: `1.5px solid ${A.border}`,
+                      background: pos === 0 ? '#F4F6F8' : A.surface,
+                      cursor: pos === 0 ? 'default' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                      opacity: pos === 0 ? 0.4 : 1,
+                      boxShadow: pos === 0 ? 'none' : '0 1px 0 rgba(15,27,45,0.04)',
+                    }}>
+                    <Icon name="chevronU" size={16} color={A.text} strokeWidth={2.8} />
+                  </button>
+                  <button
+                    onClick={() => move(pos, Math.min(items.length - 1, pos + 1))}
+                    disabled={pos === items.length - 1}
+                    aria-label="Descendre"
+                    style={{
+                      width: 40, height: 32, borderRadius: 9, border: `1.5px solid ${A.border}`,
+                      background: pos === items.length - 1 ? '#F4F6F8' : A.surface,
+                      cursor: pos === items.length - 1 ? 'default' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                      opacity: pos === items.length - 1 ? 0.4 : 1,
+                      boxShadow: pos === items.length - 1 ? 'none' : '0 1px 0 rgba(15,27,45,0.04)',
+                    }}>
+                    <Icon name="chevronD" size={16} color={A.text} strokeWidth={2.8} />
+                  </button>
+                </div>
               )}
             </div>
           )
