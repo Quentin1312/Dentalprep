@@ -209,11 +209,11 @@ export default function DashboardPage() {
       {/* Pet celebration banner — only when goal done */}
       {!loading && goalDone && (
         <div style={{ padding: '10px 20px 0' }}>
-          <div style={{ background: A.greenSoft, borderRadius: 16, border: `1px solid ${A.green}30`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ flexShrink: 0 }}>
-              <PetCompanion petType={petType} state="correct" size={60} hideName level={xpInfo.level} />
+          <div style={{ background: A.greenSoft, borderRadius: 16, border: `1px solid ${A.green}30`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <PetCompanion petType={petType} state="correct" size={48} hideName level={xpInfo.level} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: A.green }}>Objectif du jour atteint !</div>
               <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>Tu as étudié {todayMin} min. Continue comme ça !</div>
             </div>

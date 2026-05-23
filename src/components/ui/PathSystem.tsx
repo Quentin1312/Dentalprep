@@ -368,31 +368,56 @@ function ToothPathConnector({ height = 144 }: { height?: number }) {
 export type ModuleBreakVariant = 'cat' | 'yarn' | 'bowl'
 
 export function ModuleBreak({ variant = 'cat' }: { variant?: ModuleBreakVariant }) {
+  // Simplified: just a small, centered sitting Heidi as a soft divider.
   return (
-    <div style={{ position: 'relative', padding: '14px 16px 8px', minHeight: 140 }}>
+    <div style={{
+      padding: '20px 16px 16px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+    }}>
+      <SittingHeidi size={64} />
       <div style={{
-        position: 'relative', maxWidth: 200,
-        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6,
+        fontSize: 10.5, fontWeight: 700, color: '#8A95A5',
+        letterSpacing: 1.2, textTransform: 'uppercase',
       }}>
-        {variant === 'cat' && <>
-          <DecorLabel emoji="💤">Heidi se repose</DecorLabel>
-          <SleepingCat size={92} cushionColor="#F4C2D7" />
-        </>}
-        {variant === 'yarn' && <>
-          <DecorLabel emoji="🧶">Pause révision</DecorLabel>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, paddingLeft: 12 }}>
-            <YarnBall size={56} hue="#E11D48" />
-            <YarnBall size={38} hue="#0D9488" />
-          </div>
-        </>}
-        {variant === 'bowl' && <>
-          <DecorLabel emoji="🥛">Pause goûter</DecorLabel>
-          <div style={{ paddingLeft: 18 }}>
-            <MilkBowl size={72} />
-          </div>
-        </>}
+        {variant === 'yarn' ? 'Continue !' : variant === 'bowl' ? 'Bon courage' : 'Heidi te suit'}
       </div>
     </div>
+  )
+}
+
+/** Minimal sitting Heidi — same identity as PetCompanion but static, simple, centered. */
+function SittingHeidi({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 80 80" style={{ overflow: 'visible' }}>
+      {/* Ground shadow */}
+      <ellipse cx="40" cy="76" rx="22" ry="3" fill="rgba(15,27,45,0.10)" />
+      {/* Tail curled around base */}
+      <path d="M58,70 Q70,60 64,46" stroke="#1A1830" strokeWidth="5" fill="none" strokeLinecap="round" />
+      {/* Body */}
+      <ellipse cx="40" cy="64" rx="20" ry="14" fill="#1A1830" />
+      <ellipse cx="40" cy="66" rx="12" ry="8" fill="#242048" />
+      {/* Paws front */}
+      <ellipse cx="32" cy="74" rx="5" ry="3" fill="#1A1830" />
+      <ellipse cx="48" cy="74" rx="5" ry="3" fill="#1A1830" />
+      {/* Ears */}
+      <polygon points="20,30 22,12 36,26" fill="#1A1830" />
+      <polygon points="22,28 24,17 33,26" fill="#D03898" />
+      <polygon points="44,26 58,12 60,30" fill="#1A1830" />
+      <polygon points="47,26 56,17 58,28" fill="#D03898" />
+      {/* Head */}
+      <circle cx="40" cy="40" r="20" fill="#1A1830" />
+      {/* Eyes */}
+      <ellipse cx="32" cy="38" rx="5.5" ry="7" fill="#FFD84A" />
+      <ellipse cx="32" cy="39" rx="2.5" ry="5" fill="#0A0818" />
+      <circle cx="33.5" cy="34.5" r="1.5" fill="#fff" />
+      <ellipse cx="48" cy="38" rx="5.5" ry="7" fill="#FFD84A" />
+      <ellipse cx="48" cy="39" rx="2.5" ry="5" fill="#0A0818" />
+      <circle cx="49.5" cy="34.5" r="1.5" fill="#fff" />
+      {/* Nose + mouth */}
+      <path d="M38,46 Q40,48 42,46" stroke="#FF8FAB" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+      <path d="M40,46 Q38,50 35,49" stroke="#1A1830" strokeWidth="1" fill="none" strokeLinecap="round" />
+      <path d="M40,46 Q42,50 45,49" stroke="#1A1830" strokeWidth="1" fill="none" strokeLinecap="round" />
+    </svg>
   )
 }
 
