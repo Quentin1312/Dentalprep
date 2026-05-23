@@ -579,12 +579,12 @@ function VFRenderer({ q, picked, showResult, onPick }: {
         const baseColor = isTrue ? A.green : A.red
         const baseSoft = isTrue ? A.greenSoft : '#FCE8E8'
 
-        let bg = A.surface
-        let border = A.border
-        let labelCol = A.text
-        let iconBg = '#F0F2F5'
-        let iconStroke = A.textMuted
-        let shadow = '0 1px 0 rgba(15,27,45,0.02), 0 4px 14px -8px rgba(15,27,45,0.10)'
+        let bg: string = A.surface
+        let border: string = A.border
+        let labelCol: string = A.text
+        let iconBg: string = '#F0F2F5'
+        let iconStroke: string = A.textMuted
+        let shadow: string = '0 1px 0 rgba(15,27,45,0.02), 0 4px 14px -8px rgba(15,27,45,0.10)'
 
         if (isCorrect) {
           border = A.green; bg = A.greenSoft
@@ -681,12 +681,12 @@ function OrdreRenderer({ q, orderState, setOrderState, showResult, picked, setPi
           const isDragging = dragIdx === pos
           const isOver = overIdx === pos && dragIdx !== null && dragIdx !== pos
 
-          let border = A.border
-          let bg = A.surface
-          let rankBg = '#F1F6FE'
-          let rankText = A.primary
-          let shadow = '0 1px 0 rgba(15,27,45,0.02), 0 2px 6px -4px rgba(15,27,45,0.06)'
-          let transform = 'translateY(0) rotate(0)'
+          let border: string = A.border
+          let bg: string = A.surface
+          let rankBg: string = '#F1F6FE'
+          let rankText: string = A.primary
+          let shadow: string = '0 1px 0 rgba(15,27,45,0.02), 0 2px 6px -4px rgba(15,27,45,0.06)'
+          let transform: string = 'translateY(0) rotate(0)'
 
           if (showResult) {
             const isCorrectPos = origIdx === pos
@@ -953,10 +953,10 @@ function AssocChip({ side, text, state, color, onClick }: {
   color?: string
   onClick: () => void
 }) {
-  let bg = A.surface
-  let border = A.border
-  let textCol = A.text
-  let shadow = '0 1px 0 rgba(15,27,45,0.02), 0 4px 10px -8px rgba(15,27,45,0.10)'
+  let bg: string = A.surface
+  let border: string = A.border
+  let textCol: string = A.text
+  let shadow: string = '0 1px 0 rgba(15,27,45,0.02), 0 4px 10px -8px rgba(15,27,45,0.10)'
   let dot: React.ReactNode = null
 
   if (state === 'selected') {
