@@ -9,15 +9,25 @@ import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 
-type Course = { id: string; title: string; page_count: number | null; module_id?: string }
+type Course = { id: string; title: string; page_count: number | null }
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
   return m ? parseInt(m[1]) : null
 }
 
-function Skel({ h }: { h: number }) {
-  return <div style={{ height: h, borderRadius: 14, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+const MODULE_ACCENT: Record<ModuleId, string> = {
+  M1: '#0A66E0', M2: '#0D9488', M3: '#7C3AED',
+  M4: '#E11D48', M5: '#D97706', M6: '#5B21B6',
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ flex: 1, textAlign: 'center' }}>
+      <div style={{ fontSize: 19, fontWeight: 800, color: A.text, letterSpacing: -0.5 }}>{value}</div>
+      <div style={{ fontSize: 10.5, color: A.textMuted, fontWeight: 600, marginTop: 2 }}>{label}</div>
+    </div>
+  )
 }
 
 export default function ModulePage() {
@@ -27,10 +37,10 @@ export default function ModulePage() {
   const [flashcardCount, setFlashcardCount] = useState(0)
   const [accuracy, setAccuracy] = useState<number | null>(null)
   const [totalAttempts, setTotalAttempts] = useState(0)
-  const [toReviewCount, setToReviewCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const mod = MODULE_MAP[id as ModuleId]
+  const accent = mod ? MODULE_ACCENT[id as ModuleId] : A.primary
   const mFascicules = FASCICULES.filter(f => f.modules.includes(id as ModuleId))
 
   const load = useCallback(async () => {
@@ -39,13 +49,10 @@ export default function ModulePage() {
     if (!user) { router.replace('/auth/login'); return }
     const mid = id as ModuleId
 
-    const [{ data: c }, { data: f }, { data: a }, { data: qq }, { data: atts }] = await Promise.all([
-      // Fetch ALL user courses (not filtered by module) so fascicules shared across modules show as scanned
-      supabase.from('courses').select('id,title,page_count,module_id').eq('user_id', user.id).order('created_at', { ascending: false }),
+    const [{ data: c }, { data: f }, { data: a }] = await Promise.all([
+      supabase.from('courses').select('id,title,page_count').eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.from('flashcards').select('id').eq('user_id', user.id).eq('module_id', mid),
       supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
-      supabase.from('quiz_questions').select('id').eq('user_id', user.id).eq('module_id', mid),
-      supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', mid),
     ])
 
     setCourses(c ?? [])
@@ -53,19 +60,6 @@ export default function ModulePage() {
     const att = a ?? []
     setTotalAttempts(att.length)
     setAccuracy(att.length > 0 ? Math.round((att.filter(x => x.is_correct).length / att.length) * 100) : null)
-
-    // Calcul des questions à revoir (accuracy < 60%)
-    const statsByQ = new Map<string, { ok: number; total: number }>()
-    for (const at of atts ?? []) {
-      const s = statsByQ.get(at.question_id) ?? { ok: 0, total: 0 }
-      statsByQ.set(at.question_id, { ok: s.ok + (at.is_correct ? 1 : 0), total: s.total + 1 })
-    }
-    const toReview = (qq ?? []).filter(q => {
-      const s = statsByQ.get(q.id)
-      return !s || s.total === 0 || s.ok / s.total < 0.6
-    }).length
-    setToReviewCount(toReview)
-
     setLoading(false)
   }, [id, router])
 
@@ -74,153 +68,126 @@ export default function ModulePage() {
     load()
   }, [mod, load, router])
 
-
   if (!mod) return null
 
-  const r = (84 - 7) / 2
-  const circ = 2 * Math.PI * r
-  const accuracyColor = accuracy !== null && accuracy >= 75 ? A.green : accuracy !== null ? A.amber : A.border
   const scannedFascicules = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n))
-  const allScanned = scannedFascicules.length === mFascicules.length && mFascicules.length > 0
 
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
 
-      <div style={{ padding: '62px 20px 0' }}>
+      {/* Header */}
+      <div style={{ padding: '54px 20px 0' }}>
         <Link href="/library" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: A.textMuted, fontWeight: 500, textDecoration: 'none', marginBottom: 16 }}>
           <Icon name="chevronL" size={14} color={A.textMuted} /> Bibliothèque
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 54, height: 54, borderRadius: 16, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: A.primary }}>{mod.id}</div>
+          <div style={{ width: 54, height: 54, borderRadius: 16, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1.5px solid ${accent}30` }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{mod.id}</div>
           </div>
-          <div>
-            <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>{mod.description}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5, marginTop: 2 }}>{mod.label}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>Module</div>
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginTop: 1, lineHeight: 1.2 }}>{mod.label}</div>
           </div>
         </div>
       </div>
 
-      {/* Stats ring */}
+      {/* Stats strip */}
       <div style={{ padding: '16px 20px 0' }}>
-        {loading ? <Skel h={116} /> : (
-          <div style={{ background: A.surface, borderRadius: 16, padding: 18, border: `0.5px solid ${A.border}`, boxShadow: '0 1px 3px rgba(15,27,45,0.06)', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ position: 'relative', width: 84, height: 84, flexShrink: 0 }}>
-              <svg width={84} height={84} style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx={42} cy={42} r={r} fill="none" stroke="#E9ECF2" strokeWidth={7} />
-                <circle cx={42} cy={42} r={r} fill="none" stroke={accuracyColor} strokeWidth={7}
-                  strokeDasharray={circ} strokeDashoffset={circ * (1 - (accuracy ?? 0) / 100)}
-                  strokeLinecap="round" style={{ transition: 'stroke-dashoffset .6s' }} />
-              </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: A.text }}>{accuracy !== null ? `${accuracy}%` : '—'}</div>
-              </div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: A.text, marginBottom: 4 }}>
-                {accuracy === null ? 'Pas encore tenté' : accuracy >= 75 ? 'Module maîtrisé ✓' : 'En progression'}
-              </div>
-              <div style={{ fontSize: 12, color: A.textMuted, marginBottom: 2 }}>{totalAttempts} questions tentées</div>
-              <div style={{ fontSize: 12, color: A.textMuted }}>{flashcardCount} flashcards · {scannedFascicules.length}/{mFascicules.length} fascicules</div>
-            </div>
-          </div>
-        )}
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E4E8EE', padding: '16px 20px', boxShadow: '0 1px 4px rgba(15,27,45,0.06)', display: 'flex', alignItems: 'center' }}>
+          {loading ? (
+            <div style={{ width: '100%', height: 42, borderRadius: 8, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+          ) : (
+            <>
+              <Stat label="fascicules" value={`${scannedFascicules.length}/${mFascicules.length}`} />
+              <div style={{ width: 1, height: 32, background: '#E4E8EE' }} />
+              <Stat label="questions" value={totalAttempts > 0 ? String(totalAttempts) : '—'} />
+              <div style={{ width: 1, height: 32, background: '#E4E8EE' }} />
+              <Stat label="réussite" value={accuracy !== null ? `${accuracy}%` : '—'} />
+              <div style={{ width: 1, height: 32, background: '#E4E8EE' }} />
+              <Stat label="flashcards" value={String(flashcardCount)} />
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Quiz intelligent — affiché si questions à revoir */}
-      {!loading && toReviewCount > 0 && (
-        <div style={{ padding: '12px 20px 0' }}>
-          <Link href={`/quiz/${id}?mode=smart`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: `linear-gradient(135deg, ${A.amber} 0%, #B45309 100%)`, borderRadius: 16, boxShadow: '0 4px 14px rgba(180,83,9,0.28)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Icon name="refresh" size={22} color="#fff" />
+      {/* Action buttons */}
+      <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Link href={`/quiz/${id}`} style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: `linear-gradient(135deg, ${accent} 0%, ${accent}CC 100%)`,
+            borderRadius: 16, padding: '16px 20px',
+            display: 'flex', alignItems: 'center', gap: 14,
+            boxShadow: `0 8px 20px -6px ${accent}55`,
+          }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="target" size={22} color="#fff" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Quiz intelligent</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-                {toReviewCount} question{toReviewCount > 1 ? 's' : ''} à retravailler en priorité
-              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Quiz du module</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>Toutes les questions · mode intelligent</div>
             </div>
             <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
-          </Link>
-        </div>
-      )}
+          </div>
+        </Link>
 
-      {/* Quiz complet si tout est scanné */}
-      {!loading && allScanned && toReviewCount === 0 && (
-        <div style={{ padding: '12px 20px 0' }}>
-          <Link href={`/quiz/${id}?mode=smart`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`, borderRadius: 16, boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Icon name="bolt" size={22} color="#fff" />
+        <Link href={`/flashcards/${id}`} style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '16px 20px',
+            display: 'flex', alignItems: 'center', gap: 14,
+            border: '1px solid #E4E8EE',
+            boxShadow: '0 2px 8px rgba(15,27,45,0.06)',
+          }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, background: `${accent}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="cards" size={22} color={accent} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Quiz module complet</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>Tous les fascicules · mode intelligent</div>
-            </div>
-            <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
-          </Link>
-        </div>
-      )}
-
-      {/* Modes de révision */}
-      <div style={{ padding: '16px 20px 0' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 10 }}>Révision</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <Link href={`/flashcards/${id}`} style={{ textDecoration: 'none' }}>
-            <div style={{ background: A.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${A.border}`, boxShadow: '0 1px 3px rgba(15,27,45,0.05)' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                <Icon name="cards" size={20} color={A.primary} />
+              <div style={{ fontSize: 16, fontWeight: 800, color: A.text, letterSpacing: -0.3 }}>Flashcards</div>
+              <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
+                {loading ? '…' : `${flashcardCount} carte${flashcardCount > 1 ? 's' : ''} du module`}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: A.text, marginBottom: 3 }}>Flashcards</div>
-              <div style={{ fontSize: 11, color: A.textMuted }}>{loading ? '…' : `${flashcardCount} cartes`}</div>
             </div>
-          </Link>
-          <Link href={`/quiz/${id}`} style={{ textDecoration: 'none' }}>
-            <div style={{ background: A.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${A.border}`, boxShadow: '0 1px 3px rgba(15,27,45,0.05)' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-                <Icon name="target" size={20} color={A.primary} />
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: A.text, marginBottom: 3 }}>Quiz</div>
-              <div style={{ fontSize: 11, color: A.textMuted }}>{loading ? '…' : accuracy !== null ? `${accuracy}% réussite` : 'Non tenté'}</div>
-            </div>
-          </Link>
-        </div>
+            <Icon name="chevronR" size={16} color={A.textDim} />
+          </div>
+        </Link>
       </div>
 
-      {/* Fascicules du module */}
+      {/* Fascicule list */}
       <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 10 }}>Fascicules</div>
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}><Skel h={66} /><Skel h={66} /></div>
-        ) : (
-          <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,27,45,0.06)' }}>
-            {mFascicules.map((f, fi) => {
-              const course = courses.find(c => fasciculeN(c.title) === f.n)
-              const isLast = fi === mFascicules.length - 1
+        <div style={{ fontSize: 12, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 10 }}>
+          Fascicules · {scannedFascicules.length}/{mFascicules.length} scannés
+        </div>
+        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E4E8EE', overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,27,45,0.06)' }}>
+          {mFascicules.map((f, fi) => {
+            const course = courses.find(c => fasciculeN(c.title) === f.n)
+            const isLast = fi === mFascicules.length - 1
+            if (course) {
               return (
-                <div key={f.n} style={{ padding: '12px 14px', borderBottom: isLast ? 'none' : `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, background: course ? A.greenSoft : '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: course ? A.green : A.textDim }}>{f.n}</span>
+                <Link key={f.n} href={`/quiz/${id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: isLast ? 'none' : '1px solid #E4E8EE' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${accent}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: accent }}>{f.n}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
+                    <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 500, marginTop: 1 }}>{course.page_count ?? 0} pages</div>
                   </div>
-                  {course ? (
-                    <Link href={`/quiz/${id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: A.primarySoft, border: `0.5px solid ${A.primary}20`, flexShrink: 0 }}>
-                      <Icon name="target" size={11} color={A.primary} />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: A.primary }}>Quiz</span>
-                    </Link>
-                  ) : (
-                    <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}`, flexShrink: 0 }}>
-                      <Icon name="camera" size={11} color={A.textMuted} />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Scanner</span>
-                    </Link>
-                  )}
-                </div>
+                  <Icon name="chevronR" size={14} color={A.textDim} />
+                </Link>
               )
-            })}
-          </div>
-        )}
+            }
+            return (
+              <div key={f.n} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderBottom: isLast ? 'none' : '1px solid #E4E8EE', opacity: 0.4 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: A.textDim }}>{f.n}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
+                  <div style={{ fontSize: 11, color: A.textDim, fontWeight: 500, marginTop: 1 }}>Non scanné</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
