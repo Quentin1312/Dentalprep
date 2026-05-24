@@ -247,7 +247,7 @@ export default function SetupPage() {
             type="date" value={examDate}
             min={new Date().toISOString().slice(0, 10)}
             onChange={e => setExamDate(e.target.value)}
-            style={{ width: '100%', maxWidth: '100%', height: 52, borderRadius: 14, background: A.surface, border: `1.5px solid ${A.primary}`, padding: '0 18px', fontSize: 16, fontWeight: 600, color: A.text, fontFamily: A.font, outline: 'none', boxSizing: 'border-box', display: 'block', WebkitAppearance: 'none' as never }}
+            style={{ width: '100%', maxWidth: '100%', borderRadius: 14, background: A.surface, border: `1.5px solid ${A.primary}`, padding: '15px 18px', fontSize: 16, fontWeight: 600, color: A.text, fontFamily: A.font, outline: 'none', boxSizing: 'border-box', display: 'block', WebkitAppearance: 'none' as never }}
           />
         </div>
         <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
