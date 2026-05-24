@@ -223,7 +223,7 @@ export default function QuizClient({
       {/* +XP float */}
       {xpAnim > 0 && (
         <div key={xpAnim} style={{
-          position: 'fixed', bottom: 148, right: 28, zIndex: 30, pointerEvents: 'none',
+          position: 'fixed', bottom: 184, right: 28, zIndex: 30, pointerEvents: 'none',
           fontSize: 20, fontWeight: 900, color: '#FFD84A',
           textShadow: '0 0 14px rgba(255,216,74,0.7), 0 2px 4px rgba(0,0,0,0.4)',
           animation: 'xp-float 1.1s ease-out forwards',
@@ -233,7 +233,7 @@ export default function QuizClient({
 
       {/* Pet companion — peeks from bottom-right, pops up on answer */}
       <div style={{
-        position: 'fixed', bottom: 56, right: 12, zIndex: 25, pointerEvents: 'none',
+        position: 'fixed', bottom: 72, right: 12, zIndex: 25, pointerEvents: 'none',
         transform: (petState === 'idle' || petState === 'thinking') ? 'translateY(62px)' : 'translateY(0)',
         transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
       }}>
