@@ -134,7 +134,7 @@ export function MilkBowl({ size = 50 }: { size?: number }) {
 // PathNode — 3D circle node, Duolingo-style depth
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type PathNodeState = 'completed' | 'current' | 'available' | 'locked' | 'boss'
+export type PathNodeState = 'completed' | 'started' | 'current' | 'available' | 'locked' | 'boss'
 
 export function PathNode({
   state = 'available',
@@ -163,6 +163,7 @@ export function PathNode({
 
   const palette: Record<PathNodeState, { face: string; edge: string; iconCol: string; ringCol: string }> = {
     completed: { face: '#16A34A', edge: '#0E7036',  iconCol: '#fff',    ringCol: '#16A34A' },
+    started:   { face: '#F97316', edge: '#C2410C',  iconCol: '#fff',    ringCol: '#F97316' },
     current:   { face: accent,    edge: customDeep, iconCol: '#fff',    ringCol: accent     },
     available: { face: accent,    edge: customDeep, iconCol: '#fff',    ringCol: accent     },
     locked:    { face: '#D8DDE5', edge: '#A8B0BB',  iconCol: '#7C8693', ringCol: '#A8B0BB'  },

@@ -90,16 +90,17 @@ export default function QuizClient({
   const router = useRouter()
   const { data, refresh } = useAppData()
   const startRef = useRef(Date.now())
-  // Snapshot XP at session start so the summary can animate from → to.
   const [xpBefore] = useState(() => computeXP((data?.attempts as { is_correct: boolean }[] | undefined) ?? []))
-  const [idx, setIdx] = useState(0)
+  // Queue-based: wrong answers go back to end until answered correctly
+  const [queue, setQueue] = useState<Question[]>(() => [...questions])
+  const [completed, setCompleted] = useState(0)
+  const [wrongAttemptIds, setWrongAttemptIds] = useState<Set<string>>(new Set())
   const [picked, setPicked] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
-  const [scoreOk, setScoreOk] = useState(0)
-  const [scoreBad, setScoreBad] = useState(0)
   const [finished, setFinished] = useState(false)
-  const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
   const [xpAnim, setXpAnim] = useState(0)
+
+  const originalTotal = questions.length
 
   // Type-specific local interaction state. Resets per question via useEffect.
   const [orderState, setOrderState] = useState<number[]>([])
@@ -107,17 +108,16 @@ export default function QuizClient({
   const [pendingLeft, setPendingLeft] = useState<number | null>(null)
   const [pendingRight, setPendingRight] = useState<number | null>(null)
 
-  const q = questions[idx]
+  const q = queue[0]
   const qtype: QType = (q?.type ?? 'QCM') as QType
-  const total = questions.length
 
-  // Reset per-question interaction state when index changes.
+  // Reset per-question interaction state when the current question changes.
   useEffect(() => {
     setOrderState([])
     setPairs([])
     setPendingLeft(null)
     setPendingRight(null)
-  }, [idx])
+  }, [q?.id])
 
   // Pet animation state — preserved from original.
   const petState: PetState = showResult
@@ -127,13 +127,12 @@ export default function QuizClient({
   const stat = attemptStats.get(q?.id ?? '')
   const wasTricky = stat && stat.total > 0 && stat.ok / stat.total < 0.6
 
-  // submit / next / restart — UNCHANGED in behaviour.
   async function submit() {
     if (picked === null) return
     setShowResult(true)
     const isCorrect = picked === q.correct_index
-    if (isCorrect) { setScoreOk(s => s + 1); setXpAnim(n => n + 1) }
-    else { setScoreBad(s => s + 1); setWrongQuestions(prev => [...prev, q]) }
+    if (isCorrect) { setCompleted(c => c + 1); setXpAnim(n => n + 1) }
+    else { setWrongAttemptIds(prev => new Set([...prev, q.id])) }
     const supabase = createClient()
     supabase.from('quiz_attempts').insert({
       user_id: userId,
@@ -145,38 +144,43 @@ export default function QuizClient({
   }
 
   async function next() {
-    if (idx + 1 >= total) {
-      setFinished(true)
-      const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
-      await recordSession(userId, elapsed)
-      return
+    const isCorrect = picked === q.correct_index
+    if (isCorrect) {
+      const newQueue = queue.slice(1)
+      if (newQueue.length === 0) {
+        setFinished(true)
+        const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
+        await recordSession(userId, elapsed)
+        return
+      }
+      setQueue(newQueue)
+    } else {
+      // Wrong: put question back at end of queue
+      setQueue(prev => [...prev.slice(1), prev[0]])
     }
-    setIdx(i => i + 1)
     setPicked(null)
     setShowResult(false)
   }
 
-  function restart(questionsOverride?: Question[]) {
-    const qs = questionsOverride ?? questions
-    if (questionsOverride) {
-      sessionStorage.setItem('quiz_retry', JSON.stringify(qs))
-      window.location.reload()
-    } else {
-      setIdx(0); setPicked(null); setShowResult(false)
-      setScoreOk(0); setScoreBad(0); setFinished(false)
-      setWrongQuestions([]); startRef.current = Date.now()
-    }
+  function restart() {
+    setQueue([...questions])
+    setCompleted(0)
+    setWrongAttemptIds(new Set())
+    setPicked(null)
+    setShowResult(false)
+    setFinished(false)
+    startRef.current = Date.now()
   }
 
   if (finished) return (
     <QuizSummary
-      scoreOk={scoreOk}
-      scoreBad={scoreBad}
-      total={total}
+      scoreOk={originalTotal - wrongAttemptIds.size}
+      scoreBad={wrongAttemptIds.size}
+      total={originalTotal}
       moduleId={moduleId}
-      wrongQuestions={wrongQuestions}
+      wrongQuestions={[]}
       onRestart={() => restart()}
-      onRestartWrong={(qs) => restart(qs)}
+      onRestartWrong={() => {}}
       backHref={backHref}
       petType={petType}
       level={level}
@@ -189,8 +193,7 @@ export default function QuizClient({
     return s && s.total > 0 && s.ok / s.total < 0.5
   }).length : 0
 
-  // Completed segment count for progress bar = answered questions.
-  const completedSegments = idx + (showResult ? 1 : 0)
+  const completedSegments = completed
 
   // ── Type-aware label
   const typeLabel: Record<QType, string> = {
@@ -246,27 +249,22 @@ export default function QuizClient({
             <Icon name="x" size={14} color={A.text} strokeWidth={2.2} />
           </button>
 
-          {/* Segmented Linear-style progress */}
+          {/* Segmented progress — one segment per original question */}
           <div style={{ flex: 1, display: 'flex', gap: 3 }}>
-            {Array.from({ length: total }).map((_, i) => {
-              const isDone = i < completedSegments
-              const isCurrent = i === idx && !isDone
-              return (
-                <div key={i} style={{
-                  flex: 1, height: 6, borderRadius: 3,
-                  background: isDone ? A.primary : isCurrent ? A.primary : '#E4E8EE',
-                  opacity: isCurrent ? 0.45 : 1,
-                  transition: 'background .3s ease, opacity .3s ease',
-                }} />
-              )
-            })}
+            {Array.from({ length: originalTotal }).map((_, i) => (
+              <div key={i} style={{
+                flex: 1, height: 6, borderRadius: 3,
+                background: i < completedSegments ? A.green : '#E4E8EE',
+                transition: 'background .3s ease',
+              }} />
+            ))}
           </div>
 
           <div style={{
             fontSize: 13, fontWeight: 700, color: A.text,
             fontVariantNumeric: 'tabular-nums', minWidth: 36, textAlign: 'right',
           }}>
-            {idx + 1}<span style={{ color: A.textDim, fontWeight: 500 }}>/{total}</span>
+            {completed}<span style={{ color: A.textDim, fontWeight: 500 }}>/{originalTotal}</span>
           </div>
         </div>
 
@@ -323,7 +321,7 @@ export default function QuizClient({
             fontSize: 10.5, fontWeight: 700, color: A.textMuted,
             letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10,
           }}>
-            Question {idx + 1} · {headerLabel ?? moduleId}
+            {wrongAttemptIds.has(q.id) ? '↩ À corriger · ' : ''}{headerLabel ?? moduleId}
           </div>
 
           {q.page_image_url && (
@@ -404,13 +402,16 @@ export default function QuizClient({
         {showResult ? (
           <button onClick={next} style={{
             width: '100%', height: 56, borderRadius: 16, border: 'none',
-            background: A.primary, color: '#fff', fontSize: 16, fontWeight: 700,
+            background: picked === q?.correct_index ? A.primary : A.red,
+            color: '#fff', fontSize: 16, fontWeight: 700,
             letterSpacing: -0.1, fontFamily: FONT, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            boxShadow: '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+            boxShadow: picked === q?.correct_index
+              ? '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)'
+              : '0 10px 24px -6px rgba(220,38,38,0.55), 0 2px 6px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
             transition: 'transform .12s ease, box-shadow .12s ease',
           }}>
-            {idx + 1 >= total ? 'Voir les résultats' : 'Question suivante'}
+            {picked === q?.correct_index ? 'Continuer' : 'Ça reviendra !'}
             <Icon name="arrowR" size={16} color="#fff" strokeWidth={2.4} />
           </button>
         ) : (

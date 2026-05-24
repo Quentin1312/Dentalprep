@@ -14,6 +14,7 @@ interface AppData {
   profile: Profile
   courses: Course[]
   attempts: Attempt[]
+  questionCourseMap: Record<string, string>
   todayMinutes: number
   flashXpBonus: number
 }
@@ -58,20 +59,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) { router.replace('/auth/login'); return }
 
     const today = new Date().toISOString().split('T')[0]
-    const [profRes, coursesRes, attemptsRes, todayRes] = await Promise.all([
+    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes] = await Promise.all([
       supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
       supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
+      supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id),
     ])
 
     if (!profRes.data?.full_name) { router.replace('/setup'); return }
+
+    const questionCourseMap: Record<string, string> = {}
+    for (const q of questionsRes.data ?? []) {
+      questionCourseMap[q.id] = q.course_id
+    }
 
     const fresh: AppData = {
       userId: user.id,
       profile: profRes.data,
       courses: coursesRes.data ?? [],
       attempts: attemptsRes.data ?? [],
+      questionCourseMap,
       todayMinutes: todayRes.data?.minutes_studied ?? 0,
       flashXpBonus: readFlashXP(),
     }

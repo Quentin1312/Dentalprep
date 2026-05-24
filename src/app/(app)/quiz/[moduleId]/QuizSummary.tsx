@@ -418,50 +418,61 @@ export default function QuizSummary({
 
         {/* CTAs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {wrongQuestions.length > 0 && (
-            <button
-              onClick={() => onRestartWrong(wrongQuestions)}
-              style={{
-                height: 54, borderRadius: 16, border: 'none',
-                background: A.amber, color: '#fff',
-                fontSize: 15, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                letterSpacing: -0.1,
-                boxShadow: '0 10px 24px -6px rgba(217,119,6,0.55), 0 2px 6px rgba(217,119,6,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
-                transition: 'transform .12s ease, box-shadow .12s ease',
-              }}>
-              <Icon name="refresh" size={16} color="#fff" strokeWidth={2.4} />
-              Refaire les erreurs ({wrongQuestions.length})
-            </button>
+          {wrongQuestions.length > 0 ? (
+            <>
+              <button
+                onClick={() => onRestartWrong(wrongQuestions)}
+                style={{
+                  height: 56, borderRadius: 16, border: 'none',
+                  background: A.red, color: '#fff',
+                  fontSize: 16, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  letterSpacing: -0.1,
+                  boxShadow: '0 10px 24px -6px rgba(220,38,38,0.55), 0 2px 6px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+                  transition: 'transform .12s ease, box-shadow .12s ease',
+                }}>
+                <Icon name="refresh" size={17} color="#fff" strokeWidth={2.4} />
+                Corriger les {wrongQuestions.length} erreur{wrongQuestions.length > 1 ? 's' : ''}
+              </button>
+              <button
+                onClick={() => router.push(backHref ?? `/module/${moduleId}`)}
+                style={{
+                  height: 42, borderRadius: 12, border: 'none',
+                  background: 'transparent', color: A.textMuted,
+                  fontSize: 13, fontWeight: 600, fontFamily: A.font, cursor: 'pointer',
+                  transition: 'opacity .12s ease',
+                }}>
+                Terminer quand même →
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => router.push(backHref ?? `/module/${moduleId}`)}
+                style={{
+                  height: 56, borderRadius: 16, border: 'none',
+                  background: A.primary, color: '#fff',
+                  fontSize: 16, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  letterSpacing: -0.1,
+                  boxShadow: '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+                  transition: 'transform .12s ease, box-shadow .12s ease',
+                }}>
+                {backHref ? 'Retour' : 'Retour au module'}
+                <Icon name="arrowR" size={16} color="#fff" strokeWidth={2.4} />
+              </button>
+              <button
+                onClick={onRestart}
+                style={{
+                  height: 42, borderRadius: 12, border: 'none',
+                  background: 'transparent', color: A.textMuted,
+                  fontSize: 13, fontWeight: 600, fontFamily: A.font, cursor: 'pointer',
+                  transition: 'opacity .12s ease',
+                }}>
+                Recommencer le quiz
+              </button>
+            </>
           )}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={onRestart}
-              style={{
-                flex: 1, height: 50, borderRadius: 14,
-                border: `1.5px solid ${A.border}`,
-                background: A.surface, color: A.text,
-                fontSize: 14.5, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
-                boxShadow: '0 1px 0 rgba(15,27,45,0.02)',
-                transition: 'transform .12s ease',
-              }}>
-              Recommencer
-            </button>
-            <button
-              onClick={() => router.push(backHref ?? `/module/${moduleId}`)}
-              style={{
-                flex: 1.2, height: 50, borderRadius: 14, border: 'none',
-                background: A.primary, color: '#fff',
-                fontSize: 14.5, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                letterSpacing: -0.1,
-                boxShadow: '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
-                transition: 'transform .12s ease, box-shadow .12s ease',
-              }}>
-              {backHref ? 'Retour' : 'Retour module'}
-              <Icon name="arrowR" size={14} color="#fff" strokeWidth={2.4} />
-            </button>
-          </div>
         </div>
       </div>
     </div>

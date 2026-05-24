@@ -56,6 +56,7 @@ export default function LibraryPage() {
   const theme = THEMES[themeId]
   const courses = data?.courses ?? []
   const attempts = data?.attempts ?? []
+  const questionCourseMap = data?.questionCourseMap ?? {}
 
   // Compute per-module stats once
   const moduleStats = MODULES.map(m => {
@@ -70,14 +71,26 @@ export default function LibraryPage() {
   })
 
   // Rail data
-  const railModules: RailModule[] = moduleStats.map(({ m, scannedCount, mFascicules, accuracy }) => {
-    const status: RailModule['status'] = scannedCount === mFascicules.length && mFascicules.length > 0
+  const railModules: RailModule[] = moduleStats.map(({ m, mFascicules, mCourses, accuracy }) => {
+    const passedCount = mFascicules.filter(f => {
+      const course = courses.find(c => fasciculeN(c.title) === f.n)
+      if (!course) return false
+      const fascAttempts = attempts.filter(a => questionCourseMap[a.question_id] === course.id)
+      if (fascAttempts.length === 0) return false
+      return fascAttempts.filter(a => a.is_correct).length / fascAttempts.length >= 0.75
+    }).length
+    const startedCount = mFascicules.filter(f => {
+      const course = courses.find(c => fasciculeN(c.title) === f.n)
+      if (!course) return false
+      return attempts.some(a => questionCourseMap[a.question_id] === course.id)
+    }).length
+    const status: RailModule['status'] = passedCount === mFascicules.length && mFascicules.length > 0
       ? 'done'
-      : scannedCount > 0 ? 'active' : 'open'
+      : startedCount > 0 ? 'active' : 'open'
     return {
       id: m.id, label: m.label.split(' ').slice(0, 2).join(' '),
       accent: MOD_STYLE[m.id].accent, icon: MOD_STYLE[m.id].icon,
-      done: scannedCount, total: mFascicules.length || 1,
+      done: passedCount, total: mFascicules.length || 1,
       status,
     }
   })
@@ -176,10 +189,20 @@ export default function LibraryPage() {
               if (node.kind === 'fasc') {
                 const f = node.fascicule!
                 const course = node.course
-                // Un-scanned but next-up = 'current' (pulsing). Other un-scanned = 'available'.
-                // Scanned = 'completed'.
-                const state = course ? 'completed' : node.isCurrent ? 'current' : 'available'
-                const icon = course ? iconForFascicule(f.title) : 'camera'
+                const fascAttempts = course
+                  ? attempts.filter(a => questionCourseMap[a.question_id] === course.id)
+                  : []
+                const fascAcc = fascAttempts.length > 0
+                  ? fascAttempts.filter(a => a.is_correct).length / fascAttempts.length
+                  : null
+                const state = !course
+                  ? (node.isCurrent ? 'current' : 'available')
+                  : fascAcc !== null && fascAcc >= 0.75
+                    ? 'completed'
+                    : fascAcc !== null
+                      ? 'started'
+                      : (node.isCurrent ? 'current' : 'available')
+                const icon = iconForFascicule(f.title)
                 const href = course ? `/fascicule/${course.id}?module=${m.id}` : `/upload?fascicule=${f.n}`
                 const shortTitle = f.title.length > 26 ? f.title.slice(0, 24) + '…' : f.title
                 return (
