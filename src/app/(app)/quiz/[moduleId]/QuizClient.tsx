@@ -285,8 +285,8 @@ export default function QuizClient({
             {typeLabel[qtype]}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <ScoreChip kind="ok" count={scoreOk} />
-            <ScoreChip kind="bad" count={scoreBad} />
+            <ScoreChip kind="ok" count={completed} />
+            <ScoreChip kind="bad" count={wrongAttemptIds.size} />
             {mode === 'smart' && toReviewCount > 0 && (
               <div style={{
                 fontSize: 11, fontWeight: 700, color: A.amber, padding: '3px 8px',
