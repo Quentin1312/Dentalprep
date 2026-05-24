@@ -91,6 +91,10 @@ function QuizInner() {
             return last !== undefined && last === false
           })
           setQuestions(sorted)
+        } else if (mode === 'module') {
+          // All module questions, smart-sorted, capped at 50
+          sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
+          setQuestions(sorted.slice(0, 50))
         } else if (mode === 'smart') {
           sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
           const toReview = sorted.filter(q => smartSort(q, stats) === 0)
@@ -146,12 +150,12 @@ function QuizInner() {
       questions={questions}
       moduleId={moduleId}
       userId={userId!}
-      mode={(mode === 'errors' ? 'smart' : mode) as 'normal' | 'smart'}
+      mode={(mode === 'errors' || mode === 'module' ? 'smart' : mode) as 'normal' | 'smart'}
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
       backHref={`/library`}
-      headerLabel={mode === 'errors' ? 'Mes erreurs' : mode === 'smart' ? 'Quiz intelligent' : `Leçon ${lesson + 1}/${totalLessons}`}
+      headerLabel={mode === 'errors' ? 'Mes erreurs' : mode === 'module' ? 'Quiz du module' : mode === 'smart' ? 'Quiz intelligent' : `Leçon ${lesson + 1}/${totalLessons}`}
     />
   )
 }

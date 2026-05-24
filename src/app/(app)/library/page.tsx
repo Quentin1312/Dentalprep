@@ -231,7 +231,7 @@ export default function LibraryPage() {
                 : isFullyScanned && accuracy >= 0.75
                   ? 'completed'
                   : 'available'
-              const href = `/quiz/${m.id}${isFullyScanned ? '?mode=smart' : ''}`
+              const href = `/quiz/${m.id}?mode=module`
               return (
                 <PathRow key={`boss-${m.id}`} pos={pos} from={from}>
                   <Link href={bossState === 'locked' ? '#' : href} style={{ textDecoration: 'none', pointerEvents: bossState === 'locked' ? 'none' : 'auto' }}>
