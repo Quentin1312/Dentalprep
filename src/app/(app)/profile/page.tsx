@@ -12,7 +12,7 @@ import { computeBadges } from '@/lib/badges'
 import type { Badge } from '@/lib/badges'
 import { useThemeBg, themeBgStyle, THEMES, type ThemeBgId } from '@/lib/theme-bg'
 import {
-  PathSystemStyles, SectionLabel, SleepingCat, shade, PathIcon,
+  PathSystemStyles, SectionLabel, shade, PathIcon,
 } from '@/components/ui/PathSystem'
 
 type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null }
@@ -109,72 +109,69 @@ export default function ProfilePage() {
         </div>
       ) : (
         <>
-          {/* Hero — dark card with sleeping cat + level + XP */}
+          {/* Hero — dark card with pet + level + XP */}
           <div style={{ padding: '8px 16px 0' }}>
             <div style={{
-              position: 'relative',
               borderRadius: 22,
               background: 'linear-gradient(135deg, #1B1730 0%, #0F1424 100%)',
               padding: '20px 18px 18px',
               boxShadow: '0 14px 30px -12px rgba(15,27,45,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
-              overflow: 'hidden',
               color: '#fff',
             }}>
-              <div style={{ position: 'absolute', right: -10, top: 8 }}>
-                <SleepingCat size={94} cushionColor="#5B21B6" />
+              {/* Top row: name/email left, pet right */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 12, paddingTop: 4 }}>
+                  <div style={{
+                    fontSize: 26, fontWeight: 800, letterSpacing: -0.6, lineHeight: 1.1,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.20)',
+                  }}>{name || 'Mon profil'}</div>
+                  <div style={{
+                    fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{email}</div>
+                </div>
+                <div style={{ flexShrink: 0 }}>
+                  <PetCompanion petType={petType} state="idle" size={72} level={xpInfo.level} />
+                </div>
               </div>
 
-              <div style={{
-                fontSize: 26, fontWeight: 800, letterSpacing: -0.6, lineHeight: 1.1,
-                textShadow: '0 1px 2px rgba(0,0,0,0.20)', maxWidth: '60%',
-              }}>{name || 'Mon profil'}</div>
-              <div style={{
-                fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500,
-                maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>{email}</div>
-
-              <div style={{ marginTop: 18 }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: 8,
-                      background: `linear-gradient(135deg, ${accent} 0%, ${shade(accent, -25)} 100%)`,
-                      color: '#fff', fontSize: 12, fontWeight: 900,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.3), 0 2px 6px ${accent}66`,
-                    }}>{xpInfo.level}</div>
-                    <div style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: -0.2 }}>
-                      {xpInfo.name}
-                    </div>
+              {/* XP bar — full width, no overlap */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    width: 26, height: 26, borderRadius: 8,
+                    background: `linear-gradient(135deg, ${accent} 0%, ${shade(accent, -25)} 100%)`,
+                    color: '#fff', fontSize: 12, fontWeight: 900,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.3), 0 2px 6px ${accent}66`,
+                  }}>{xpInfo.level}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: -0.2 }}>
+                    {xpInfo.name}
                   </div>
-                  <div style={{
-                    fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.85)',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}>{xp} XP</div>
                 </div>
                 <div style={{
-                  height: 10, borderRadius: 6, background: 'rgba(255,255,255,0.10)',
-                  position: 'relative', overflow: 'hidden',
-                  boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.30)',
-                }}>
-                  <div style={{
-                    width: `${xpPct}%`, height: '100%',
-                    background: `linear-gradient(90deg, ${accent} 0%, ${shade(accent, 25)} 100%)`,
-                    borderRadius: 6,
-                    boxShadow: `0 0 10px ${accent}88`,
-                    transition: 'width 1s cubic-bezier(0.34,1.2,0.64,1)',
-                  }} />
-                </div>
+                  fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.85)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}>{xp} XP</div>
+              </div>
+              <div style={{
+                height: 10, borderRadius: 6, background: 'rgba(255,255,255,0.10)',
+                overflow: 'hidden', boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.30)',
+              }}>
                 <div style={{
-                  marginTop: 5, fontSize: 10.5, color: 'rgba(255,255,255,0.55)',
-                  fontWeight: 600, fontVariantNumeric: 'tabular-nums',
-                }}>
-                  {xpInfo.level < LEVEL_THRESHOLDS.length
-                    ? `${xpInfo.levelEnd - xp} XP avant niv. ${xpInfo.level + 1}`
-                    : 'Niveau maximum atteint !'}
-                </div>
+                  width: `${xpPct}%`, height: '100%',
+                  background: `linear-gradient(90deg, ${accent} 0%, ${shade(accent, 25)} 100%)`,
+                  borderRadius: 6, boxShadow: `0 0 10px ${accent}88`,
+                  transition: 'width 1s cubic-bezier(0.34,1.2,0.64,1)',
+                }} />
+              </div>
+              <div style={{
+                marginTop: 5, fontSize: 10.5, color: 'rgba(255,255,255,0.55)',
+                fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+              }}>
+                {xpInfo.level < LEVEL_THRESHOLDS.length
+                  ? `${xpInfo.levelEnd - xp} XP avant niv. ${xpInfo.level + 1}`
+                  : 'Niveau maximum atteint !'}
               </div>
             </div>
           </div>
