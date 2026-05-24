@@ -99,6 +99,9 @@ export default function QuizClient({
   const [showResult, setShowResult] = useState(false)
   const [finished, setFinished] = useState(false)
   const [xpAnim, setXpAnim] = useState(0)
+  // Monotonic counter — increments every time we move to the next question,
+  // even if it's the same question coming back. Used to reset interaction state.
+  const [questionKey, setQuestionKey] = useState(0)
 
   const originalTotal = questions.length
 
@@ -111,13 +114,13 @@ export default function QuizClient({
   const q = queue[0]
   const qtype: QType = (q?.type ?? 'QCM') as QType
 
-  // Reset per-question interaction state when the current question changes.
+  // Reset per-question interaction state on every question advance (including repeats).
   useEffect(() => {
     setOrderState([])
     setPairs([])
     setPendingLeft(null)
     setPendingRight(null)
-  }, [q?.id])
+  }, [questionKey])
 
   // Pet animation state — preserved from original.
   const petState: PetState = showResult
@@ -160,6 +163,7 @@ export default function QuizClient({
     }
     setPicked(null)
     setShowResult(false)
+    setQuestionKey(k => k + 1)
   }
 
   function restart() {
@@ -169,6 +173,7 @@ export default function QuizClient({
     setPicked(null)
     setShowResult(false)
     setFinished(false)
+    setQuestionKey(k => k + 1)
     startRef.current = Date.now()
   }
 
@@ -825,14 +830,15 @@ function AssociationRenderer({ q, pairs, setPairs, pendingLeft, pendingRight, se
   const rightPairedFrom: Record<number, number | undefined> = {}
   pairs.forEach((p, i) => { leftPairedTo[p.l] = i; rightPairedFrom[p.r] = i })
 
-  // Recompute picked whenever pairs change.
+  // Recompute picked whenever pairs actually change (not just their count).
+  const pairsKey = pairs.map(p => `${p.l}:${p.r}`).join(',')
   useEffect(() => {
     if (showResult) return
     if (pairs.length !== left.length) { setPicked(null); return }
     const allCorrect = pairs.every(p => correctMap[p.l] === p.r)
     setPicked(allCorrect ? q.correct_index : (q.correct_index === 0 ? 1 : 0))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pairs.length, showResult])
+  }, [pairsKey, showResult])
 
   function attempt(li: number | null, ri: number | null) {
     if (li !== null && ri !== null) {
