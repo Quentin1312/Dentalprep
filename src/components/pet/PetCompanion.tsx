@@ -374,17 +374,20 @@ export default function PetCompanion({
         {hasCrown && (
           <div style={{
             position: 'absolute',
-            top: hideName ? -size * 0.28 : -size * 0.28,
+            top: -size * 0.28,
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: size * 0.3,
-            lineHeight: 1,
-            animation: 'crown-bob 2s ease-in-out infinite',
             pointerEvents: 'none',
             zIndex: 3,
-            filter: `drop-shadow(0 0 ${size * 0.08}px rgba(255,216,74,0.8))`,
           }}>
-            {level >= 5 ? '🌈' : '👑'}
+            <div style={{
+              animation: 'crown-bob 2s ease-in-out infinite',
+              fontSize: size * 0.3,
+              lineHeight: 1,
+              filter: `drop-shadow(0 0 ${size * 0.08}px rgba(255,216,74,0.8))`,
+            }}>
+              {level >= 5 ? '🌈' : '👑'}
+            </div>
           </div>
         )}
 
@@ -415,24 +418,28 @@ export default function PetCompanion({
           </div>
         )}
 
-        {/* Animal with animation wrapper */}
+        {/* Animal with animation wrapper — two nested divs to avoid transform collision */}
         <div style={{
           width: size, height: size,
           position: 'relative', zIndex: 1,
-          animation: state === 'correct'
-            ? 'pet-bounce 0.42s ease-in-out infinite'
-            : state === 'wrong'
-            ? 'pet-shake 0.13s ease-in-out 5'
-            : undefined,
           transform: `scale(${scale})`,
           transformOrigin: '0 0',
           filter: level >= 2
             ? `drop-shadow(0 0 ${Math.round(size * 0.12)}px ${glowColor})`
             : undefined,
         }}>
-          {petType === 'cat'   && <CatSVG   state={state} />}
-          {petType === 'dog'   && <DogSVG   state={state} />}
-          {petType === 'bunny' && <BunnySVG state={state} />}
+          <div style={{
+            width: 80, height: 80,
+            animation: state === 'correct'
+              ? 'pet-bounce 0.42s ease-in-out infinite'
+              : state === 'wrong'
+              ? 'pet-shake 0.13s ease-in-out 5'
+              : undefined,
+          }}>
+            {petType === 'cat'   && <CatSVG   state={state} />}
+            {petType === 'dog'   && <DogSVG   state={state} />}
+            {petType === 'bunny' && <BunnySVG state={state} />}
+          </div>
         </div>
 
         {/* Name label */}
