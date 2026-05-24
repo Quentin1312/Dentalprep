@@ -37,21 +37,25 @@ export default function SignupPage() {
     })
   }
 
-  async function doSignUp(): Promise<boolean> {
+  async function doSignUp(): Promise<'session' | 'otp' | false> {
     setLoading(true)
     setError(null)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
     setLoading(false)
     if (error) { setError(error.message); return false }
-    return true
+    if (data.session) return 'session'
+    return 'otp'
   }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
-    const ok = await doSignUp()
-    if (ok) {
-      setDigits(['', '', '', '', '', ''])
+    const result = await doSignUp()
+    if (result === 'session') {
+      router.push('/setup')
+      router.refresh()
+    } else if (result === 'otp') {
+      setDigits(['', '', '', '', '', '', '', ''])
       setStep('otp')
       setResendCooldown(60)
       setTimeout(() => inputRefs.current[0]?.focus(), 100)
@@ -60,9 +64,9 @@ export default function SignupPage() {
 
   async function handleResend() {
     if (resendCooldown > 0) return
-    const ok = await doSignUp()
-    if (ok) {
-      setDigits(['', '', '', '', '', ''])
+    const result = await doSignUp()
+    if (result === 'otp') {
+      setDigits(['', '', '', '', '', '', '', ''])
       setResendCooldown(60)
       setTimeout(() => inputRefs.current[0]?.focus(), 100)
     }
