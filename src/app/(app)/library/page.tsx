@@ -324,7 +324,7 @@ export default function LibraryPage() {
               </div>
             </Link>
             {/* Flashcards */}
-            <Link href={`/flashcards/${sheet.modId}`} style={{ textDecoration: 'none', display: 'block' }} onClick={() => setSheet(null)}>
+            <Link href={`/flashcards/${sheet.modId}?courseId=${sheet.courseId}`} style={{ textDecoration: 'none', display: 'block' }} onClick={() => setSheet(null)}>
               <div style={{
                 background: A.surface, borderRadius: 16, padding: '16px 18px',
                 display: 'flex', alignItems: 'center', gap: 14,
@@ -336,7 +336,7 @@ export default function LibraryPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: A.text, letterSpacing: -0.3 }}>Flashcards</div>
-                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>Toutes les cartes du module {sheet.modId}</div>
+                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>Cartes de ce fascicule</div>
                 </div>
                 <Icon name="chevronR" size={16} color={A.textDim} />
               </div>
