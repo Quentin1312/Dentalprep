@@ -418,22 +418,22 @@ export default function PetCompanion({
           </div>
         )}
 
-        {/* Animal with animation wrapper — two nested divs to avoid transform collision */}
+        {/* Animal — animation on outer (layout box), scale on inner (absolute, no flow impact) */}
         <div style={{
           width: size, height: size,
           position: 'relative', zIndex: 1,
-          transform: `scale(${scale})`,
-          transformOrigin: '0 0',
-          filter: level >= 2
-            ? `drop-shadow(0 0 ${Math.round(size * 0.12)}px ${glowColor})`
+          animation: state === 'correct'
+            ? 'pet-bounce 0.42s ease-in-out infinite'
+            : state === 'wrong'
+            ? 'pet-shake 0.13s ease-in-out 5'
             : undefined,
         }}>
           <div style={{
-            width: 80, height: 80,
-            animation: state === 'correct'
-              ? 'pet-bounce 0.42s ease-in-out infinite'
-              : state === 'wrong'
-              ? 'pet-shake 0.13s ease-in-out 5'
+            position: 'absolute', top: 0, left: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: '0 0',
+            filter: level >= 2
+              ? `drop-shadow(0 0 ${Math.round(size * 0.12)}px ${glowColor})`
               : undefined,
           }}>
             {petType === 'cat'   && <CatSVG   state={state} />}
