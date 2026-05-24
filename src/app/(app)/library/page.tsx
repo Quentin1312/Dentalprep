@@ -65,8 +65,9 @@ export default function LibraryPage() {
     // A fascicule is "scanned" if a course with its number exists anywhere (any module)
     const scanned = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n))
     const mAttempts = attempts.filter(a => a.module_id === m.id)
-    const correct = mAttempts.filter(a => a.is_correct).length
-    const acc = mAttempts.length > 0 ? correct / mAttempts.length : 0
+    const uAttempted = new Set(mAttempts.map(a => a.question_id))
+    const uCorrect = new Set(mAttempts.filter(a => a.is_correct).map(a => a.question_id))
+    const acc = uAttempted.size > 0 ? uCorrect.size / uAttempted.size : 0
     return { m, mFascicules, mCourses, scannedCount: scanned.length, attempts: mAttempts.length, accuracy: acc }
   })
 
@@ -77,7 +78,9 @@ export default function LibraryPage() {
       if (!course) return false
       const fascAttempts = attempts.filter(a => questionCourseMap[a.question_id] === course.id)
       if (fascAttempts.length === 0) return false
-      return fascAttempts.filter(a => a.is_correct).length / fascAttempts.length >= 0.75
+      const uAttempted = new Set(fascAttempts.map(a => a.question_id))
+      const uCorrect = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
+      return uCorrect.size / uAttempted.size >= 0.75
     }).length
     const startedCount = mFascicules.filter(f => {
       const course = courses.find(c => fasciculeN(c.title) === f.n)
@@ -192,8 +195,12 @@ export default function LibraryPage() {
                 const fascAttempts = course
                   ? attempts.filter(a => questionCourseMap[a.question_id] === course.id)
                   : []
-                const fascAcc = fascAttempts.length > 0
-                  ? fascAttempts.filter(a => a.is_correct).length / fascAttempts.length
+                // Use unique-question accuracy: questions answered correctly at least once / unique questions attempted.
+                // This way Duolingo retries don't penalize the score.
+                const uniqueAttempted = new Set(fascAttempts.map(a => a.question_id))
+                const uniqueCorrect = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
+                const fascAcc = uniqueAttempted.size > 0
+                  ? uniqueCorrect.size / uniqueAttempted.size
                   : null
                 const state = !course
                   ? (node.isCurrent ? 'current' : 'available')
