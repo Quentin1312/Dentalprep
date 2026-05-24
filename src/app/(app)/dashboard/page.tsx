@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAppData } from '@/lib/app-context'
-import { MODULES } from '@/lib/modules'
+import { MODULES, FASCICULES } from '@/lib/modules'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
@@ -53,21 +53,13 @@ export default function DashboardPage() {
   const overallProgress = attempts.length > 0
     ? Math.round((attempts.filter(a => a.is_correct).length / attempts.length) * 100) : 0
 
-  // Count questions with at least 1 wrong answer
-  const errorCount = (() => {
-    const stats = new Map<string, { ok: number; total: number }>()
-    for (const a of attempts) {
-      const s = stats.get(a.question_id) ?? { ok: 0, total: 0 }
-      stats.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
-    }
-    return Array.from(stats.values()).filter(s => s.ok < s.total).length
-  })()
+  const courses = data?.courses ?? []
 
   const moduleStats = MODULES.map(m => {
-    const mAttempts = attempts.filter(a => a.module_id === m.id)
-    const correct = mAttempts.filter(a => a.is_correct).length
-    const score = mAttempts.length > 0 ? Math.round((correct / mAttempts.length) * 100) : null
-    return { ...m, score, total: mAttempts.length }
+    const totalFascicules = FASCICULES.filter(f => f.modules.includes(m.id)).length
+    const uploadedFascicules = courses.filter(c => c.module_id === m.id).length
+    const pct = totalFascicules > 0 ? Math.min(100, Math.round((uploadedFascicules / totalFascicules) * 100)) : 0
+    return { ...m, pct, uploaded: uploadedFascicules, total: totalFascicules }
   })
 
   return (
@@ -221,32 +213,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Mes erreurs + Quiz Flash — side by side if errors exist, else full-width quiz flash */}
-      <div style={{ padding: '12px 20px 0', display: 'flex', gap: 10 }}>
-        {!loading && errorCount > 0 && (
-          <Link href="/mes-erreurs" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: '#FEF2F2', borderRadius: 16, textDecoration: 'none', border: `1px solid ${A.red}20` }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: A.red, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Icon name="target" size={18} color="#fff" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: A.red }}>Mes erreurs</div>
-              <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 500 }}>{errorCount} à revoir</div>
-            </div>
-          </Link>
-        )}
-        <Link href="/quick-scan" style={{ flex: errorCount > 0 ? 1 : undefined, width: errorCount > 0 ? undefined : '100%', display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: A.text, borderRadius: 16, textDecoration: 'none' }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon name="camera" size={18} color="#fff" />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: errorCount > 0 ? 13 : 15, fontWeight: 600, color: '#fff' }}>Quiz Flash</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Photo → quiz IA</div>
-          </div>
-          <Icon name="chevronR" size={14} color="rgba(255,255,255,0.5)" />
-        </Link>
-      </div>
-
-
       {/* Module progress */}
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -260,31 +226,29 @@ export default function DashboardPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {moduleStats.map(m => {
-              const color = m.score !== null && m.score >= 75 ? A.green : m.score !== null ? A.amber : A.textDim
+              const color = m.pct >= 100 ? A.green : m.pct > 0 ? A.amber : A.textDim
               return (
                 <Link key={m.id} href={`/module/${m.id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ background: A.surface, borderRadius: 14, padding: '12px 14px', border: `0.5px solid ${A.border}`, boxShadow: '0 1px 3px rgba(15,27,45,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 9, background: m.score !== null && m.score >= 75 ? A.greenSoft : m.score !== null ? A.amberSoft : '#F1F3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 9, background: m.pct >= 100 ? A.greenSoft : m.pct > 0 ? A.amberSoft : '#F1F3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <span style={{ fontSize: 11, fontWeight: 800, color }}>{m.id}</span>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
-                        {m.score !== null
-                          ? <div style={{ fontSize: 11, color, marginTop: 1, fontWeight: 600 }}>{m.score}% · {m.total} questions</div>
-                          : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Pas encore commencé</div>}
+                        {m.uploaded > 0
+                          ? <div style={{ fontSize: 11, color, marginTop: 1, fontWeight: 600 }}>{m.uploaded}/{m.total} fascicules</div>
+                          : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>0/{m.total} fascicules</div>}
                       </div>
-                      {m.score !== null && (
-                        <div style={{ width: 36, height: 36, position: 'relative', flexShrink: 0 }}>
-                          <svg width="36" height="36" viewBox="0 0 36 36">
-                            <circle cx="18" cy="18" r="14" fill="none" stroke="#E9ECF2" strokeWidth="3" />
-                            <circle cx="18" cy="18" r="14" fill="none" stroke={color} strokeWidth="3"
-                              strokeDasharray={`${(m.score / 100) * 88} 88`} strokeLinecap="round"
-                              transform="rotate(-90 18 18)" />
-                          </svg>
-                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color }}>{m.score}%</div>
-                        </div>
-                      )}
+                      <div style={{ width: 36, height: 36, position: 'relative', flexShrink: 0 }}>
+                        <svg width="36" height="36" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="14" fill="none" stroke="#E9ECF2" strokeWidth="3" />
+                          <circle cx="18" cy="18" r="14" fill="none" stroke={color} strokeWidth="3"
+                            strokeDasharray={`${(m.pct / 100) * 88} 88`} strokeLinecap="round"
+                            transform="rotate(-90 18 18)" />
+                        </svg>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color }}>{m.pct}%</div>
+                      </div>
                     </div>
                   </div>
                 </Link>
