@@ -118,24 +118,18 @@ export default function ProfilePage() {
               boxShadow: '0 14px 30px -12px rgba(15,27,45,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
               color: '#fff',
             }}>
-              {/* Top row: name/email left, pet right */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
-                <div style={{ flex: 1, minWidth: 0, paddingRight: 12, paddingTop: 4 }}>
-                  <div style={{
-                    fontSize: 26, fontWeight: 800, letterSpacing: -0.6, lineHeight: 1.1,
-                    textShadow: '0 1px 2px rgba(0,0,0,0.20)',
-                  }}>{name || 'Mon profil'}</div>
-                  <div style={{
-                    fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>{email}</div>
-                </div>
-                <div style={{ flexShrink: 0 }}>
-                  <PetCompanion petType={petType} state="idle" size={72} level={xpInfo.level} />
-                </div>
+              <div style={{ marginBottom: 18 }}>
+                <div style={{
+                  fontSize: 26, fontWeight: 800, letterSpacing: -0.6, lineHeight: 1.1,
+                  textShadow: '0 1px 2px rgba(0,0,0,0.20)',
+                }}>{name || 'Mon profil'}</div>
+                <div style={{
+                  fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{email}</div>
               </div>
 
-              {/* XP bar — full width, no overlap */}
+              {/* XP bar */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{
