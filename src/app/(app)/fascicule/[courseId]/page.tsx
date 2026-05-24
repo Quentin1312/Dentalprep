@@ -30,8 +30,6 @@ function FasciculeInner() {
 
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
 
   const course = appData?.courses.find(c => c.id === courseId)
   const fN = course ? fasciculeN(course.title) : null
@@ -54,20 +52,20 @@ function FasciculeInner() {
         let attempts: { question_id: string; is_correct: boolean }[] = []
         if (qids.length > 0) {
           const { data: atts } = await supabase.from('quiz_attempts').select('question_id,is_correct')
-            .eq('user_id', user.id).in('question_id', qids)
+            .eq('user_id', user.id).in('question_id', qids).order('created_at', { ascending: true })
           attempts = atts ?? []
         }
         const ok = attempts.filter(a => a.is_correct).length
 
-        // Per-question stats to know which questions need review (acc < 60%)
-        const perQ = new Map<string, { ok: number; total: number }>()
+        // Track the most recent attempt per question (atts ordered asc, last wins)
+        const lastAttempt = new Map<string, boolean>()
         for (const a of attempts) {
-          const s = perQ.get(a.question_id) ?? { ok: 0, total: 0 }
-          perQ.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+          lastAttempt.set(a.question_id, a.is_correct)
         }
+        // "to review" = questions where last attempt was wrong
         const toReview = qids.filter(id => {
-          const s = perQ.get(id)
-          return s && s.total > 0 && s.ok / s.total < 0.6
+          const last = lastAttempt.get(id)
+          return last !== undefined && last === false
         }).length
 
         setStats({
@@ -82,29 +80,11 @@ function FasciculeInner() {
     })
   }, [courseId, modId, router])
 
-  async function handleDelete() {
-    if (!appData) return
-    setDeleting(true)
-    const supabase = createClient()
-    try {
-      const { data: files } = await supabase.storage.from('course-images')
-        .list(`${appData.userId}/${courseId}`)
-      if (files?.length) {
-        await supabase.storage.from('course-images')
-          .remove(files.map(f => `${appData.userId}/${courseId}/${f.name}`))
-      }
-    } catch {}
-    await supabase.from('courses').delete().eq('id', courseId)
-    await refresh()
-    router.push('/library')
-  }
-
   if (!course && appData) {
     router.replace('/library')
     return null
   }
 
-  const accuracy = stats?.accuracy ?? null
   const toReview = stats?.toReview ?? 0
 
   return (
@@ -126,13 +106,6 @@ function FasciculeInner() {
             <div style={{ fontSize: 18, fontWeight: 800, color: A.text, letterSpacing: -0.4, lineHeight: 1.2 }}>
               {fascicule?.title ?? course?.title ?? '…'}
             </div>
-            {(accuracy !== null || (stats && stats.attempts > 0)) && (
-              <div style={{ fontSize: 11.5, color: A.textMuted, marginTop: 2, fontWeight: 500 }}>
-                {accuracy !== null && <span style={{ color: accuracy >= 75 ? A.green : A.amber, fontWeight: 700 }}>{accuracy}%</span>}
-                {accuracy !== null && stats && stats.attempts > 0 && ' · '}
-                {stats && stats.attempts > 0 && <>{stats.attempts} question{stats.attempts > 1 ? 's' : ''} tentée{stats.attempts > 1 ? 's' : ''}</>}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -209,26 +182,6 @@ function FasciculeInner() {
         )}
       </div>
 
-      {/* Tiny delete link */}
-      <div style={{ padding: '36px 20px 0', display: 'flex', justifyContent: 'center' }}>
-        {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: A.textDim, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', fontFamily: A.font, padding: '6px 10px' }}>
-            <Icon name="trash" size={12} color={A.textDim} /> Supprimer ce fascicule
-          </button>
-        ) : (
-          <div style={{ background: '#FEF2F2', borderRadius: 14, padding: '14px 16px', border: `1px solid ${A.red}30`, width: '100%' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: A.red, marginBottom: 10 }}>
-              Supprimer ce fascicule et toutes ses données ?
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, height: 40, borderRadius: 10, border: `1px solid ${A.border}`, background: A.surface, fontSize: 13, fontWeight: 600, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>Annuler</button>
-              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, height: 40, borderRadius: 10, border: 'none', background: A.red, fontSize: 13, fontWeight: 700, color: '#fff', cursor: deleting ? 'default' : 'pointer', fontFamily: A.font, opacity: deleting ? 0.6 : 1 }}>
-                {deleting ? 'Suppression…' : 'Supprimer'}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

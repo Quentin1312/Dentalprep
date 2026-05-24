@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { MODULE_MAP, FASCICULES } from '@/lib/modules'
-import { useAppData } from '@/lib/app-context'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
@@ -24,16 +23,12 @@ function Skel({ h }: { h: number }) {
 export default function ModulePage() {
   const { id } = useParams() as { id: string }
   const router = useRouter()
-  const { data: appData, refresh } = useAppData()
-
   const [courses, setCourses] = useState<Course[]>([])
   const [flashcardCount, setFlashcardCount] = useState(0)
   const [accuracy, setAccuracy] = useState<number | null>(null)
   const [totalAttempts, setTotalAttempts] = useState(0)
   const [toReviewCount, setToReviewCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [confirmId, setConfirmId] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const mod = MODULE_MAP[id as ModuleId]
   const mFascicules = FASCICULES.filter(f => f.modules.includes(id as ModuleId))
@@ -79,22 +74,6 @@ export default function ModulePage() {
     load()
   }, [mod, load, router])
 
-  async function deleteCourse(courseId: string) {
-    if (!appData) return
-    setDeletingId(courseId)
-    const supabase = createClient()
-    try {
-      const { data: files } = await supabase.storage.from('course-images').list(`${appData.userId}/${courseId}`)
-      if (files?.length) {
-        await supabase.storage.from('course-images').remove(files.map(f => `${appData.userId}/${courseId}/${f.name}`))
-      }
-    } catch {}
-    await supabase.from('courses').delete().eq('id', courseId)
-    setCourses(prev => prev.filter(c => c.id !== courseId))
-    setDeletingId(null)
-    setConfirmId(null)
-    refresh()
-  }
 
   if (!mod) return null
 
@@ -225,31 +204,14 @@ export default function ModulePage() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</div>
-                    {course
-                      ? <div style={{ fontSize: 11, color: A.green, marginTop: 1, fontWeight: 600 }}>Scanné ✓</div>
-                      : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>Non scanné</div>}
                   </div>
                   {course ? (
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <Link href={`/quiz/${id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: A.primarySoft, border: `0.5px solid ${A.primary}20` }}>
-                        <Icon name="target" size={11} color={A.primary} />
-                        <span style={{ fontSize: 11, fontWeight: 600, color: A.primary }}>Quiz</span>
-                      </Link>
-                      {confirmId === course.id ? (
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => setConfirmId(null)} style={{ padding: '5px 8px', borderRadius: 8, border: `0.5px solid ${A.border}`, background: A.bg, fontSize: 11, fontWeight: 600, color: A.textMuted, cursor: 'pointer', fontFamily: A.font }}>✕</button>
-                          <button onClick={() => deleteCourse(course.id)} disabled={deletingId === course.id} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', background: A.red, fontSize: 11, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: A.font, opacity: deletingId === course.id ? 0.6 : 1 }}>
-                            {deletingId === course.id ? '…' : 'Sup.'}
-                          </button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setConfirmId(course.id)} style={{ width: 28, height: 28, borderRadius: 8, background: '#FEF2F2', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                          <Icon name="trash" size={12} color={A.red} />
-                        </button>
-                      )}
-                    </div>
+                    <Link href={`/quiz/${id}?courseId=${course.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 9px', borderRadius: 8, background: A.primarySoft, border: `0.5px solid ${A.primary}20`, flexShrink: 0 }}>
+                      <Icon name="target" size={11} color={A.primary} />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: A.primary }}>Quiz</span>
+                    </Link>
                   ) : (
-                    <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}` }}>
+                    <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, background: '#F0F2F5', border: `0.5px solid ${A.border}`, flexShrink: 0 }}>
                       <Icon name="camera" size={11} color={A.textMuted} />
                       <span style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>Scanner</span>
                     </Link>

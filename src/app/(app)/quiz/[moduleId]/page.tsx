@@ -12,7 +12,7 @@ import { computeXP, xpToLevel } from '@/lib/xp'
 
 type QType = 'QCM' | 'VF' | 'ORDRE' | 'ASSOCIATION'
 type Question = { id: string; type?: QType; question: string; choices: unknown; correct_index: number; explanation: string; module_id: string; course_id: string; page_image_url?: string | null }
-type AttemptStat = { question_id: string; is_correct: boolean }
+type AttemptStat = { question_id: string; is_correct: boolean; created_at?: string }
 
 function Skel({ h }: { h: number }) {
   return <div style={{ height: h, borderRadius: 14, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
@@ -64,7 +64,7 @@ function QuizInner() {
 
       Promise.all([
         q.order('created_at'),
-        supabase.from('quiz_attempts').select('question_id,is_correct').eq('user_id', user.id).eq('module_id', moduleId as ModuleId),
+        supabase.from('quiz_attempts').select('question_id,is_correct,created_at').eq('user_id', user.id).eq('module_id', moduleId as ModuleId).order('created_at', { ascending: true }),
       ]).then(([{ data: qs }, { data: atts }]) => {
         // Normalise each row: parse choices if it came back as a string,
         // and ensure `type` is uppercase so the renderers match.
@@ -74,18 +74,21 @@ function QuizInner() {
           type: row.type ? ((row.type as string).toUpperCase() as QType) : undefined,
         }))
         const stats = new Map<string, { ok: number; total: number }>()
+        // Track the most recent attempt per question (atts is ordered asc, so last wins)
+        const lastAttempt = new Map<string, boolean>()
         for (const a of atts ?? [] as AttemptStat[]) {
           const s = stats.get(a.question_id) ?? { ok: 0, total: 0 }
           stats.set(a.question_id, { ok: s.ok + (a.is_correct ? 1 : 0), total: s.total + 1 })
+          lastAttempt.set(a.question_id, a.is_correct)
         }
         setAttemptStats(stats)
 
         let sorted = raw
         if (mode === 'errors') {
-          // ONLY questions the user has attempted and got wrong (accuracy < 60%)
+          // ONLY questions where the most recent attempt was wrong
           sorted = raw.filter(q => {
-            const s = stats.get(q.id)
-            return s && s.total > 0 && s.ok / s.total < 0.6
+            const last = lastAttempt.get(q.id)
+            return last !== undefined && last === false
           })
           setQuestions(sorted)
         } else if (mode === 'smart') {
