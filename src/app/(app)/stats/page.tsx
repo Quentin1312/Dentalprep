@@ -8,7 +8,7 @@ import type { ModuleId } from '@/types/database'
 import { useThemeBg, themeBgStyle, THEMES } from '@/lib/theme-bg'
 import { PathSystemStyles, SectionLabel, shade } from '@/components/ui/PathSystem'
 
-type Attempt = { module_id: string; is_correct: boolean; created_at: string }
+type Attempt = { module_id: string; is_correct: boolean; created_at: string; question_id: string }
 type Session = { date: string; minutes_studied: number }
 
 const MODULE_ACCENT: Record<ModuleId, string> = {
@@ -32,7 +32,7 @@ export default function StatsPage() {
       if (!user) { router.replace('/auth/login'); return }
       Promise.all([
         supabase.from('profiles').select('streak,exam_date').eq('id', user.id).single(),
-        supabase.from('quiz_attempts').select('module_id,is_correct,created_at').eq('user_id', user.id),
+        supabase.from('quiz_attempts').select('module_id,is_correct,created_at,question_id').eq('user_id', user.id),
         supabase.from('daily_sessions').select('date,minutes_studied').eq('user_id', user.id).order('date', { ascending: false }).limit(7),
       ]).then(([p, a, s]) => {
         setStreak(p.data?.streak ?? 0)
@@ -44,17 +44,20 @@ export default function StatsPage() {
     })
   }, [router])
 
-  const totalAttempts = attempts.length
-  const totalOk = attempts.filter(a => a.is_correct).length
-  const totalBad = totalAttempts - totalOk
-  const accuracy = totalAttempts > 0 ? Math.round((totalOk / totalAttempts) * 100) : 0
+  // Unique-question metric: a question counts as correct if answered correctly at least once
+  const uniqueAttempted = new Set(attempts.map(a => a.question_id))
+  const uniqueCorrect = new Set(attempts.filter(a => a.is_correct).map(a => a.question_id))
+  const totalOk = uniqueCorrect.size
+  const totalBad = uniqueAttempted.size - uniqueCorrect.size
+  const accuracy = uniqueAttempted.size > 0 ? Math.round((totalOk / uniqueAttempted.size) * 100) : 0
 
   const moduleStats = MODULES.map(m => {
     const mA = attempts.filter(a => a.module_id === m.id)
-    const correct = mA.filter(a => a.is_correct).length
-    const pct = mA.length > 0 ? Math.round((correct / mA.length) * 100) : null
-    return { ...m, pct, count: mA.length, accent: MODULE_ACCENT[m.id] }
-  }).filter(m => m.count > 0)
+    const mUniqAttempted = new Set(mA.map(a => a.question_id))
+    const mUniqCorrect = new Set(mA.filter(a => a.is_correct).map(a => a.question_id))
+    const pct = mUniqAttempted.size > 0 ? Math.round((mUniqCorrect.size / mUniqAttempted.size) * 100) : null
+    return { ...m, pct, count: mUniqAttempted.size, accent: MODULE_ACCENT[m.id] }
+  })
 
   // Build the week chart (oldest → newest = today)
   const dayLetters = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -364,7 +367,6 @@ function AccuracyRow({ accuracy, totalOk, totalBad }: { accuracy: number; totalO
 }
 
 function ModuleMastery({ modules }: { modules: Array<Module & { pct: number | null; count: number; accent: string }> }) {
-  if (!modules.length) return null
   return (
     <div style={{ padding: '14px 16px 0' }}>
       <SectionLabel>Niveau par module</SectionLabel>
@@ -374,22 +376,26 @@ function ModuleMastery({ modules }: { modules: Array<Module & { pct: number | nu
         boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
       }}>
         {modules.map((m, i) => {
+          const notStarted = m.pct === null
           const pct = m.pct ?? 0
-          const statusColor = pct >= 75 ? '#16A34A' : pct >= 50 ? '#0A66E0' : '#D97706'
+          const statusColor = notStarted ? '#8A95A5' : pct >= 75 ? '#16A34A' : pct >= 50 ? '#0A66E0' : '#D97706'
           const isLast = i === modules.length - 1
           return (
             <div key={m.id} style={{
               padding: '12px 14px',
               borderBottom: isLast ? 'none' : `1px solid #E4E8EE`,
+              opacity: notStarted ? 0.6 : 1,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: notStarted ? 0 : 8 }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: 8,
-                  background: `linear-gradient(135deg, ${m.accent} 0%, ${shade(m.accent, -20)} 100%)`,
-                  color: '#fff', fontSize: 10.5, fontWeight: 900,
+                  background: notStarted
+                    ? '#E4E8EE'
+                    : `linear-gradient(135deg, ${m.accent} 0%, ${shade(m.accent, -20)} 100%)`,
+                  color: notStarted ? '#8A95A5' : '#fff', fontSize: 10.5, fontWeight: 900,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   letterSpacing: 0.3, flexShrink: 0,
-                  boxShadow: `inset 0 -1px 0 rgba(0,0,0,0.10), 0 2px 4px ${m.accent}55`,
+                  boxShadow: notStarted ? 'none' : `inset 0 -1px 0 rgba(0,0,0,0.10), 0 2px 4px ${m.accent}55`,
                 }}>{m.id}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
@@ -397,25 +403,29 @@ function ModuleMastery({ modules }: { modules: Array<Module & { pct: number | nu
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>{m.label}</div>
                   <div style={{ fontSize: 10.5, color: '#5A6675', fontWeight: 600, marginTop: 1 }}>
-                    {m.count} {m.count > 1 ? 'tentatives' : 'tentative'}
+                    {notStarted ? 'Pas encore commencé' : `${m.count} question${m.count > 1 ? 's' : ''} tentée${m.count > 1 ? 's' : ''}`}
                   </div>
                 </div>
-                <div style={{
-                  fontSize: 14, fontWeight: 800, color: statusColor,
-                  fontVariantNumeric: 'tabular-nums', letterSpacing: -0.3,
-                }}>{pct}%</div>
+                {!notStarted && (
+                  <div style={{
+                    fontSize: 14, fontWeight: 800, color: statusColor,
+                    fontVariantNumeric: 'tabular-nums', letterSpacing: -0.3,
+                  }}>{pct}%</div>
+                )}
               </div>
-              <div style={{
-                height: 8, background: '#EEF1F5', borderRadius: 5, overflow: 'hidden',
-                boxShadow: 'inset 0 1px 1px rgba(15,27,45,0.06)',
-              }}>
+              {!notStarted && (
                 <div style={{
-                  width: `${pct}%`, height: '100%',
-                  background: `linear-gradient(90deg, ${statusColor} 0%, ${shade(statusColor, 20)} 100%)`,
-                  borderRadius: 5,
-                  boxShadow: `0 0 6px ${statusColor}55`,
-                }} />
-              </div>
+                  height: 8, background: '#EEF1F5', borderRadius: 5, overflow: 'hidden',
+                  boxShadow: 'inset 0 1px 1px rgba(15,27,45,0.06)',
+                }}>
+                  <div style={{
+                    width: `${pct}%`, height: '100%',
+                    background: `linear-gradient(90deg, ${statusColor} 0%, ${shade(statusColor, 20)} 100%)`,
+                    borderRadius: 5,
+                    boxShadow: `0 0 6px ${statusColor}55`,
+                  }} />
+                </div>
+              )}
             </div>
           )
         })}
