@@ -10,7 +10,7 @@ import { PathSystemStyles, SectionLabel, shade } from '@/components/ui/PathSyste
 
 type Attempt = { module_id: string; is_correct: boolean; created_at: string; question_id: string }
 type Session = { date: string; minutes_studied: number }
-type Course = { module_id: string }
+type Course = { module_id: string; title: string }
 
 const MODULE_ACCENT: Record<ModuleId, string> = {
   M1: '#0A66E0', M2: '#0D9488', M3: '#7C3AED',
@@ -36,7 +36,7 @@ export default function StatsPage() {
         supabase.from('profiles').select('streak,exam_date').eq('id', user.id).single(),
         supabase.from('quiz_attempts').select('module_id,is_correct,created_at,question_id').eq('user_id', user.id),
         supabase.from('daily_sessions').select('date,minutes_studied').eq('user_id', user.id).order('date', { ascending: false }).limit(7),
-        supabase.from('courses').select('module_id').eq('user_id', user.id),
+        supabase.from('courses').select('module_id,title').eq('user_id', user.id),
       ]).then(([p, a, s, c]) => {
         setStreak(p.data?.streak ?? 0)
         setExamDate(p.data?.exam_date ?? null)
@@ -55,11 +55,16 @@ export default function StatsPage() {
   const totalBad = uniqueAttempted.size - uniqueCorrect.size
   const accuracy = uniqueAttempted.size > 0 ? Math.round((totalOk / uniqueAttempted.size) * 100) : 0
 
+  function fasciculeN(title: string): number | null {
+    const match = title.match(/Fascicule\s+(\d+)/i)
+    return match ? parseInt(match[1]) : null
+  }
+
   const moduleStats = MODULES.map(m => {
-    const totalFascicules = FASCICULES.filter(f => f.modules.includes(m.id)).length
-    const uploadedFascicules = courses.filter(c => c.module_id === m.id).length
-    const pct = totalFascicules > 0 ? Math.min(100, Math.round((uploadedFascicules / totalFascicules) * 100)) : 0
-    return { ...m, pct, uploaded: uploadedFascicules, total: totalFascicules, accent: MODULE_ACCENT[m.id] }
+    const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
+    const uploadedFascicules = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n)).length
+    const pct = mFascicules.length > 0 ? Math.min(100, Math.round((uploadedFascicules / mFascicules.length) * 100)) : 0
+    return { ...m, pct, uploaded: uploadedFascicules, total: mFascicules.length, accent: MODULE_ACCENT[m.id] }
   })
 
   // Build the week chart (oldest → newest = today)

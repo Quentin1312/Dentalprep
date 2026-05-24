@@ -55,11 +55,16 @@ export default function DashboardPage() {
 
   const courses = data?.courses ?? []
 
+  function fasciculeN(title: string): number | null {
+    const m = title.match(/Fascicule\s+(\d+)/i)
+    return m ? parseInt(m[1]) : null
+  }
+
   const moduleStats = MODULES.map(m => {
-    const totalFascicules = FASCICULES.filter(f => f.modules.includes(m.id)).length
-    const uploadedFascicules = courses.filter(c => c.module_id === m.id).length
-    const pct = totalFascicules > 0 ? Math.min(100, Math.round((uploadedFascicules / totalFascicules) * 100)) : 0
-    return { ...m, pct, uploaded: uploadedFascicules, total: totalFascicules }
+    const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
+    const uploadedFascicules = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n)).length
+    const pct = mFascicules.length > 0 ? Math.min(100, Math.round((uploadedFascicules / mFascicules.length) * 100)) : 0
+    return { ...m, pct, uploaded: uploadedFascicules, total: mFascicules.length }
   })
 
   return (
