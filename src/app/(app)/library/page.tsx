@@ -7,6 +7,8 @@ import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES, type Module, type Fascicule } from '@/lib/modules'
 import type { ModuleId } from '@/types/database'
 import { useThemeBg, themeBgStyle, THEMES } from '@/lib/theme-bg'
+import { A } from '@/lib/theme'
+import Icon from '@/components/ui/Icon'
 import {
   PathSystemStyles, PathNode, PathRow, ModuleBanner, ModuleBreak, ModuleRail,
   type RailModule, type ModuleBreakVariant,
@@ -53,6 +55,7 @@ export default function LibraryPage() {
   const router = useRouter()
   const { data, loading } = useAppData()
   const [themeId] = useThemeBg()
+  const [sheet, setSheet] = useState<{ courseId: string; modId: ModuleId; title: string; n: number } | null>(null)
   const theme = THEMES[themeId]
   const courses = data?.courses ?? []
   const attempts = data?.attempts ?? []
@@ -210,18 +213,21 @@ export default function LibraryPage() {
                       ? 'started'
                       : (node.isCurrent ? 'current' : 'available')
                 const icon = iconForFascicule(f.title)
-                const href = course ? `/fascicule/${course.id}?module=${m.id}` : `/upload?fascicule=${f.n}`
                 const shortTitle = f.title.length > 26 ? f.title.slice(0, 24) + '…' : f.title
                 return (
                   <PathRow key={`f-${m.id}-${f.n}`} pos={pos} from={from}>
-                    <Link href={href} style={{ textDecoration: 'none' }}>
-                      <PathNode
-                        state={state}
-                        icon={icon}
-                        accent={accent}
-                        label={shortTitle}
-                      />
-                    </Link>
+                    {course ? (
+                      <div
+                        onClick={() => setSheet({ courseId: course.id, modId: m.id, title: f.title, n: f.n })}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <PathNode state={state} icon={icon} accent={accent} label={shortTitle} />
+                      </div>
+                    ) : (
+                      <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none' }}>
+                        <PathNode state={state} icon={icon} accent={accent} label={shortTitle} />
+                      </Link>
+                    )}
                   </PathRow>
                 )
               }
@@ -270,6 +276,73 @@ export default function LibraryPage() {
             <PathNode state="locked" icon="trophy" isBoss label="Examen blanc" sublabel="Conditions réelles" accent="#7C3AED" />
           </Link>
         </div>
+      )}
+
+      {/* Bottom sheet */}
+      {sheet && (
+        <>
+          <style>{`@keyframes dp-slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+          <div
+            onClick={() => setSheet(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200 }}
+          />
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0,
+            background: '#fff', borderRadius: '22px 22px 0 0',
+            padding: '0 20px 48px', zIndex: 201,
+            animation: 'dp-slide-up 0.28s cubic-bezier(0.32,0.72,0,1)',
+            boxShadow: '0 -8px 40px rgba(15,27,45,0.18)',
+          }}>
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: '#D1D8E4', margin: '12px auto 20px' }} />
+            {/* Fascicule header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: A.primary }}>{sheet.n}</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>Fascicule</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sheet.title}</div>
+              </div>
+            </div>
+            {/* Quiz */}
+            <Link href={`/quiz/${sheet.modId}?courseId=${sheet.courseId}`} style={{ textDecoration: 'none', display: 'block', marginBottom: 10 }} onClick={() => setSheet(null)}>
+              <div style={{
+                background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
+                borderRadius: 16, padding: '16px 18px',
+                display: 'flex', alignItems: 'center', gap: 14,
+                boxShadow: '0 8px 20px -6px rgba(10,102,224,0.40)',
+              }}>
+                <div style={{ width: 46, height: 46, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name="target" size={22} color="#fff" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Quiz</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>QCM, Vrai/Faux, Ordre, Association</div>
+                </div>
+                <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
+              </div>
+            </Link>
+            {/* Flashcards */}
+            <Link href={`/flashcards/${sheet.modId}`} style={{ textDecoration: 'none', display: 'block' }} onClick={() => setSheet(null)}>
+              <div style={{
+                background: A.surface, borderRadius: 16, padding: '16px 18px',
+                display: 'flex', alignItems: 'center', gap: 14,
+                border: `1px solid ${A.border}`,
+                boxShadow: '0 2px 8px rgba(15,27,45,0.06)',
+              }}>
+                <div style={{ width: 46, height: 46, borderRadius: 13, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon name="cards" size={22} color={A.primary} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: A.text, letterSpacing: -0.3 }}>Flashcards</div>
+                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>Toutes les cartes du module {sheet.modId}</div>
+                </div>
+                <Icon name="chevronR" size={16} color={A.textDim} />
+              </div>
+            </Link>
+          </div>
+        </>
       )}
     </div>
   )

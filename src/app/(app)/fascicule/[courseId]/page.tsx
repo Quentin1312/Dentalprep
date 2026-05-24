@@ -135,29 +135,6 @@ function FasciculeInner() {
           </Link>
         )}
 
-        {/* Quiz intelligent — only if there are errors */}
-        {mod && !loading && toReview > 0 && (
-          <Link href={`/quiz/${mod.id}?courseId=${courseId}&mode=errors`} style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: `linear-gradient(135deg, ${A.amber} 0%, #B45309 100%)`,
-              borderRadius: 18, padding: '18px 20px',
-              display: 'flex', alignItems: 'center', gap: 14,
-              boxShadow: '0 8px 20px -6px rgba(180,83,9,0.45), inset 0 1px 0 rgba(255,255,255,0.20)',
-            }}>
-              <div style={{ width: 48, height: 48, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.18)' }}>
-                <Icon name="refresh" size={22} color="#fff" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', letterSpacing: -0.2 }}>Refaire les erreurs</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>
-                  {toReview} question{toReview > 1 ? 's' : ''} à retravailler
-                </div>
-              </div>
-              <Icon name="chevronR" size={16} color="rgba(255,255,255,0.85)" strokeWidth={2.4} />
-            </div>
-          </Link>
-        )}
-
         {/* Flashcards */}
         {mod && (
           <Link href={`/flashcards/${mod.id}`} style={{ textDecoration: 'none' }}>
