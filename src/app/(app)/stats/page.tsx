@@ -131,7 +131,7 @@ export default function StatsPage() {
       {/* Per-module mastery */}
       <ModuleMastery modules={moduleStats} />
 
-      {totalAttempts === 0 && (
+      {uniqueAttempted.size === 0 && (
         <div style={{ padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 13, color: theme.textMuted, lineHeight: 1.5 }}>
             Fais tes premiers quiz pour voir tes statistiques ici.
