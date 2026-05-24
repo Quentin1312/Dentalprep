@@ -14,7 +14,7 @@ export default function SignupPage() {
   const [step, setStep] = useState<Step>('form')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [digits, setDigits] = useState(['', '', '', '', '', ''])
+  const [digits, setDigits] = useState(['', '', '', '', '', '', '', ''])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -87,9 +87,9 @@ export default function SignupPage() {
       inputRefs.current[index + 1]?.focus()
     }
     // Auto-submit when last digit filled
-    if (index === 5 && value) {
-      const token = [...newDigits.slice(0, 5), value.slice(-1)].join('')
-      if (token.length === 6) verifyCode(token)
+    if (index === 7 && value) {
+      const token = [...newDigits.slice(0, 7), value.slice(-1)].join('')
+      if (token.length === 8) verifyCode(token)
     }
   }
 
@@ -103,15 +103,15 @@ export default function SignupPage() {
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
     if (!pasted) return
     e.preventDefault()
-    const newDigits = pasted.split('').concat(Array(6).fill('')).slice(0, 6)
+    const newDigits = pasted.split('').concat(Array(8).fill('')).slice(0, 8)
     setDigits(newDigits)
     const nextEmpty = newDigits.findIndex(d => !d)
     inputRefs.current[nextEmpty === -1 ? 5 : nextEmpty]?.focus()
-    if (pasted.length === 6) verifyCode(pasted)
+    if (pasted.length === 8) verifyCode(pasted)
   }
 
   const token = digits.join('')
-  const canVerify = token.length === 6 && !loading
+  const canVerify = token.length === 8 && !loading
 
   // ── OTP step ────────────────────────────────────────────────────────────────
   if (step === 'otp') return (
@@ -134,7 +134,7 @@ export default function SignupPage() {
         </div>
 
         {/* 6 digit boxes */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20 }} onPaste={handleDigitPaste}>
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 20 }} onPaste={handleDigitPaste}>
           {digits.map((d, i) => (
             <input
               key={i}
@@ -143,8 +143,8 @@ export default function SignupPage() {
               onChange={e => handleDigitChange(i, e.target.value)}
               onKeyDown={e => handleDigitKeyDown(i, e)}
               style={{
-                width: 46, height: 58, borderRadius: 13, textAlign: 'center',
-                fontSize: 24, fontWeight: 700, color: A.text,
+                width: 36, height: 52, borderRadius: 11, textAlign: 'center',
+                fontSize: 20, fontWeight: 700, color: A.text,
                 background: A.surface,
                 border: `1.5px solid ${d ? A.primary : A.border}`,
                 outline: 'none', boxSizing: 'border-box',
