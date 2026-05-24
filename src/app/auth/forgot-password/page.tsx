@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
           <span style={{ color: A.text, fontWeight: 600 }}>{email}</span><br />
           Clique dessus pour choisir un nouveau mot de passe.
         </div>
-        <Link href="/auth/login" style={{ display: 'block', width: '100%', height: 50, borderRadius: 14, background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' } as React.CSSProperties}>
+        <Link href="/auth/login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 50, borderRadius: 14, background: A.primary, color: '#fff', fontSize: 16, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' } as React.CSSProperties}>
           Retour à la connexion
         </Link>
       </div>
