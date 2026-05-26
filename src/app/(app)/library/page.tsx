@@ -101,7 +101,7 @@ export default function LibraryPage() {
     }).length
     const status: RailModule['status'] = completion.total > 0 && completion.done === completion.total
       ? 'done'
-      : completion.done > 0 || startedCount > 0 ? 'active' : 'open'
+      : completion.done > 0 || startedCount > 0 || scannedCount > 0 ? 'active' : 'open'
     return {
       id: m.id, label: m.label.split(' ').slice(0, 2).join(' '),
       accent: MOD_STYLE[m.id].accent, icon: MOD_STYLE[m.id].icon,
@@ -230,18 +230,20 @@ export default function LibraryPage() {
                 const fascAttempts = course
                   ? attempts.filter(a => questionCourseMap[a.question_id] === course.id)
                   : []
-                // Use unique-question accuracy: questions answered correctly at least once / unique questions attempted.
-                // This way Duolingo retries don't penalize the score.
-                const uniqueAttempted = new Set(fascAttempts.map(a => a.question_id))
-                const uniqueCorrect = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
-                const fascAcc = uniqueAttempted.size > 0
-                  ? uniqueCorrect.size / uniqueAttempted.size
-                  : null
+                const courseQuestions = course
+                  ? questions.filter(q => q.course_id === course.id && q.module_id === m.id)
+                  : []
+                const correctIds = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
+                const totalLessons = Math.ceil(courseQuestions.length / LESSON_SIZE)
+                const allLessonsDone = totalLessons > 0 && Array.from({ length: totalLessons }, (_, li) => {
+                  const chunk = courseQuestions.slice(li * LESSON_SIZE, (li + 1) * LESSON_SIZE)
+                  return chunk.length > 0 && chunk.every(q => correctIds.has(q.id))
+                }).every(Boolean)
                 const state = !course
                   ? 'available'
-                  : fascAcc !== null && fascAcc >= 0.75
+                  : allLessonsDone
                     ? 'completed'
-                    : fascAcc !== null
+                    : fascAttempts.length > 0
                       ? 'started'
                       : 'current'
                 const icon = iconForFascicule(f.title)
