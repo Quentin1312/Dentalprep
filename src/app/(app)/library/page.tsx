@@ -106,6 +106,7 @@ export default function LibraryPage() {
       id: m.id, label: m.label.split(' ').slice(0, 2).join(' '),
       accent: MOD_STYLE[m.id].accent, icon: MOD_STYLE[m.id].icon,
       done: completion.done, total: completion.total || 1,
+      scanned: scannedCount,
       status,
     }
   })
