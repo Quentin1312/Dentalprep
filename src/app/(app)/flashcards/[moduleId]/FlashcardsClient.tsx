@@ -30,13 +30,10 @@ export default function FlashcardsClient({
   const router = useRouter()
   const startRef = useRef<number | null>(null)
   const isCourseLesson = !!courseId && lesson !== undefined
-  const lessonLabel = isCourseLesson && totalLessons ? `SÃ©rie ${lesson + 1}/${totalLessons}` : `Flashcards ${moduleId}`
+  const lessonLabel = isCourseLesson && totalLessons ? `Leçon ${lesson + 1}/${totalLessons}` : `Flashcards ${moduleId}`
   const quizHref = isCourseLesson
     ? `/quiz/${moduleId}?courseId=${courseId}&lesson=${lesson}`
     : `/quiz/${moduleId}`
-  const nextLessonHref = isCourseLesson && totalLessons && lesson + 1 < totalLessons
-    ? `/flashcards/${moduleId}?courseId=${courseId}&lesson=${lesson + 1}`
-    : null
   // progress map loaded from DB: flashcard_id → status
   const [progress, setProgress] = useState<Record<string, Status>>({})
   const [progressLoaded, setProgressLoaded] = useState(false)
@@ -106,7 +103,8 @@ export default function FlashcardsClient({
 
   const sessionKnown = Object.values(sessionProgress).filter(s => s === 'known').length
   const sessionReview = Object.values(sessionProgress).filter(s => s === 'review').length
-  const totalKnown = Object.values({ ...progress, ...sessionProgress }).filter(s => s === 'known').length
+  const mergedProgress = { ...progress, ...sessionProgress }
+  const totalKnown = flashcards.filter(c => mergedProgress[c.id] === 'known').length
 
   if (!progressLoaded) return (
     <div style={{ minHeight: '100vh', background: A.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -120,19 +118,19 @@ export default function FlashcardsClient({
       <div style={{ width: 80, height: 80, borderRadius: 28, background: `linear-gradient(135deg, ${A.green} 0%, #0E8C3E 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, boxShadow: '0 12px 32px rgba(22,163,74,0.32)' }}>
         <Icon name="check" size={40} color="#fff" strokeWidth={2.5} />
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Session terminée !</div>
+      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: A.text, marginBottom: 8 }}>Révision terminée !</div>
       <div style={{ fontSize: 14, color: A.textMuted, marginBottom: 6 }}>
         <span style={{ color: A.green, fontWeight: 600 }}>{sessionKnown} sues</span> · <span style={{ color: A.amber, fontWeight: 600 }}>{sessionReview} à revoir</span> cette session
       </div>
       <div style={{ fontSize: 13, color: A.primary, fontWeight: 600, marginBottom: 28 }}>
-        {totalKnown}/{total} cartes maîtrisées au total
+        {totalKnown}/{total} cartes maîtrisées dans cette leçon
       </div>
       <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 320 }}>
         <button onClick={() => { setIdx(0); setFlipped(false); setSessionProgress({}); setDone(false); startRef.current = Date.now() }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
           Recommencer
         </button>
-        <button onClick={() => router.push(nextLessonHref ?? quizHref)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-          {nextLessonHref ? 'SÃ©rie suivante' : 'Faire le quiz'}
+        <button onClick={() => router.push(quizHref)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+          Faire le quiz
         </button>
       </div>
     </div>
@@ -150,8 +148,13 @@ export default function FlashcardsClient({
           <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>{lessonLabel}</div>
           <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
             {idx + 1}<span style={{ color: A.textDim }}>/{total}</span>
-            {isCourseLesson && totalCards ? <span style={{ color: A.textDim, fontSize: 11, fontWeight: 500 }}> Â· {totalCards} au total</span> : null}
+            {isCourseLesson && totalCards ? <span style={{ color: A.textDim, fontSize: 11, fontWeight: 500 }}> · {totalCards} au total</span> : null}
           </div>
+          {isCourseLesson && (
+            <div style={{ fontSize: 12, color: A.textMuted, marginTop: 5, lineHeight: 1.35 }}>
+              Un peu de révision avant de commencer le quiz.
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 10, fontSize: 12 }}>
           <span style={{ color: A.green, fontWeight: 600 }}>{sessionKnown} sue</span>

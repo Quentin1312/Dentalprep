@@ -99,7 +99,7 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
           >
             {it.course ? (
               <Link
-                href={`/quiz/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
+                href={`/flashcards/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
                 style={{ textDecoration: 'none' }}
               >
                 <NodeCircle state={it.allDone ? 'done' : it.isCurrent ? 'current' : it.isStarted ? 'started' : 'unstarted'} number={it.f.n} />
@@ -129,18 +129,11 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
             {it.course && (
               <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                 <Link
-                  href={`/quiz/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
-                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 20, background: A.primarySoft, border: `1px solid ${A.primary}22` }}
+                  href={`/flashcards/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 20, background: A.primarySoft, border: `1px solid ${A.primary}22` }}
                 >
                   <Icon name="bolt" size={11} color={A.primary} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: A.primary }}>Quiz</span>
-                </Link>
-                <Link
-                  href={`/flashcards/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
-                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 20, background: '#F3E8FF', border: '1px solid #7C3AED22' }}
-                >
-                  <Icon name="cards" size={11} color="#7C3AED" />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED' }}>Cartes</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: A.primary }}>Leçon</span>
                 </Link>
               </div>
             )}

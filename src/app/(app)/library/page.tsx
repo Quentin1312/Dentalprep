@@ -315,10 +315,7 @@ export default function LibraryPage() {
         const activeLesson = progress.activeIndex
         const active = progress.lessons[activeLesson]
         const allDone = progress.hasQuestions && progress.lessons.every(l => l.done)
-        const quizHref = progress.hasQuestions
-          ? `/quiz/${sheet.modId}?courseId=${sheet.courseId}&lesson=${activeLesson}`
-          : '#'
-        const flashHref = progress.hasQuestions
+        const lessonHref = progress.hasQuestions
           ? `/flashcards/${sheet.modId}?courseId=${sheet.courseId}&lesson=${activeLesson}`
           : '#'
 
@@ -361,8 +358,8 @@ export default function LibraryPage() {
                   {!progress.hasQuestions
                     ? 'Quiz pas encore prêt'
                     : allDone
-                      ? 'Toutes les séries terminées'
-                      : `Série ${activeLesson + 1}/${progress.totalLessons}`}
+                      ? 'Toutes les leçons terminées'
+                      : `Leçon ${activeLesson + 1}/${progress.totalLessons}`}
                 </div>
                 {progress.hasQuestions && (
                   <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted }}>
@@ -388,7 +385,7 @@ export default function LibraryPage() {
                   return (
                     <div
                       key={lesson.i}
-                      aria-label={`Série ${lesson.i + 1}`}
+                      aria-label={`Leçon ${lesson.i + 1}`}
                       style={{
                         borderRadius: 999,
                         background: bg,
@@ -402,8 +399,8 @@ export default function LibraryPage() {
                 )}
               </div>
             </div>
-            {/* Quiz */}
-            <Link href={quizHref} style={{ textDecoration: 'none', display: 'block', marginBottom: 10, pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
+            {/* Lesson */}
+            <Link href={lessonHref} style={{ textDecoration: 'none', display: 'block', pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
               <div style={{
                 background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
                 borderRadius: 16, padding: '16px 18px',
@@ -411,35 +408,17 @@ export default function LibraryPage() {
                 boxShadow: '0 8px 20px -6px rgba(10,102,224,0.40)',
               }}>
                 <div style={{ width: 46, height: 46, borderRadius: 13, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name="target" size={22} color="#fff" />
+                  <Icon name="cards" size={22} color="#fff" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Quiz</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>
+                    {progress.hasQuestions ? `Leçon ${activeLesson + 1}` : 'Leçon en attente'}
+                  </div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
-                    {progress.hasQuestions ? `Série ${activeLesson + 1} · ${active?.total ?? 0} questions` : 'Questions en attente'}
+                    {progress.hasQuestions ? `Révision flashcards puis quiz · ${active?.total ?? 0} questions` : 'Questions en attente'}
                   </div>
                 </div>
                 <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
-              </div>
-            </Link>
-            {/* Flashcards */}
-            <Link href={flashHref} style={{ textDecoration: 'none', display: 'block', pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
-              <div style={{
-                background: A.surface, borderRadius: 16, padding: '16px 18px',
-                display: 'flex', alignItems: 'center', gap: 14,
-                border: `1px solid ${A.border}`,
-                boxShadow: '0 2px 8px rgba(15,27,45,0.06)',
-              }}>
-                <div style={{ width: 46, height: 46, borderRadius: 13, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon name="cards" size={22} color={A.primary} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: A.text, letterSpacing: -0.3 }}>Flashcards</div>
-                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
-                    {progress.hasQuestions ? `Cartes de la série ${activeLesson + 1}` : 'Cartes en attente'}
-                  </div>
-                </div>
-                <Icon name="chevronR" size={16} color={A.textDim} />
               </div>
             </Link>
           </div>

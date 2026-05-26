@@ -21,7 +21,7 @@ function FasciculeInner() {
   const { courseId } = useParams() as { courseId: string }
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { data: appData, refresh } = useAppData()
+  const { data: appData } = useAppData()
 
   // The "viewing module" — set when navigating from a specific module path in the library.
   // Falls back to the course's stored module_id. This lets fascicule pages show module-specific
@@ -85,8 +85,6 @@ function FasciculeInner() {
     return null
   }
 
-  const toReview = stats?.toReview ?? 0
-
   return (
     <div style={{ minHeight: '100%', background: A.bg, color: A.text, fontFamily: A.font, paddingBottom: 120 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
@@ -110,11 +108,10 @@ function FasciculeInner() {
         </div>
       </div>
 
-      {/* Big action cards */}
+      {/* Big action card */}
       <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Quiz complet — main action */}
         {mod && (
-          <Link href={`/quiz/${mod.id}?courseId=${courseId}`} style={{ textDecoration: 'none' }}>
+          <Link href={`/flashcards/${mod.id}?courseId=${courseId}&lesson=0`} style={{ textDecoration: 'none' }}>
             <div style={{
               background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
               borderRadius: 18, padding: '20px',
@@ -122,38 +119,15 @@ function FasciculeInner() {
               boxShadow: '0 10px 24px -6px rgba(10,102,224,0.45), inset 0 1px 0 rgba(255,255,255,0.20)',
             }}>
               <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid rgba(255,255,255,0.18)' }}>
-                <Icon name="target" size={26} color="#fff" />
+                <Icon name="cards" size={26} color="#fff" />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Quiz</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Leçon 1</div>
                 <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.78)', marginTop: 2, fontWeight: 600 }}>
-                  {loading ? '…' : `${stats?.questions ?? 0} questions · QCM, V/F, ordre, association`}
+                  {loading ? '…' : `Révision puis quiz · ${stats?.questions ?? 0} questions`}
                 </div>
               </div>
               <Icon name="chevronR" size={18} color="rgba(255,255,255,0.85)" strokeWidth={2.4} />
-            </div>
-          </Link>
-        )}
-
-        {/* Flashcards */}
-        {mod && (
-          <Link href={`/flashcards/${mod.id}?courseId=${courseId}&lesson=0`} style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: A.surface, borderRadius: 18, padding: '18px 20px',
-              display: 'flex', alignItems: 'center', gap: 14,
-              border: `1px solid ${A.border}`,
-              boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.12)',
-            }}>
-              <div style={{ width: 48, height: 48, borderRadius: 13, background: A.primarySoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon name="cards" size={22} color={A.primary} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15.5, fontWeight: 800, color: A.text, letterSpacing: -0.2 }}>Flashcards</div>
-                <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2, fontWeight: 600 }}>
-                  {loading ? '…' : `${stats?.flashcards ?? 0} carte${(stats?.flashcards ?? 0) > 1 ? 's' : ''}`}
-                </div>
-              </div>
-              <Icon name="chevronR" size={16} color={A.textDim} strokeWidth={2.2} />
             </div>
           </Link>
         )}
