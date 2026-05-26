@@ -51,6 +51,20 @@ function amplitudeAt(i: number): number {
 }
 
 const BREAK_ROTATION: ModuleBreakVariant[] = ['cat', 'cat', 'cat', 'cat', 'cat']
+const LESSON_SIZE = 10
+
+type LessonProgress = {
+  activeIndex: number
+  hasQuestions: boolean
+  totalLessons: number
+  lessons: {
+    i: number
+    total: number
+    done: boolean
+    started: boolean
+    correctCount: number
+  }[]
+}
 
 export default function LibraryPage() {
   const router = useRouter()
@@ -105,6 +119,31 @@ export default function LibraryPage() {
     if (typeof document === 'undefined') return
     const el = document.getElementById(`mod-${modId}`)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function getLessonProgress(courseId: string, modId: ModuleId): LessonProgress {
+    const courseQuestions = questions.filter(q => q.course_id === courseId && q.module_id === modId)
+    if (courseQuestions.length === 0) {
+      return { activeIndex: 0, hasQuestions: false, totalLessons: 0, lessons: [] }
+    }
+
+    const correctIds = new Set(attempts.filter(a => a.is_correct).map(a => a.question_id))
+    const attemptedIds = new Set(attempts.map(a => a.question_id))
+    const totalLessons = Math.ceil(courseQuestions.length / LESSON_SIZE)
+    const lessons = Array.from({ length: totalLessons }, (_, i) => {
+      const chunk = courseQuestions.slice(i * LESSON_SIZE, (i + 1) * LESSON_SIZE)
+      const total = chunk.length
+      const correctCount = chunk.filter(q => correctIds.has(q.id)).length
+      return {
+        i,
+        total,
+        correctCount,
+        done: total > 0 && correctCount === total,
+        started: chunk.some(q => attemptedIds.has(q.id)),
+      }
+    })
+    const nextLesson = lessons.find(l => !l.done)?.i ?? Math.max(0, totalLessons - 1)
+    return { activeIndex: nextLesson, hasQuestions: true, totalLessons, lessons }
   }
 
   return (
@@ -271,9 +310,21 @@ export default function LibraryPage() {
       )}
 
       {/* Bottom sheet */}
-      {sheet && (
+      {sheet && (() => {
+        const progress = getLessonProgress(sheet.courseId, sheet.modId)
+        const activeLesson = progress.activeIndex
+        const active = progress.lessons[activeLesson]
+        const allDone = progress.hasQuestions && progress.lessons.every(l => l.done)
+        const quizHref = progress.hasQuestions
+          ? `/quiz/${sheet.modId}?courseId=${sheet.courseId}&lesson=${activeLesson}`
+          : '#'
+        const flashHref = progress.hasQuestions
+          ? `/flashcards/${sheet.modId}?courseId=${sheet.courseId}&lesson=${activeLesson}`
+          : '#'
+
+        return (
         <>
-          <style>{`@keyframes dp-slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+          <style>{`@keyframes dp-slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes dp-lesson-pulse{0%,100%{opacity:.55;transform:scaleX(.96)}50%{opacity:1;transform:scaleX(1)}}`}</style>
           <div
             onClick={() => setSheet(null)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200 }}
@@ -297,8 +348,62 @@ export default function LibraryPage() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sheet.title}</div>
               </div>
             </div>
+            {/* Lesson progress */}
+            <div style={{
+              border: `1px solid ${A.border}`,
+              borderRadius: 16,
+              padding: '13px 14px 14px',
+              marginBottom: 12,
+              background: '#FBFCFE',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: A.text, letterSpacing: -0.1 }}>
+                  {!progress.hasQuestions
+                    ? 'Quiz pas encore prêt'
+                    : allDone
+                      ? 'Toutes les séries terminées'
+                      : `Série ${activeLesson + 1}/${progress.totalLessons}`}
+                </div>
+                {progress.hasQuestions && (
+                  <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted }}>
+                    {active?.correctCount ?? 0}/{active?.total ?? 0} validées
+                  </div>
+                )}
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: progress.hasQuestions ? `repeat(${progress.totalLessons}, minmax(0, 1fr))` : '1fr',
+                gap: 5,
+                height: 8,
+              }}>
+                {progress.hasQuestions ? progress.lessons.map(lesson => {
+                  const isActiveLesson = lesson.i === activeLesson && !lesson.done
+                  const bg = lesson.done
+                    ? A.green
+                    : isActiveLesson
+                      ? A.primary
+                      : lesson.started
+                        ? A.amber
+                        : '#DDE4EE'
+                  return (
+                    <div
+                      key={lesson.i}
+                      aria-label={`Série ${lesson.i + 1}`}
+                      style={{
+                        borderRadius: 999,
+                        background: bg,
+                        animation: isActiveLesson ? 'dp-lesson-pulse 1.25s ease-in-out infinite' : undefined,
+                        transformOrigin: 'center',
+                      }}
+                    />
+                  )
+                }) : (
+                  <div style={{ borderRadius: 999, background: '#DDE4EE' }} />
+                )}
+              </div>
+            </div>
             {/* Quiz */}
-            <Link href={`/quiz/${sheet.modId}?courseId=${sheet.courseId}`} style={{ textDecoration: 'none', display: 'block', marginBottom: 10 }} onClick={() => setSheet(null)}>
+            <Link href={quizHref} style={{ textDecoration: 'none', display: 'block', marginBottom: 10, pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
               <div style={{
                 background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
                 borderRadius: 16, padding: '16px 18px',
@@ -310,13 +415,15 @@ export default function LibraryPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>Quiz</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>QCM, Vrai/Faux, Ordre, Association</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
+                    {progress.hasQuestions ? `Série ${activeLesson + 1} · ${active?.total ?? 0} questions` : 'Questions en attente'}
+                  </div>
                 </div>
                 <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
               </div>
             </Link>
             {/* Flashcards */}
-            <Link href={`/flashcards/${sheet.modId}?courseId=${sheet.courseId}&lesson=0`} style={{ textDecoration: 'none', display: 'block' }} onClick={() => setSheet(null)}>
+            <Link href={flashHref} style={{ textDecoration: 'none', display: 'block', pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
               <div style={{
                 background: A.surface, borderRadius: 16, padding: '16px 18px',
                 display: 'flex', alignItems: 'center', gap: 14,
@@ -328,14 +435,17 @@ export default function LibraryPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: A.text, letterSpacing: -0.3 }}>Flashcards</div>
-                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>Cartes de ce fascicule</div>
+                  <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
+                    {progress.hasQuestions ? `Cartes de la série ${activeLesson + 1}` : 'Cartes en attente'}
+                  </div>
                 </div>
                 <Icon name="chevronR" size={16} color={A.textDim} />
               </div>
             </Link>
           </div>
         </>
-      )}
+        )
+      })()}
     </div>
   )
 }
