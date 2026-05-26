@@ -93,7 +93,7 @@ export default function LibraryPage() {
   })
 
   // Rail data
-  const railModules: RailModule[] = moduleStats.map(({ m, mFascicules, completion }) => {
+  const railModules: RailModule[] = moduleStats.map(({ m, mFascicules, scannedCount, completion }) => {
     const startedCount = mFascicules.filter(f => {
       const course = courses.find(c => fasciculeN(c.title) === f.n)
       if (!course) return false
