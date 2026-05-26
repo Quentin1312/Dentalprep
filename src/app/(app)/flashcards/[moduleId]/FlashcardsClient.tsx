@@ -10,9 +10,33 @@ import Icon from '@/components/ui/Icon'
 type Flashcard = { id: string; concept: string; definition: string }
 type Status = 'known' | 'review'
 
-export default function FlashcardsClient({ flashcards: rawCards, moduleId, userId }: { flashcards: Flashcard[]; moduleId: string; userId: string }) {
+export default function FlashcardsClient({
+  flashcards: rawCards,
+  moduleId,
+  userId,
+  courseId,
+  lesson,
+  totalLessons,
+  totalCards,
+}: {
+  flashcards: Flashcard[]
+  moduleId: string
+  userId: string
+  courseId?: string | null
+  lesson?: number
+  totalLessons?: number
+  totalCards?: number
+}) {
   const router = useRouter()
-  const startRef = useRef(Date.now())
+  const startRef = useRef<number | null>(null)
+  const isCourseLesson = !!courseId && lesson !== undefined
+  const lessonLabel = isCourseLesson && totalLessons ? `SÃ©rie ${lesson + 1}/${totalLessons}` : `Flashcards ${moduleId}`
+  const quizHref = isCourseLesson
+    ? `/quiz/${moduleId}?courseId=${courseId}&lesson=${lesson}`
+    : `/quiz/${moduleId}`
+  const nextLessonHref = isCourseLesson && totalLessons && lesson + 1 < totalLessons
+    ? `/flashcards/${moduleId}?courseId=${courseId}&lesson=${lesson + 1}`
+    : null
   // progress map loaded from DB: flashcard_id → status
   const [progress, setProgress] = useState<Record<string, Status>>({})
   const [progressLoaded, setProgressLoaded] = useState(false)
@@ -22,12 +46,13 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
   const [flipped, setFlipped] = useState(false)
   const [done, setDone] = useState(false)
 
+  const [initialProgress, setInitialProgress] = useState<Record<string, Status> | null>(null)
+
   // Sort ONCE when progress finishes loading; keep stable for the rest of the session
   // so the progression bar positions don't shuffle as the user marks cards.
-  const [initialProgress, setInitialProgress] = useState<Record<string, Status> | null>(null)
   useEffect(() => {
-    if (progressLoaded && initialProgress === null) setInitialProgress(progress)
-  }, [progressLoaded, progress, initialProgress])
+    if (startRef.current === null) startRef.current = Date.now()
+  }, [])
 
   const flashcards = useMemo(() => {
     if (!initialProgress) return rawCards
@@ -49,9 +74,13 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
           const map: Record<string, Status> = {}
           data.forEach(r => { map[r.flashcard_id] = r.status as Status })
           setProgress(map)
+          setInitialProgress(map)
         }
         setProgressLoaded(true)
-      }, () => setProgressLoaded(true))
+      }, () => {
+        setInitialProgress({})
+        setProgressLoaded(true)
+      })
   }, [userId])
 
   async function handleAction(knew: boolean) {
@@ -67,7 +96,7 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
 
     if (idx + 1 >= total) {
       setDone(true)
-      const elapsed = Math.max(1, Math.round((Date.now() - startRef.current) / 60000))
+      const elapsed = Math.max(1, Math.round((Date.now() - (startRef.current ?? Date.now())) / 60000))
       await recordSession(userId, elapsed)
       return
     }
@@ -102,8 +131,8 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
         <button onClick={() => { setIdx(0); setFlipped(false); setSessionProgress({}); setDone(false); startRef.current = Date.now() }} style={{ flex: 1, height: 50, borderRadius: 14, background: A.surface, border: `0.5px solid ${A.borderStrong}`, color: A.text, fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer' }}>
           Recommencer
         </button>
-        <button onClick={() => router.push(`/quiz/${moduleId}`)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
-          Faire le quiz
+        <button onClick={() => router.push(nextLessonHref ?? quizHref)} style={{ flex: 1, height: 50, borderRadius: 14, background: A.primary, border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: A.font, cursor: 'pointer', boxShadow: '0 4px 14px rgba(10,102,224,0.28)' }}>
+          {nextLessonHref ? 'SÃ©rie suivante' : 'Faire le quiz'}
         </button>
       </div>
     </div>
@@ -118,8 +147,11 @@ export default function FlashcardsClient({ flashcards: rawCards, moduleId, userI
           <Icon name="x" size={16} color={A.text} />
         </button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>Flashcards {moduleId}</div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{idx + 1}<span style={{ color: A.textDim }}>/{total}</span></div>
+          <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase' }}>{lessonLabel}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+            {idx + 1}<span style={{ color: A.textDim }}>/{total}</span>
+            {isCourseLesson && totalCards ? <span style={{ color: A.textDim, fontSize: 11, fontWeight: 500 }}> Â· {totalCards} au total</span> : null}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 10, fontSize: 12 }}>
           <span style={{ color: A.green, fontWeight: 600 }}>{sessionKnown} sue</span>

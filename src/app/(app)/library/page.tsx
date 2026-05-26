@@ -319,7 +319,7 @@ export default function LibraryPage() {
               </div>
             </Link>
             {/* Flashcards */}
-            <Link href={`/flashcards/${sheet.modId}?courseId=${sheet.courseId}`} style={{ textDecoration: 'none', display: 'block' }} onClick={() => setSheet(null)}>
+            <Link href={`/flashcards/${sheet.modId}?courseId=${sheet.courseId}&lesson=0`} style={{ textDecoration: 'none', display: 'block' }} onClick={() => setSheet(null)}>
               <div style={{
                 background: A.surface, borderRadius: 16, padding: '16px 18px',
                 display: 'flex', alignItems: 'center', gap: 14,

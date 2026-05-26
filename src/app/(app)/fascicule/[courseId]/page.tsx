@@ -137,7 +137,7 @@ function FasciculeInner() {
 
         {/* Flashcards */}
         {mod && (
-          <Link href={`/flashcards/${mod.id}`} style={{ textDecoration: 'none' }}>
+          <Link href={`/flashcards/${mod.id}?courseId=${courseId}&lesson=0`} style={{ textDecoration: 'none' }}>
             <div style={{
               background: A.surface, borderRadius: 18, padding: '18px 20px',
               display: 'flex', alignItems: 'center', gap: 14,

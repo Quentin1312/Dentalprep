@@ -135,7 +135,7 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
                   <span style={{ fontSize: 10, fontWeight: 700, color: A.primary }}>Quiz</span>
                 </Link>
                 <Link
-                  href={`/flashcards/${moduleId}?courseId=${it.course.id}`}
+                  href={`/flashcards/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
                   style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 20, background: '#F3E8FF', border: '1px solid #7C3AED22' }}
                 >
                   <Icon name="cards" size={11} color="#7C3AED" />
