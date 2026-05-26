@@ -101,7 +101,7 @@ export default function LibraryPage() {
     }).length
     const status: RailModule['status'] = completion.total > 0 && completion.done === completion.total
       ? 'done'
-      : completion.done > 0 || startedCount > 0 || scannedCount > 0 ? 'active' : 'open'
+      : completion.done > 0 || startedCount > 0 ? 'active' : 'open'
     return {
       id: m.id, label: m.label.split(' ').slice(0, 2).join(' '),
       accent: MOD_STYLE[m.id].accent, icon: MOD_STYLE[m.id].icon,

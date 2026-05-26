@@ -589,10 +589,10 @@ export function ModuleRail({
               }}>
               <div style={{
                 width: 36, height: 36, borderRadius: 11,
-                background: pct > 0 || (m.scanned ?? 0) > 0
+                background: m.status !== 'open'
                   ? `linear-gradient(135deg, ${m.accent} 0%, ${shade(m.accent, -20)} 100%)`
                   : '#F0F2F5',
-                color: pct > 0 || (m.scanned ?? 0) > 0 ? '#fff' : '#8A95A5',
+                color: m.status !== 'open' ? '#fff' : '#8A95A5',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 7px',
                 boxShadow: pct > 0
