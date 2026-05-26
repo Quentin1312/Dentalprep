@@ -34,10 +34,11 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
     const totalLessons = prog.total > 0 ? Math.ceil(prog.total / 10) : 0
     const completedLessons = Math.floor(prog.attempted / 10)
     const allDone = totalLessons > 0 && completedLessons >= totalLessons
-    const isCurrent = !allDone && !!course && totalLessons > 0
+    const isCurrent = !!course && totalLessons > 0 && prog.attempted === 0
+    const isStarted = !!course && !allDone && prog.attempted > 0
     const nextLesson = Math.min(completedLessons, Math.max(0, totalLessons - 1))
     const xOff = OFFSETS[i % OFFSETS.length]
-    return { f, course, prog, totalLessons, completedLessons, allDone, isCurrent, nextLesson, xOff }
+    return { f, course, prog, totalLessons, completedLessons, allDone, isCurrent, isStarted, nextLesson, xOff }
   })
 
   const totalHeight = items.length * ROW_H + 40
@@ -101,7 +102,7 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
                 href={`/quiz/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
                 style={{ textDecoration: 'none' }}
               >
-                <NodeCircle state={it.allDone ? 'done' : it.isCurrent ? 'current' : 'unstarted'} number={it.f.n} />
+                <NodeCircle state={it.allDone ? 'done' : it.isCurrent ? 'current' : it.isStarted ? 'started' : 'unstarted'} number={it.f.n} />
               </Link>
             ) : (
               <Link href={`/upload?fascicule=${it.f.n}`} style={{ textDecoration: 'none' }}>
@@ -115,7 +116,7 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
               </div>
               <div style={{
                 fontSize: 10, fontWeight: 600, marginTop: 2,
-                color: it.allDone ? '#16A34A' : it.isCurrent ? A.primary : '#9CA3AF',
+                color: it.allDone ? '#16A34A' : it.isCurrent ? A.primary : it.isStarted ? A.amber : '#9CA3AF',
               }}>
                 {it.allDone
                   ? '✓ Terminé'
@@ -150,7 +151,7 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
   )
 }
 
-function NodeCircle({ state, number }: { state: 'done' | 'current' | 'unstarted' | 'locked'; number: number }) {
+function NodeCircle({ state, number }: { state: 'done' | 'current' | 'started' | 'unstarted' | 'locked'; number: number }) {
   const size = NODE_SIZE
   // base 3D button effect
   const baseShadow = '0 4px 0 0 rgba(0,0,0,0.08)'
@@ -195,6 +196,20 @@ function NodeCircle({ state, number }: { state: 'done' | 'current' | 'unstarted'
         cursor: 'pointer',
       }}>
         <span style={{ fontSize: 22, fontWeight: 800, color: '#9CA3AF' }}>{number}</span>
+      </div>
+    )
+  }
+
+  if (state === 'started') {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: size / 2,
+        background: 'linear-gradient(180deg, #FBBF24 0%, #D97706 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: `${baseShadow}, 0 6px 14px rgba(217,119,6,0.28), inset 0 2px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.12)`,
+        cursor: 'pointer',
+      }}>
+        <span style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>{number}</span>
       </div>
     )
   }

@@ -158,13 +158,10 @@ export default function LibraryPage() {
         }> = []
 
         // First "current" = first not-scanned fascicule. Make others available/locked accordingly.
-        let foundCurrent = false
         for (const f of mFascicules) {
           // Look in all courses (not just this module's) — a fascicule belongs to multiple modules
           const course = courses.find(c => fasciculeN(c.title) === f.n)
-          const isCurrent = !course && !foundCurrent
-          if (isCurrent) foundCurrent = true
-          nodes.push({ kind: 'fasc', fascicule: f, course, isCurrent })
+          nodes.push({ kind: 'fasc', fascicule: f, course })
         }
         // Add boss quiz node at end (regardless of scan state, it's always there)
         nodes.push({ kind: 'boss' })
@@ -201,12 +198,12 @@ export default function LibraryPage() {
                   ? uniqueCorrect.size / uniqueAttempted.size
                   : null
                 const state = !course
-                  ? (node.isCurrent ? 'current' : 'available')
+                  ? 'available'
                   : fascAcc !== null && fascAcc >= 0.75
                     ? 'completed'
                     : fascAcc !== null
                       ? 'started'
-                      : (node.isCurrent ? 'current' : 'available')
+                      : 'current'
                 const icon = iconForFascicule(f.title)
                 const shortTitle = f.title.length > 26 ? f.title.slice(0, 24) + '…' : f.title
                 return (
