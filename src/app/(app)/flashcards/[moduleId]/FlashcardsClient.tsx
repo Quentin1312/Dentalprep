@@ -166,7 +166,7 @@ export default function FlashcardsClient({
         {Array.from({ length: total }).map((_, i) => {
           const cid = flashcards[i]?.id
           if (!cid) return <div key={i} />
-          const s = sessionProgress[cid] ?? progress[cid]
+          const s = sessionProgress[cid]
           const isCurrent = i === idx
           const bg = isCurrent
             ? A.primary

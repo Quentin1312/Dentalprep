@@ -8,7 +8,7 @@
  * All inline styles, theme-aware via the `accent` prop on nodes.
  */
 
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Color helpers
@@ -243,16 +243,6 @@ export function PathNode({
           textAlign: 'center', maxWidth: 110, marginTop: 2,
           fontSize: 10, color: '#8A95A5', fontWeight: 600,
         }}>{sublabel}</div>
-      )}
-
-      {state === 'current' && (
-        <div style={{
-          marginTop: 6,
-          background: '#0E1424', color: '#fff',
-          fontSize: 9.5, fontWeight: 800, letterSpacing: 1,
-          padding: '4px 9px', borderRadius: 6, textTransform: 'uppercase',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.20)', whiteSpace: 'nowrap',
-        }}>Commencer</div>
       )}
     </div>
   )

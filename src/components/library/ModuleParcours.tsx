@@ -23,7 +23,7 @@ function fasciculeN(title: string): number | null {
 // Pattern winding gauche-droite (largeur en px depuis le centre)
 const OFFSETS = [0, 56, 70, 56, 0, -56, -70, -56]
 const NODE_SIZE = 68
-const ROW_H = 164 // hauteur d'une ligne (cercle + label + boutons + espace)
+const ROW_H = 140 // hauteur d'une ligne (cercle + label + espace)
 const SVG_W = 280 // largeur du canvas SVG (assez large pour le winding)
 
 export default function ModuleParcours({ moduleId, fascicules, courses, courseProgress }: Props) {
@@ -126,17 +126,6 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
               </div>
             </div>
 
-            {it.course && (
-              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                <Link
-                  href={`/flashcards/${moduleId}?courseId=${it.course.id}&lesson=${it.nextLesson}`}
-                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 20, background: A.primarySoft, border: `1px solid ${A.primary}22` }}
-                >
-                  <Icon name="bolt" size={11} color={A.primary} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: A.primary }}>Leçon</span>
-                </Link>
-              </div>
-            )}
           </div>
         )
       })}
