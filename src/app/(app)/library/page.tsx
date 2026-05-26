@@ -231,11 +231,11 @@ export default function LibraryPage() {
                   ? attempts.filter(a => questionCourseMap[a.question_id] === course.id)
                   : []
                 const courseQuestions = course
-                  ? questions.filter(q => q.course_id === course.id && q.module_id === m.id)
+                  ? questions.filter(q => q.course_id === course.id)
                   : []
                 const correctIds = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
                 const totalLessons = Math.ceil(courseQuestions.length / LESSON_SIZE)
-                const allLessonsDone = totalLessons > 0 && Array.from({ length: totalLessons }, (_, li) => {
+                const allLessonsDone = fascAttempts.length > 0 && totalLessons > 0 && Array.from({ length: totalLessons }, (_, li) => {
                   const chunk = courseQuestions.slice(li * LESSON_SIZE, (li + 1) * LESSON_SIZE)
                   return chunk.length > 0 && chunk.every(q => correctIds.has(q.id))
                 }).every(Boolean)
