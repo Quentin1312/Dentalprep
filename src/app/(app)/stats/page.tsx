@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { MODULES, FASCICULES, type Module } from '@/lib/modules'
+import { MODULES, type Module } from '@/lib/modules'
 import type { ModuleId } from '@/types/database'
 import { useThemeBg, themeBgStyle, THEMES } from '@/lib/theme-bg'
 import { PathSystemStyles, SectionLabel, shade } from '@/components/ui/PathSystem'
+import { quizCompletionCount, quizCompletionPct } from '@/lib/quiz-progress'
 
 type Attempt = { module_id: string; is_correct: boolean; created_at: string; question_id: string }
+type Question = { id: string; module_id: string; course_id: string }
 type Session = { date: string; minutes_studied: number }
-type Course = { module_id: string; title: string }
 
 const MODULE_ACCENT: Record<ModuleId, string> = {
   M1: '#0A66E0', M2: '#0D9488', M3: '#7C3AED',
@@ -24,8 +25,9 @@ export default function StatsPage() {
   const [streak, setStreak] = useState(0)
   const [examDate, setExamDate] = useState<string | null>(null)
   const [attempts, setAttempts] = useState<Attempt[]>([])
+  const [questions, setQuestions] = useState<Question[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
+  const [today] = useState(() => new Date())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,13 +38,13 @@ export default function StatsPage() {
         supabase.from('profiles').select('streak,exam_date').eq('id', user.id).single(),
         supabase.from('quiz_attempts').select('module_id,is_correct,created_at,question_id').eq('user_id', user.id),
         supabase.from('daily_sessions').select('date,minutes_studied').eq('user_id', user.id).order('date', { ascending: false }).limit(7),
-        supabase.from('courses').select('module_id,title').eq('user_id', user.id),
-      ]).then(([p, a, s, c]) => {
+        supabase.from('quiz_questions').select('id,module_id,course_id').eq('user_id', user.id),
+      ]).then(([p, a, s, q]) => {
         setStreak(p.data?.streak ?? 0)
         setExamDate(p.data?.exam_date ?? null)
         setAttempts((a.data ?? []) as Attempt[])
         setSessions((s.data ?? []) as Session[])
-        setCourses((c.data ?? []) as Course[])
+        setQuestions((q.data ?? []) as Question[])
         setLoading(false)
       })
     })
@@ -55,23 +57,32 @@ export default function StatsPage() {
   const totalBad = uniqueAttempted.size - uniqueCorrect.size
   const accuracy = uniqueAttempted.size > 0 ? Math.round((totalOk / uniqueAttempted.size) * 100) : 0
 
-  function fasciculeN(title: string): number | null {
-    const match = title.match(/Fascicule\s+(\d+)/i)
-    return match ? parseInt(match[1]) : null
-  }
-
   const moduleStats = MODULES.map(m => {
-    const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
-    const uploadedFascicules = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n)).length
-    const pct = mFascicules.length > 0 ? Math.min(100, Math.round((uploadedFascicules / mFascicules.length) * 100)) : 0
-    return { ...m, pct, uploaded: uploadedFascicules, total: mFascicules.length, accent: MODULE_ACCENT[m.id] }
+    const moduleQuestions = questions.filter(q => q.module_id === m.id)
+    const completion = quizCompletionCount(moduleQuestions, attempts)
+    const pct = quizCompletionPct(moduleQuestions, attempts)
+    return { ...m, pct, doneQuestions: completion.done, totalQuestions: completion.total, accent: MODULE_ACCENT[m.id] }
   })
 
   // Build the week chart (oldest → newest = today)
+  function localDateKey(date: Date) {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
   const dayLetters = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+  const sessionByDate = new Map(sessions.map(s => [s.date, s.minutes_studied]))
+  const monday = new Date(today)
+  const dayIndex = (today.getDay() + 6) % 7
+  monday.setDate(today.getDate() - dayIndex)
+  monday.setHours(12, 0, 0, 0)
   const week = dayLetters.map((d, i) => {
-    const s = sessions[6 - i]
-    return { d, min: s?.minutes_studied ?? 0, today: i === 6 }
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + i)
+    const key = localDateKey(date)
+    return { d, min: sessionByDate.get(key) ?? 0, today: key === localDateKey(today) }
   })
   const weekTotal = week.reduce((s, w) => s + w.min, 0)
 
@@ -80,7 +91,7 @@ export default function StatsPage() {
     if (!examDate) return null
     const t = new Date(examDate).getTime()
     if (isNaN(t)) return null
-    const diff = Math.round((t - Date.now()) / 86400000)
+    const diff = Math.round((t - today.getTime()) / 86400000)
     return diff >= 0 ? diff : null
   })()
 
@@ -374,7 +385,7 @@ function AccuracyRow({ accuracy, totalOk, totalBad }: { accuracy: number; totalO
   )
 }
 
-function ModuleMastery({ modules }: { modules: Array<Module & { pct: number; uploaded: number; total: number; accent: string }> }) {
+function ModuleMastery({ modules }: { modules: Array<Module & { pct: number; doneQuestions: number; totalQuestions: number; accent: string }> }) {
   return (
     <div style={{ padding: '14px 16px 0' }}>
       <SectionLabel>Progression par module</SectionLabel>
@@ -384,7 +395,7 @@ function ModuleMastery({ modules }: { modules: Array<Module & { pct: number; upl
         boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
       }}>
         {modules.map((m, i) => {
-          const notStarted = m.uploaded === 0
+          const notStarted = m.totalQuestions === 0
           const statusColor = notStarted ? '#8A95A5' : m.pct >= 100 ? '#16A34A' : m.pct >= 50 ? '#0A66E0' : '#D97706'
           const isLast = i === modules.length - 1
           return (
@@ -410,7 +421,7 @@ function ModuleMastery({ modules }: { modules: Array<Module & { pct: number; upl
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>{m.label}</div>
                   <div style={{ fontSize: 10.5, color: '#5A6675', fontWeight: 600, marginTop: 1 }}>
-                    {notStarted ? 'Pas encore commencé' : `${m.uploaded}/${m.total} fascicules`}
+                    {notStarted ? 'Pas encore commencé' : `${m.doneQuestions}/${m.totalQuestions} questions validées`}
                   </div>
                 </div>
                 <div style={{
