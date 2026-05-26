@@ -8,12 +8,14 @@ import { readFlashXP } from '@/lib/flash-store'
 type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number; pet_type: string | null }
 type Course = { id: string; module_id: string; title: string; page_count: number | null }
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
+type QuestionRef = { id: string; course_id: string; module_id: string }
 
 interface AppData {
   userId: string
   profile: Profile
   courses: Course[]
   attempts: Attempt[]
+  questions: QuestionRef[]
   questionCourseMap: Record<string, string>
   todayMinutes: number
   flashXpBonus: number
@@ -64,7 +66,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
       supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
-      supabase.from('quiz_questions').select('id,course_id').eq('user_id', user.id),
+      supabase.from('quiz_questions').select('id,course_id,module_id').eq('user_id', user.id),
     ])
 
     if (!profRes.data?.full_name) { router.replace('/setup'); return }
@@ -79,6 +81,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       profile: profRes.data,
       courses: coursesRes.data ?? [],
       attempts: attemptsRes.data ?? [],
+      questions: questionsRes.data ?? [],
       questionCourseMap,
       todayMinutes: todayRes.data?.minutes_studied ?? 0,
       flashXpBonus: readFlashXP(),
@@ -91,13 +94,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (fetchedRef.current) return
     fetchedRef.current = true
-    // If we have cached data, show it immediately and refresh in background
-    if (data) {
-      fetchAll()
-    } else {
-      fetchAll()
-    }
-  }, [data, fetchAll])
+    queueMicrotask(() => { void fetchAll() })
+  }, [fetchAll])
 
   const refresh = useCallback(async () => {
     try { localStorage.removeItem(CACHE_KEY) } catch {}

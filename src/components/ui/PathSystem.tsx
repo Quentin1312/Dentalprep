@@ -454,6 +454,10 @@ export function ModuleBanner({
   isActive?: boolean
   onClick?: () => void
 }) {
+  const pct = totalNodes > 0 ? Math.round(doneNodes / totalNodes * 100) : 0
+  const segmentCount = Math.min(totalNodes, 12)
+  const filledSegments = Math.round((pct / 100) * segmentCount)
+
   return (
     <div style={{ padding: '6px 16px 12px' }}>
       <div onClick={onClick} style={{
@@ -518,11 +522,11 @@ export function ModuleBanner({
         {totalNodes > 0 && (
           <>
             <div style={{ display: 'flex', gap: 3, marginTop: 12 }}>
-              {Array.from({ length: totalNodes }).map((_, i) => (
+              {Array.from({ length: segmentCount }).map((_, i) => (
                 <div key={i} style={{
                   flex: 1, height: 6, borderRadius: 4,
-                  background: i < doneNodes ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.22)',
-                  boxShadow: i < doneNodes ? '0 0 6px rgba(255,255,255,0.5)' : 'none',
+                  background: i < filledSegments ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.22)',
+                  boxShadow: i < filledSegments ? '0 0 6px rgba(255,255,255,0.5)' : 'none',
                 }} />
               ))}
             </div>
@@ -530,7 +534,7 @@ export function ModuleBanner({
               marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.85)',
               fontWeight: 700, fontVariantNumeric: 'tabular-nums',
             }}>
-              {doneNodes} / {totalNodes} fascicules · <span style={{ opacity: 0.8 }}>{totalNodes > 0 ? Math.round(doneNodes / totalNodes * 100) : 0}%</span>
+              {doneNodes} / {totalNodes} questions · <span style={{ opacity: 0.8 }}>{pct}%</span>
             </div>
           </>
         )}

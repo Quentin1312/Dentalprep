@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAppData } from '@/lib/app-context'
-import { MODULES, FASCICULES, type Module, type Fascicule } from '@/lib/modules'
+import { MODULES, FASCICULES, type Fascicule } from '@/lib/modules'
 import type { ModuleId } from '@/types/database'
 import { useThemeBg, themeBgStyle, THEMES } from '@/lib/theme-bg'
 import { A } from '@/lib/theme'
@@ -13,6 +13,7 @@ import {
   PathSystemStyles, PathNode, PathRow, ModuleBanner, ModuleBreak, ModuleRail,
   type RailModule, type ModuleBreakVariant,
 } from '@/components/ui/PathSystem'
+import { quizCompletionCount } from '@/lib/quiz-progress'
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -59,6 +60,7 @@ export default function LibraryPage() {
   const theme = THEMES[themeId]
   const courses = data?.courses ?? []
   const attempts = data?.attempts ?? []
+  const questions = data?.questions ?? []
   const questionCourseMap = data?.questionCourseMap ?? {}
 
   // Compute per-module stats once
@@ -68,35 +70,28 @@ export default function LibraryPage() {
     // A fascicule is "scanned" if a course with its number exists anywhere (any module)
     const scanned = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n))
     const mAttempts = attempts.filter(a => a.module_id === m.id)
+    const mQuestions = questions.filter(q => q.module_id === m.id)
+    const completion = quizCompletionCount(mQuestions, attempts)
     const uAttempted = new Set(mAttempts.map(a => a.question_id))
     const uCorrect = new Set(mAttempts.filter(a => a.is_correct).map(a => a.question_id))
     const acc = uAttempted.size > 0 ? uCorrect.size / uAttempted.size : 0
-    return { m, mFascicules, mCourses, scannedCount: scanned.length, attempts: mAttempts.length, accuracy: acc }
+    return { m, mFascicules, mCourses, scannedCount: scanned.length, attempts: mAttempts.length, accuracy: acc, completion }
   })
 
   // Rail data
-  const railModules: RailModule[] = moduleStats.map(({ m, mFascicules, mCourses, accuracy }) => {
-    const passedCount = mFascicules.filter(f => {
-      const course = courses.find(c => fasciculeN(c.title) === f.n)
-      if (!course) return false
-      const fascAttempts = attempts.filter(a => questionCourseMap[a.question_id] === course.id)
-      if (fascAttempts.length === 0) return false
-      const uAttempted = new Set(fascAttempts.map(a => a.question_id))
-      const uCorrect = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
-      return uCorrect.size / uAttempted.size >= 0.75
-    }).length
+  const railModules: RailModule[] = moduleStats.map(({ m, mFascicules, completion }) => {
     const startedCount = mFascicules.filter(f => {
       const course = courses.find(c => fasciculeN(c.title) === f.n)
       if (!course) return false
       return attempts.some(a => questionCourseMap[a.question_id] === course.id)
     }).length
-    const status: RailModule['status'] = passedCount === mFascicules.length && mFascicules.length > 0
+    const status: RailModule['status'] = completion.total > 0 && completion.done === completion.total
       ? 'done'
-      : startedCount > 0 ? 'active' : 'open'
+      : completion.done > 0 || startedCount > 0 ? 'active' : 'open'
     return {
       id: m.id, label: m.label.split(' ').slice(0, 2).join(' '),
       accent: MOD_STYLE[m.id].accent, icon: MOD_STYLE[m.id].icon,
-      done: passedCount, total: mFascicules.length || 1,
+      done: completion.done, total: completion.total || 1,
       status,
     }
   })
@@ -148,7 +143,7 @@ export default function LibraryPage() {
       )}
 
       {/* The full zigzag path */}
-      {!loading && moduleStats.map(({ m, mFascicules, mCourses, scannedCount, accuracy }, mIdx) => {
+      {!loading && moduleStats.map(({ m, mFascicules, scannedCount, accuracy, completion }, mIdx) => {
         const accent = MOD_STYLE[m.id].accent
         const modIcon = MOD_STYLE[m.id].icon
         const isFullyScanned = scannedCount === mFascicules.length && mFascicules.length > 0
@@ -182,8 +177,8 @@ export default function LibraryPage() {
               sublabel={m.description}
               accent={accent}
               icon={modIcon}
-              doneNodes={scannedCount}
-              totalNodes={mFascicules.length}
+              doneNodes={completion.done}
+              totalNodes={completion.total}
               isActive={isActive}
               onClick={() => router.push(`/module/${m.id}`)}
             />

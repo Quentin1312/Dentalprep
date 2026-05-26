@@ -8,6 +8,7 @@ import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { computeXP, xpProgress } from '@/lib/xp'
+import { quizCompletionPct, quizCompletionCount } from '@/lib/quiz-progress'
 
 function daysUntil(d: string | null) {
   if (!d) return null
@@ -50,8 +51,8 @@ export default function DashboardPage() {
 
   const days = daysUntil(profile?.exam_date ?? null)
   const firstName = profile?.full_name?.split(' ')[0] ?? ''
-  const overallProgress = attempts.length > 0
-    ? Math.round((attempts.filter(a => a.is_correct).length / attempts.length) * 100) : 0
+  const questions = data?.questions ?? []
+  const overallProgress = quizCompletionPct(questions, attempts)
 
   const courses = data?.courses ?? []
 
@@ -63,8 +64,10 @@ export default function DashboardPage() {
   const moduleStats = MODULES.map(m => {
     const mFascicules = FASCICULES.filter(f => f.modules.includes(m.id))
     const uploadedFascicules = mFascicules.filter(f => courses.some(c => fasciculeN(c.title) === f.n)).length
-    const pct = mFascicules.length > 0 ? Math.min(100, Math.round((uploadedFascicules / mFascicules.length) * 100)) : 0
-    return { ...m, pct, uploaded: uploadedFascicules, total: mFascicules.length }
+    const moduleQuestions = questions.filter(q => q.module_id === m.id)
+    const completion = quizCompletionCount(moduleQuestions, attempts)
+    const pct = quizCompletionPct(moduleQuestions, attempts)
+    return { ...m, pct, uploaded: uploadedFascicules, total: mFascicules.length, doneQuestions: completion.done, totalQuestions: completion.total }
   })
 
   return (
@@ -158,7 +161,7 @@ export default function DashboardPage() {
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: goalDone ? 'rgba(255,255,255,0.8)' : A.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' }}>Aujourd'hui</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: goalDone ? 'rgba(255,255,255,0.8)' : A.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' }}>Aujourd&apos;hui</div>
                 <Ring pct={goalPct} size={38} stroke={4} color={goalDone ? '#fff' : A.primary} />
               </div>
               <div>
@@ -241,9 +244,9 @@ export default function DashboardPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
-                        {m.uploaded > 0
-                          ? <div style={{ fontSize: 11, color, marginTop: 1, fontWeight: 600 }}>{m.uploaded}/{m.total} fascicules</div>
-                          : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>0/{m.total} fascicules</div>}
+                        {m.totalQuestions > 0
+                          ? <div style={{ fontSize: 11, color, marginTop: 1, fontWeight: 600 }}>{m.doneQuestions}/{m.totalQuestions} questions validées</div>
+                          : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>{m.uploaded}/{m.total} fascicules scannés</div>}
                       </div>
                       <div style={{ width: 36, height: 36, position: 'relative', flexShrink: 0 }}>
                         <svg width="36" height="36" viewBox="0 0 36 36">
