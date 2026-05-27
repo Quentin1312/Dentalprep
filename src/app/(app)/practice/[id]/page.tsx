@@ -32,14 +32,14 @@ export default function PracticeExercisePage() {
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const supabase = createClient() as any
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
       supabase.from('practical_exercises')
         .select('id,n,category,title,prompt,rows,explanation')
         .eq('id', id).single()
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           if (data) setExo(data as Exercise)
           setLoading(false)
         })
@@ -51,7 +51,7 @@ export default function PracticeExercisePage() {
     const r = scoreFeuille(userRows, exo.rows)
     setResult(r)
     setValidated(true)
-    const supabase = createClient()
+    const supabase = createClient() as any
     await supabase.from('practical_attempts').insert({
       user_id: userId,
       exercise_id: exo.id,

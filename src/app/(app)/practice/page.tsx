@@ -39,13 +39,13 @@ export default function PracticePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const supabase = createClient() as any
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
       if (!user) { router.replace('/auth/login'); return }
       Promise.all([
         supabase.from('practical_exercises').select('id,n,category,title').eq('user_id', user.id).order('n'),
         supabase.from('practical_attempts').select('exercise_id,score,created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
-      ]).then(([ex, at]) => {
+      ]).then(([ex, at]: any) => {
         setExercises(ex.data ?? [])
         setAttempts(at.data ?? [])
         setLoading(false)
