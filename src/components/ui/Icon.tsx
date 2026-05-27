@@ -51,6 +51,7 @@ export default function Icon({ name, size = 20, color = 'currentColor', strokeWi
     grid:       <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
     eye:        <><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></>,
     trash:      <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></>,
+    edit:       <><path d="M9 4H5a2 2 0 00-2 2v13a2 2 0 002 2h13a2 2 0 002-2v-4"/><path d="M18.5 2.5a2.12 2.12 0 113 3L12 15l-4 1 1-4z"/></>,
   }
 
   return <svg {...props}>{paths[name] ?? null}</svg>

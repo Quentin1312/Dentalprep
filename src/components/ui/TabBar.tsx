@@ -8,6 +8,7 @@ import Icon from './Icon'
 const TABS = [
   { id: 'dashboard', href: '/dashboard', icon: 'grid',     label: 'Accueil' },
   { id: 'library',   href: '/library',   icon: 'bookOpen', label: 'Mes cours' },
+  { id: 'practice',  href: '/practice',  icon: 'edit',     label: 'Cas pratiques' },
   { id: 'stats',     href: '/stats',     icon: 'target',   label: 'Stats' },
   { id: 'profile',   href: '/profile',   icon: 'user',     label: 'Profil' },
 ]
