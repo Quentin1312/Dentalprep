@@ -152,7 +152,14 @@ export default function CcamHelp() {
                 <div><strong>HB</strong> = localisation anatomique (bouche, dent, parodonte)</div>
                 <div><span style={{ color: '#16A34A', fontWeight: 700 }}>G</span> = action générale (avulsion)</div>
                 <div><span style={{ color: '#D97706', fontWeight: 700 }}>D</span> = voie d'abord / technique (transorificiel)</div>
-                <div><strong>022</strong> = compteur (aléatoire, sans signification)</div>
+                <div><strong>022</strong> = identifiant unique de l'acte (sans logique apparente)</div>
+              </div>
+              <div style={{
+                marginTop: 10, padding: '8px 10px',
+                background: '#FFFBEB', borderRadius: 8,
+                fontSize: 10.5, color: '#92400E', fontWeight: 600, lineHeight: 1.5,
+              }}>
+                💡 Tu n'as besoin que des 4 lettres pour valider ici — les 3 chiffres ne sont pas demandés (impossible à deviner depuis l'énoncé).
               </div>
             </div>
 

@@ -54,9 +54,23 @@ function norm(v: any): string {
   return String(v).trim().toUpperCase().replace(/\s+/g, '')
 }
 
-function cellOK(user: any, expected: any): boolean {
+// Un code CCAM "complet" fait 4 lettres + 3 chiffres (ex: HBQK002).
+// Les chiffres étant un identifiant arbitraire impossible à déduire de
+// l'énoncé, on ne valide QUE les 4 lettres pour ces codes.
+// Les codes courts NGAP (BR4, BDC, BR2, BRP, BDX, C, CS, ...) restent en
+// comparaison exacte.
+function isFullCcam(code: string): boolean {
+  return /^[A-Z]{4}\d{3}$/.test(code.toUpperCase().replace(/\s+/g, ''))
+}
+
+function cellOK(user: any, expected: any, key?: keyof FsRow): boolean {
   if (expected === null || expected === undefined || expected === '') return user === null || user === undefined || user === ''
-  return norm(user) === norm(expected)
+  const u = norm(user), e = norm(expected)
+  if (key === 'code_ccam' && isFullCcam(e)) {
+    // Compare seulement les 4 premières lettres (la "grammaire" CCAM).
+    return u.slice(0, 4) === e.slice(0, 4)
+  }
+  return u === e
 }
 
 export default function FeuilleSoins({ expected, showCorrection, onChange, onValidate }: Props) {
@@ -77,7 +91,7 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
     if (!showCorrection) return 'empty'
     const u = rows[rowIdx]?.[key]
     const e = expected[rowIdx]?.[key]
-    return cellOK(u, e) ? 'correct' : 'wrong'
+    return cellOK(u, e, key) ? 'correct' : 'wrong'
   }
 
   return (
@@ -179,7 +193,7 @@ export function scoreFeuille(user: FsRow[], expected: FsRow[]): { cellsCorrect: 
       // Only count cells that have an expected value (not null/empty in the answer key)
       if (e !== null && e !== undefined && e !== '') {
         total++
-        if (cellOK(user[i]?.[f.key], e)) correct++
+        if (cellOK(user[i]?.[f.key], e, f.key)) correct++
       }
     }
   }
