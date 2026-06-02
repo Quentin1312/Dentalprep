@@ -142,6 +142,37 @@ export default function PracticePage() {
         </div>
       </div>
 
+      {/* CTA Drill codes — mémoriser les codes CCAM */}
+      {!loading && (
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '4px 16px 8px' }}>
+          <Link href="/practice/drill" style={{ textDecoration: 'none' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '14px 16px', borderRadius: 14,
+              background: 'linear-gradient(135deg, #FFD84A 0%, #F59E0B 100%)',
+              boxShadow: '0 8px 18px -6px rgba(245,158,11,0.45)',
+              cursor: 'pointer',
+            }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: 'rgba(255,255,255,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, flexShrink: 0,
+              }}>🎯</div>
+              <div style={{ flex: 1, color: '#fff' }}>
+                <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: -0.2 }}>
+                  Drill codes CCAM
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.92, marginTop: 2, fontWeight: 600 }}>
+                  10 codes au pif · 1 minute · mémorise les 3 chiffres
+                </div>
+              </div>
+              <Icon name="chevronR" size={18} color="#fff" strokeWidth={2.4} />
+            </div>
+          </Link>
+        </div>
+      )}
+
       {/* Sélecteur compact de catégorie */}
       {!loading && activeCat && (
         <div style={{ maxWidth: 760, margin: '0 auto', padding: '4px 16px 8px' }}>
