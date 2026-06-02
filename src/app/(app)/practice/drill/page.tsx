@@ -172,11 +172,15 @@ export default function DrillPage() {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, color: A.text, fontFamily: A.font, textAlign: 'center', ...themeBgStyle(themeId) }}>
         <div style={{
           width: 96, height: 96, borderRadius: 32,
-          background: perfect ? 'linear-gradient(135deg, #FFD84A 0%, #F59E0B 100%)' : 'linear-gradient(135deg, #0A66E0 0%, #5B21B6 100%)',
+          background: perfect
+            ? `linear-gradient(135deg, #16A34A 0%, #0E8C3E 100%)`
+            : `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: 20, fontSize: 48,
+          marginBottom: 20,
           boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
-        }}>{perfect ? '🏆' : '🎯'}</div>
+        }}>
+          <Icon name={perfect ? 'check' : 'target'} size={48} color="#fff" strokeWidth={2.4} />
+        </div>
         <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: -0.6, marginBottom: 6 }}>
           {perfect ? 'Sans-faute !' : 'Drill terminé'}
         </div>

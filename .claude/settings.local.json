@@ -23,7 +23,8 @@
       "Bash(npx tsc *)",
       "Bash(git commit -m ' *)",
       "Bash(npx --yes -p typescript tsc --noEmit)",
-      "Bash(npm exec *)"
+      "Bash(npm exec *)",
+      "Bash(py insert_ccam_codes.py)"
     ]
   }
 }

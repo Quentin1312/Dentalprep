@@ -149,16 +149,18 @@ export default function PracticePage() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '14px 16px', borderRadius: 14,
-              background: 'linear-gradient(135deg, #FFD84A 0%, #F59E0B 100%)',
-              boxShadow: '0 8px 18px -6px rgba(245,158,11,0.45)',
+              background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
+              boxShadow: '0 8px 18px -6px rgba(10,102,224,0.45)',
               cursor: 'pointer',
             }}>
               <div style={{
                 width: 44, height: 44, borderRadius: 12,
-                background: 'rgba(255,255,255,0.25)',
+                background: 'rgba(255,255,255,0.18)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, flexShrink: 0,
-              }}>🎯</div>
+                flexShrink: 0,
+              }}>
+                <Icon name="target" size={22} color="#fff" strokeWidth={2} />
+              </div>
               <div style={{ flex: 1, color: '#fff' }}>
                 <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: -0.2 }}>
                   Drill codes CCAM
