@@ -31,10 +31,28 @@ const PALETTE: ToothState[] = [
   'prothese_conjointe', 'prothese_adjointe', 'amalgame',
 ]
 
-// Numérotation FDI : quadrant 1 (haut droite) → 18..11, quadrant 2 (haut gauche) → 21..28
-// quadrant 4 (bas droite) → 48..41, quadrant 3 (bas gauche) → 31..38
+// Quadrant 1 (haut-droite vu du patient → gauche à l'écran) : 18→11
+// Quadrant 2 (haut-gauche du patient → droite à l'écran) : 21→28
+// Quadrant 4 : 48→41   Quadrant 3 : 31→38
 const UPPER = ['18','17','16','15','14','13','12','11','21','22','23','24','25','26','27','28']
 const LOWER = ['48','47','46','45','44','43','42','41','31','32','33','34','35','36','37','38']
+
+type ToothType = 'incisive' | 'canine' | 'premolaire' | 'molaire'
+
+function toothType(num: string): ToothType {
+  const p = parseInt(num[1], 10)
+  if (p === 1 || p === 2) return 'incisive'
+  if (p === 3) return 'canine'
+  if (p === 4 || p === 5) return 'premolaire'
+  return 'molaire'
+}
+
+const SIZE: Record<ToothType, { w: number; h: number }> = {
+  incisive:   { w: 26, h: 44 },
+  canine:     { w: 28, h: 50 },
+  premolaire: { w: 30, h: 44 },
+  molaire:    { w: 36, h: 44 },
+}
 
 interface Props {
   expected: ToothMap
@@ -55,71 +73,141 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
     onChange?.(next)
   }
 
-  function statusColor(tooth: string): { bg: string; outline: string } {
-    const user = state[tooth] ?? 'sain'
-    const exp  = expected[tooth] ?? 'sain'
-    const bg = COLORS[user].bg
-    if (!showCorrection) return { bg, outline: A.border }
-    const ok = user === exp
-    return { bg, outline: ok ? '#16A34A' : '#EF4444' }
-  }
-
-  function renderTooth(tooth: string) {
-    const { bg, outline } = statusColor(tooth)
+  function renderTooth(tooth: string, arch: 'upper' | 'lower') {
+    const tt = toothType(tooth)
+    const { w, h } = SIZE[tt]
     const user = state[tooth] ?? 'sain'
     const exp = expected[tooth] ?? 'sain'
-    const wrong = showCorrection && user !== exp
+    const c = COLORS[user]
+    const ok = !showCorrection ? null : (user === exp)
+
+    // Forme : couronne arrondie + racine
+    // SVG path différent selon arch (haut: couronne en bas, racine vers haut)
+    const isUpper = arch === 'upper'
+    const crownR = 6
+    const rootW = w * 0.55
+
+    // Couronne (en bas si upper, en haut si lower)
+    // Path conceptuel : forme de dent avec racine
+
+    const path = isUpper
+      // dent du haut : racine en haut, couronne en bas
+      ? `M ${(w - rootW) / 2} 0
+         L ${(w + rootW) / 2} 0
+         L ${(w + rootW) / 2} ${h * 0.45}
+         L ${w} ${h * 0.55}
+         L ${w} ${h - crownR}
+         Q ${w} ${h} ${w - crownR} ${h}
+         L ${crownR} ${h}
+         Q 0 ${h} 0 ${h - crownR}
+         L 0 ${h * 0.55}
+         L ${(w - rootW) / 2} ${h * 0.45}
+         Z`
+      // dent du bas : couronne en haut, racine en bas
+      : `M 0 ${crownR}
+         Q 0 0 ${crownR} 0
+         L ${w - crownR} 0
+         Q ${w} 0 ${w} ${crownR}
+         L ${w} ${h * 0.45}
+         L ${(w + rootW) / 2} ${h * 0.55}
+         L ${(w + rootW) / 2} ${h}
+         L ${(w - rootW) / 2} ${h}
+         L ${(w - rootW) / 2} ${h * 0.55}
+         L 0 ${h * 0.45}
+         Z`
+
+    const stroke = ok === true ? '#16A34A' : ok === false ? '#EF4444' : '#9CA3AF'
+    const strokeW = ok === null ? 1.5 : 2.5
+
+    const numberY = isUpper ? h - h * 0.7 + 12 : h * 0.7 - 4
+    const labelColor = user === 'sain' ? '#6B7280' : c.text
+
     return (
       <button
         key={tooth}
         onClick={() => paint(tooth)}
         disabled={showCorrection}
         style={{
-          width: 30, height: 38,
-          background: bg,
-          border: `2px solid ${outline}`,
-          borderRadius: 6,
-          fontFamily: A.font, fontSize: 9, fontWeight: 800,
-          color: COLORS[user].text,
+          width: w, height: h, padding: 0,
+          background: 'transparent', border: 'none',
           cursor: showCorrection ? 'default' : 'pointer',
-          padding: 0,
           position: 'relative',
         }}
-        title={wrong ? `Attendu : ${COLORS[exp].label}` : COLORS[user].label}
+        title={ok === false ? `Attendu : ${COLORS[exp].label}` : COLORS[user].label}
       >
-        {tooth}
-        {wrong && (
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
+          <path d={path} fill={c.bg} stroke={stroke} strokeWidth={strokeW} strokeLinejoin="round" />
+          <text
+            x={w / 2}
+            y={numberY}
+            textAnchor="middle"
+            fontSize={9}
+            fontWeight={800}
+            fill={labelColor}
+            fontFamily={A.font}
+          >
+            {tooth}
+          </text>
+        </svg>
+        {ok === false && (
           <div style={{
-            position: 'absolute', top: -6, right: -6,
+            position: 'absolute', top: -4, right: -4,
             width: 14, height: 14, borderRadius: '50%',
             background: '#EF4444', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 9, fontWeight: 900,
-          }}>
-            !
-          </div>
+            border: '2px solid #fff',
+          }}>!</div>
         )}
       </button>
+    )
+  }
+
+  // Affiche l'arcade avec un séparateur visuel au milieu (entre quadrants 1-2 ou 4-3)
+  function renderArch(teeth: string[], arch: 'upper' | 'lower') {
+    return (
+      <div style={{
+        display: 'flex', alignItems: arch === 'upper' ? 'flex-end' : 'flex-start',
+        justifyContent: 'center', gap: 2, padding: '4px 0',
+      }}>
+        {teeth.slice(0, 8).map(t => renderTooth(t, arch))}
+        {/* Séparateur central (axe médian) */}
+        <div style={{
+          width: 2, height: 56,
+          background: 'repeating-linear-gradient(180deg, #94A3B8 0 4px, transparent 4px 8px)',
+          margin: '0 4px',
+          alignSelf: 'center',
+        }} />
+        {teeth.slice(8).map(t => renderTooth(t, arch))}
+      </div>
     )
   }
 
   return (
     <div style={{
       background: '#fff', borderRadius: 14, padding: 14,
-      border: `1px solid ${A.border}`,
-      fontFamily: A.font,
+      border: `1px solid ${A.border}`, fontFamily: A.font,
     }}>
       <div style={{
-        fontSize: 11, fontWeight: 800, color: A.textMuted,
-        letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 10,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10,
       }}>
-        Schéma dentaire
+        <div style={{
+          fontSize: 11, fontWeight: 800, color: A.textMuted,
+          letterSpacing: 1.4, textTransform: 'uppercase',
+        }}>
+          Schéma dentaire
+        </div>
+        <div style={{ fontSize: 10, color: A.textMuted }}>
+          patient face à toi → droite ↔ gauche inversées
+        </div>
       </div>
 
       {/* Palette */}
       {!showCorrection && (
         <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12,
+          display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14,
+          padding: '8px 10px', background: '#F7F9FC', borderRadius: 10,
+          border: `1px solid ${A.border}`,
         }}>
           {PALETTE.map(s => {
             const c = COLORS[s]
@@ -130,7 +218,7 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
                 onClick={() => setBrush(s)}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: active ? c.bg : '#F4F6FA',
+                  background: active ? c.bg : '#fff',
                   border: active ? `2px solid ${A.primary}` : `1px solid ${A.border}`,
                   borderRadius: 999,
                   padding: '4px 10px',
@@ -140,7 +228,7 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
                 }}
               >
                 <span style={{
-                  width: 10, height: 10, borderRadius: 3,
+                  width: 10, height: 10, borderRadius: '50%',
                   background: c.bg, border: `1px solid ${A.border}`,
                 }} />
                 {c.label}
@@ -150,30 +238,39 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
         </div>
       )}
 
-      {/* Arcade supérieure */}
-      <div style={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 4 }}>
-        {UPPER.map(renderTooth)}
+      {/* Maxillaire (arcade supérieure) */}
+      <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+        <div style={{
+          fontSize: 9, fontWeight: 700, color: A.textMuted,
+          textAlign: 'center', letterSpacing: 1.2, marginBottom: 2,
+        }}>
+          MAXILLAIRE (haut)
+        </div>
+        {renderArch(UPPER, 'upper')}
       </div>
+
+      {/* Trait de séparation arcades */}
       <div style={{
-        textAlign: 'center', fontSize: 9, fontWeight: 700, color: A.textMuted,
-        margin: '6px 0', letterSpacing: 1.2,
-      }}>
-        ──  M A X I L L A I R E  ──
-      </div>
-      {/* Arcade inférieure */}
-      <div style={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 4 }}>
-        {LOWER.map(renderTooth)}
-      </div>
-      <div style={{
-        textAlign: 'center', fontSize: 9, fontWeight: 700, color: A.textMuted,
-        marginTop: 6, letterSpacing: 1.2,
-      }}>
-        ──  M A N D I B U L E  ──
+        margin: '8px 0', height: 1, background: A.border,
+      }} />
+
+      {/* Mandibule (arcade inférieure) */}
+      <div style={{ overflowX: 'auto', paddingTop: 4 }}>
+        {renderArch(LOWER, 'lower')}
+        <div style={{
+          fontSize: 9, fontWeight: 700, color: A.textMuted,
+          textAlign: 'center', letterSpacing: 1.2, marginTop: 2,
+        }}>
+          MANDIBULE (bas)
+        </div>
       </div>
 
       {!showCorrection && (
-        <div style={{ fontSize: 10, color: A.textMuted, marginTop: 10, textAlign: 'center' }}>
-          Touche une couleur puis tap les dents concernées.
+        <div style={{
+          fontSize: 11, color: A.textMuted, marginTop: 12, textAlign: 'center',
+          padding: '8px 10px', background: '#EEF4FF', borderRadius: 8,
+        }}>
+          1. Sélectionne une <strong>couleur</strong> dans la palette → 2. tap les <strong>dents</strong> concernées.
         </div>
       )}
     </div>
@@ -183,7 +280,6 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
 export function scoreSchema(user: ToothMap, expected: ToothMap): { cellsCorrect: number; cellsTotal: number } {
   let correct = 0
   let total = 0
-  // Compter uniquement les dents avec un état attendu (sain pas compté)
   for (const [tooth, exp] of Object.entries(expected)) {
     if (exp === 'sain') continue
     total++
