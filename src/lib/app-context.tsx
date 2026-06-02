@@ -19,6 +19,7 @@ interface AppData {
   questionCourseMap: Record<string, string>
   todayMinutes: number
   flashXpBonus: number
+  flashcardsDueCount: number
 }
 
 interface AppContextValue {
@@ -61,12 +62,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) { router.replace('/auth/login'); return }
 
     const today = new Date().toISOString().split('T')[0]
-    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes] = await Promise.all([
+    const supaAny = supabase as any
+    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes] = await Promise.all([
       supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
       supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
       supabase.from('quiz_questions').select('id,course_id,module_id').eq('user_id', user.id),
+      supaAny.from('flashcard_progress')
+        .select('flashcard_id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .lte('next_review_at', new Date().toISOString()),
     ])
 
     if (!profRes.data?.full_name) { router.replace('/setup'); return }
@@ -85,6 +91,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       questionCourseMap,
       todayMinutes: todayRes.data?.minutes_studied ?? 0,
       flashXpBonus: readFlashXP(),
+      flashcardsDueCount: (dueCardsRes as any).count ?? 0,
     }
     writeCache(fresh)
     setData(fresh)

@@ -6,9 +6,15 @@ import { createClient } from '@/lib/supabase/client'
 import { recordSession } from '@/lib/recordSession'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
+import { reviewKnown, reviewLapse, isDue, DEFAULT_SM2, type Sm2State } from '@/lib/sm2'
 
 type Flashcard = { id: string; concept: string; definition: string }
 type Status = 'known' | 'review'
+
+type ProgressRow = Sm2State & {
+  status: Status
+  next_review_at: string | null
+}
 
 export default function FlashcardsClient({
   flashcards: rawCards,
@@ -34,7 +40,9 @@ export default function FlashcardsClient({
   const quizHref = isCourseLesson
     ? `/quiz/${moduleId}?courseId=${courseId}&lesson=${lesson}`
     : `/quiz/${moduleId}`
-  // progress map loaded from DB: flashcard_id → status
+  // progress map loaded from DB: flashcard_id → full row
+  const [progressMap, setProgressMap] = useState<Record<string, ProgressRow>>({})
+  // backward-compat status map (used by parts of the UI)
   const [progress, setProgress] = useState<Record<string, Status>>({})
   const [progressLoaded, setProgressLoaded] = useState(false)
   // current session state
@@ -44,6 +52,7 @@ export default function FlashcardsClient({
   const [done, setDone] = useState(false)
 
   const [initialProgress, setInitialProgress] = useState<Record<string, Status> | null>(null)
+  const [initialProgressMap, setInitialProgressMap] = useState<Record<string, ProgressRow> | null>(null)
 
   // Sort ONCE when progress finishes loading; keep stable for the rest of the session
   // so the progression bar positions don't shuffle as the user marks cards.
@@ -51,31 +60,66 @@ export default function FlashcardsClient({
     if (startRef.current === null) startRef.current = Date.now()
   }, [])
 
+  // Tri SM-2 : 1) cartes dues (next_review_at <= aujourd'hui) en 1er, par ancienneté de revue
+  //           2) cartes jamais vues (nouvelles)
+  //           3) cartes pas encore dues (skippées dans la session — mais on les garde au cas où)
   const flashcards = useMemo(() => {
-    if (!initialProgress) return rawCards
+    const map = initialProgressMap
+    if (!map) return rawCards
+    const now = Date.now()
+    function bucket(id: string): number {
+      const p = map![id]
+      if (!p) return 1                                          // jamais vue
+      if (isDue(p.next_review_at)) return 0                     // due
+      return 2                                                  // pas due
+    }
     return [...rawCards].sort((a, b) => {
-      const order = (s: Status | undefined) => s === 'review' ? 0 : s === undefined ? 1 : 2
-      return order(initialProgress[a.id]) - order(initialProgress[b.id])
+      const ba = bucket(a.id), bb = bucket(b.id)
+      if (ba !== bb) return ba - bb
+      if (ba === 0) {
+        const ta = map![a.id]?.next_review_at
+          ? new Date(map![a.id].next_review_at!).getTime() : now
+        const tb = map![b.id]?.next_review_at
+          ? new Date(map![b.id].next_review_at!).getTime() : now
+        return ta - tb
+      }
+      return 0
     })
-  }, [rawCards, initialProgress])
+  }, [rawCards, initialProgressMap])
 
   const total = flashcards.length
   const card = flashcards[idx]
 
-  // Load previous progress from DB
+  // Load previous progress from DB (with SM-2 fields)
   useEffect(() => {
-    const supabase = createClient()
-    supabase.from('flashcard_progress').select('flashcard_id,status').eq('user_id', userId)
-      .then(({ data }) => {
+    const supabase = createClient() as any
+    supabase.from('flashcard_progress')
+      .select('flashcard_id,status,ease_factor,interval_days,reps,lapses,next_review_at')
+      .eq('user_id', userId)
+      .then(({ data }: any) => {
         if (data) {
-          const map: Record<string, Status> = {}
-          data.forEach(r => { map[r.flashcard_id] = r.status as Status })
-          setProgress(map)
-          setInitialProgress(map)
+          const statusMap: Record<string, Status> = {}
+          const fullMap: Record<string, ProgressRow> = {}
+          data.forEach((r: any) => {
+            statusMap[r.flashcard_id] = r.status as Status
+            fullMap[r.flashcard_id] = {
+              status: r.status as Status,
+              ease_factor: r.ease_factor ?? 2.5,
+              interval_days: r.interval_days ?? 0,
+              reps: r.reps ?? 0,
+              lapses: r.lapses ?? 0,
+              next_review_at: r.next_review_at ?? null,
+            }
+          })
+          setProgress(statusMap)
+          setProgressMap(fullMap)
+          setInitialProgress(statusMap)
+          setInitialProgressMap(fullMap)
         }
         setProgressLoaded(true)
       }, () => {
         setInitialProgress({})
+        setInitialProgressMap({})
         setProgressLoaded(true)
       })
   }, [userId])
@@ -84,12 +128,31 @@ export default function FlashcardsClient({
     const status: Status = knew ? 'known' : 'review'
     setSessionProgress(prev => ({ ...prev, [card.id]: status }))
 
-    // Save to DB (fire-and-forget)
-    const supabase = createClient()
+    // SM-2 : calcule le nouvel état à partir de l'ancien
+    const prev = progressMap[card.id] ?? {
+      status, ...DEFAULT_SM2, next_review_at: null as string | null,
+    }
+    const next = knew ? reviewKnown(prev) : reviewLapse(prev)
+
+    // Save to DB (fire-and-forget) — full SM-2 row
+    const supabase = createClient() as any
     supabase.from('flashcard_progress').upsert(
-      { user_id: userId, flashcard_id: card.id, status, updated_at: new Date().toISOString() },
+      {
+        user_id: userId,
+        flashcard_id: card.id,
+        status,
+        ease_factor: next.ease_factor,
+        interval_days: next.interval_days,
+        reps: next.reps,
+        lapses: next.lapses,
+        next_review_at: next.next_review_at,
+        updated_at: new Date().toISOString(),
+      },
       { onConflict: 'user_id,flashcard_id' }
-    ).then(() => setProgress(prev => ({ ...prev, [card.id]: status })))
+    ).then(() => {
+      setProgress(prev2 => ({ ...prev2, [card.id]: status }))
+      setProgressMap(prev2 => ({ ...prev2, [card.id]: { status, ...next } }))
+    })
 
     if (idx + 1 >= total) {
       setDone(true)
