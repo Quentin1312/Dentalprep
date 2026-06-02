@@ -8,7 +8,13 @@ import { A } from '@/lib/theme'
 import { useThemeBg, themeBgStyle } from '@/lib/theme-bg'
 import Icon from '@/components/ui/Icon'
 import FeuilleSoins, { scoreFeuille, type FsRow } from '@/components/practice/FeuilleSoins'
+import SchemaDentaire, { scoreSchema, type ToothMap } from '@/components/practice/SchemaDentaire'
 import CcamHelp from '@/components/practice/CcamHelp'
+
+type ExtraData = {
+  schema_dentaire?: ToothMap
+  // calculs, devis, questions à venir
+}
 
 type Exercise = {
   id: string
@@ -17,6 +23,7 @@ type Exercise = {
   title: string
   prompt: string
   rows: FsRow[]
+  extra: ExtraData | null
   explanation: string | null
 }
 
@@ -28,6 +35,7 @@ export default function PracticeExercisePage() {
   const [exo, setExo] = useState<Exercise | null>(null)
   const [loading, setLoading] = useState(true)
   const [userRows, setUserRows] = useState<FsRow[]>([])
+  const [userSchema, setUserSchema] = useState<ToothMap>({})
   const [validated, setValidated] = useState(false)
   const [result, setResult] = useState<{ cellsCorrect: number; cellsTotal: number; score: number } | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -38,7 +46,7 @@ export default function PracticeExercisePage() {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
       supabase.from('practical_exercises')
-        .select('id,n,category,title,prompt,rows,explanation')
+        .select('id,n,category,title,prompt,rows,extra,explanation')
         .eq('id', id).single()
         .then(({ data }: any) => {
           if (data) setExo(data as Exercise)
@@ -49,14 +57,23 @@ export default function PracticeExercisePage() {
 
   async function handleValidate() {
     if (!exo || !userId) return
-    const r = scoreFeuille(userRows, exo.rows)
+    const fs = scoreFeuille(userRows, exo.rows)
+    let cellsCorrect = fs.cellsCorrect
+    let cellsTotal = fs.cellsTotal
+    if (exo.extra?.schema_dentaire) {
+      const sc = scoreSchema(userSchema, exo.extra.schema_dentaire)
+      cellsCorrect += sc.cellsCorrect
+      cellsTotal += sc.cellsTotal
+    }
+    const score = cellsTotal > 0 ? cellsCorrect / cellsTotal : 0
+    const r = { cellsCorrect, cellsTotal, score }
     setResult(r)
     setValidated(true)
     const supabase = createClient() as any
     await supabase.from('practical_attempts').insert({
       user_id: userId,
       exercise_id: exo.id,
-      answers: userRows,
+      answers: { rows: userRows, schema_dentaire: userSchema },
       cells_correct: r.cellsCorrect,
       cells_total: r.cellsTotal,
       score: r.score,
@@ -67,10 +84,13 @@ export default function PracticeExercisePage() {
     setValidated(false)
     setResult(null)
     setUserRows(exo!.rows.map(() => ({})))
+    setUserSchema({})
   }
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Chargement…</div>
   if (!exo)   return <div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Exercice introuvable.</div>
+
+  const hasSchema = !!exo.extra?.schema_dentaire
 
   return (
     <div style={{ minHeight: '100%', ...themeBgStyle(themeId), paddingBottom: 120 }}>
@@ -102,12 +122,25 @@ export default function PracticeExercisePage() {
           </div>
         </div>
 
+        {/* Schéma dentaire (cas CSS / cas complet) */}
+        {hasSchema && (
+          <div style={{ marginBottom: 14 }}>
+            <SchemaDentaire
+              expected={exo.extra!.schema_dentaire!}
+              showCorrection={validated}
+              onChange={setUserSchema}
+            />
+          </div>
+        )}
+
         {/* Feuille de soins */}
-        <FeuilleSoins
-          expected={exo.rows}
-          showCorrection={validated}
-          onChange={setUserRows}
-        />
+        {exo.rows && exo.rows.length > 0 && (
+          <FeuilleSoins
+            expected={exo.rows}
+            showCorrection={validated}
+            onChange={setUserRows}
+          />
+        )}
 
         {/* Résultat */}
         {validated && result && (
