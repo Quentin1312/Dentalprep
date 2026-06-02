@@ -10,11 +10,15 @@ import Icon from '@/components/ui/Icon'
 import FeuilleSoins, { scoreFeuille, type FsRow } from '@/components/practice/FeuilleSoins'
 import SchemaDentaire, { scoreSchema, type ToothMap } from '@/components/practice/SchemaDentaire'
 import TextQuestions, { scoreQuestions, type TextQuestion, type AnswerMap } from '@/components/practice/TextQuestions'
+import CalculsAmoAmc, { scoreCalculs, type CalculsExpected, type CalculsAnswers } from '@/components/practice/CalculsAmoAmc'
+import Devis, { scoreDevis, type DevisRowExpected, type DevisRowAnswer } from '@/components/practice/Devis'
 import CcamHelp from '@/components/practice/CcamHelp'
 
 type ExtraData = {
   schema_dentaire?: ToothMap
   questions?: TextQuestion[]
+  calculs?: CalculsExpected
+  devis?: DevisRowExpected[]
 }
 
 type Exercise = {
@@ -38,6 +42,8 @@ export default function PracticeExercisePage() {
   const [userRows, setUserRows] = useState<FsRow[]>([])
   const [userSchema, setUserSchema] = useState<ToothMap>({})
   const [userAnswers, setUserAnswers] = useState<AnswerMap>({})
+  const [userCalculs, setUserCalculs] = useState<CalculsAnswers>({})
+  const [userDevis, setUserDevis] = useState<DevisRowAnswer[]>([])
   const [validated, setValidated] = useState(false)
   const [result, setResult] = useState<{ cellsCorrect: number; cellsTotal: number; score: number } | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -72,6 +78,16 @@ export default function PracticeExercisePage() {
       cellsCorrect += qs.cellsCorrect
       cellsTotal += qs.cellsTotal
     }
+    if (exo.extra?.calculs) {
+      const cs = scoreCalculs(userCalculs, exo.extra.calculs)
+      cellsCorrect += cs.cellsCorrect
+      cellsTotal += cs.cellsTotal
+    }
+    if (exo.extra?.devis && exo.extra.devis.length > 0) {
+      const ds = scoreDevis(userDevis, exo.extra.devis)
+      cellsCorrect += ds.cellsCorrect
+      cellsTotal += ds.cellsTotal
+    }
     const score = cellsTotal > 0 ? cellsCorrect / cellsTotal : 0
     const r = { cellsCorrect, cellsTotal, score }
     setResult(r)
@@ -80,7 +96,7 @@ export default function PracticeExercisePage() {
     await supabase.from('practical_attempts').insert({
       user_id: userId,
       exercise_id: exo.id,
-      answers: { rows: userRows, schema_dentaire: userSchema, questions: userAnswers },
+      answers: { rows: userRows, schema_dentaire: userSchema, questions: userAnswers, calculs: userCalculs, devis: userDevis },
       cells_correct: r.cellsCorrect,
       cells_total: r.cellsTotal,
       score: r.score,
@@ -93,6 +109,8 @@ export default function PracticeExercisePage() {
     setUserRows(exo!.rows.map(() => ({})))
     setUserSchema({})
     setUserAnswers({})
+    setUserCalculs({})
+    setUserDevis([])
   }
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Chargement…</div>
@@ -100,6 +118,8 @@ export default function PracticeExercisePage() {
 
   const hasSchema = !!exo.extra?.schema_dentaire
   const hasQuestions = !!(exo.extra?.questions && exo.extra.questions.length > 0)
+  const hasCalculs = !!exo.extra?.calculs
+  const hasDevis = !!(exo.extra?.devis && exo.extra.devis.length > 0)
 
   return (
     <div style={{ minHeight: '100%', ...themeBgStyle(themeId), paddingBottom: 120 }}>
@@ -149,6 +169,39 @@ export default function PracticeExercisePage() {
             showCorrection={validated}
             onChange={setUserRows}
           />
+        )}
+
+        {/* Devis */}
+        {hasDevis && (
+          <div style={{ marginTop: 14 }}>
+            <Devis
+              rows={exo.extra!.devis!}
+              showCorrection={validated}
+              onChange={setUserDevis}
+            />
+          </div>
+        )}
+
+        {/* Calculs AMO/AMC */}
+        {hasCalculs && (
+          <div style={{ marginTop: 14 }}>
+            <CalculsAmoAmc
+              expected={exo.extra!.calculs!}
+              showCorrection={validated}
+              onChange={setUserCalculs}
+            />
+          </div>
+        )}
+
+        {/* Questions ouvertes */}
+        {hasQuestions && (
+          <div style={{ marginTop: 14 }}>
+            <TextQuestions
+              questions={exo.extra!.questions!}
+              showCorrection={validated}
+              onChange={setUserAnswers}
+            />
+          </div>
         )}
 
         {/* Questions ouvertes */}
