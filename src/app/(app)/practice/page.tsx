@@ -374,17 +374,17 @@ function LessonCard({
           <Link
             href={`/practice/${nextExo.id}`}
             onClick={e => e.stopPropagation()}
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: 'none', flexShrink: 0 }}
           >
             <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 14px', borderRadius: 999,
+              padding: '8px 16px', borderRadius: 999,
               background: isComplete ? '#F4F6FA' : accent,
               color: isComplete ? A.text : '#fff',
               fontSize: 12, fontWeight: 800,
               fontFamily: A.font,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
             }}>
-              <Icon name="play" size={12} color={isComplete ? A.text : '#fff'} strokeWidth={0} />
               {ctaLabel}
             </div>
           </Link>
