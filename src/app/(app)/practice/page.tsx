@@ -41,8 +41,16 @@ export default function PracticePage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [attempts, setAttempts] = useState<Attempt[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [selectedCat, setSelectedCat] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem('practice_active_cat')
+  })
   const [sheetOpen, setSheetOpen] = useState(false)
+
+  // Persiste la catégorie active pour retrouver son endroit en revenant d'un exo
+  useEffect(() => {
+    if (selectedCat) localStorage.setItem('practice_active_cat', selectedCat)
+  }, [selectedCat])
 
   useEffect(() => {
     const supabase = createClient() as any
