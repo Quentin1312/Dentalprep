@@ -38,6 +38,7 @@ export default function PracticeExercisePage() {
   const id = params?.id as string
   const [themeId] = useThemeBg()
   const [exo, setExo] = useState<Exercise | null>(null)
+  const [nextExoId, setNextExoId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [userRows, setUserRows] = useState<FsRow[]>([])
   const [userSchema, setUserSchema] = useState<ToothMap>({})
@@ -47,6 +48,7 @@ export default function PracticeExercisePage() {
   const [validated, setValidated] = useState(false)
   const [result, setResult] = useState<{ cellsCorrect: number; cellsTotal: number; score: number } | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     const supabase = createClient() as any
@@ -62,6 +64,22 @@ export default function PracticeExercisePage() {
         })
     })
   }, [id, router])
+
+  // Récupère l'exo suivant dans la même catégorie (n+1 ou plus)
+  useEffect(() => {
+    if (!exo || !userId) return
+    const supabase = createClient() as any
+    supabase.from('practical_exercises')
+      .select('id,n')
+      .eq('user_id', userId)
+      .eq('category', exo.category)
+      .gt('n', exo.n)
+      .order('n', { ascending: true })
+      .limit(1)
+      .then(({ data }: any) => {
+        setNextExoId(data && data.length > 0 ? data[0].id : null)
+      })
+  }, [exo, userId])
 
   async function handleValidate() {
     if (!exo || !userId) return
@@ -106,11 +124,15 @@ export default function PracticeExercisePage() {
   function handleRetry() {
     setValidated(false)
     setResult(null)
-    setUserRows(exo!.rows.map(() => ({})))
+    setUserRows([])
     setUserSchema({})
     setUserAnswers({})
     setUserCalculs({})
     setUserDevis([])
+    // Force un remount des sous-composants (qui ont leur état interne) :
+    setRetryKey(k => k + 1)
+    // Remonte en haut de la page
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Chargement…</div>
@@ -151,10 +173,11 @@ export default function PracticeExercisePage() {
           </div>
         </div>
 
-        {/* Schéma dentaire (cas CSS / cas complet) */}
+        {/* Schéma dentaire */}
         {hasSchema && (
           <div style={{ marginBottom: 14 }}>
             <SchemaDentaire
+              key={`schema-${retryKey}`}
               expected={exo.extra!.schema_dentaire!}
               showCorrection={validated}
               onChange={setUserSchema}
@@ -165,6 +188,7 @@ export default function PracticeExercisePage() {
         {/* Feuille de soins */}
         {exo.rows && exo.rows.length > 0 && (
           <FeuilleSoins
+            key={`feuille-${retryKey}`}
             expected={exo.rows}
             showCorrection={validated}
             onChange={setUserRows}
@@ -175,6 +199,7 @@ export default function PracticeExercisePage() {
         {hasDevis && (
           <div style={{ marginTop: 14 }}>
             <Devis
+              key={`devis-${retryKey}`}
               rows={exo.extra!.devis!}
               showCorrection={validated}
               onChange={setUserDevis}
@@ -186,6 +211,7 @@ export default function PracticeExercisePage() {
         {hasCalculs && (
           <div style={{ marginTop: 14 }}>
             <CalculsAmoAmc
+              key={`calculs-${retryKey}`}
               expected={exo.extra!.calculs!}
               showCorrection={validated}
               onChange={setUserCalculs}
@@ -197,17 +223,7 @@ export default function PracticeExercisePage() {
         {hasQuestions && (
           <div style={{ marginTop: 14 }}>
             <TextQuestions
-              questions={exo.extra!.questions!}
-              showCorrection={validated}
-              onChange={setUserAnswers}
-            />
-          </div>
-        )}
-
-        {/* Questions ouvertes */}
-        {hasQuestions && (
-          <div style={{ marginTop: 14 }}>
-            <TextQuestions
+              key={`questions-${retryKey}`}
               questions={exo.extra!.questions!}
               showCorrection={validated}
               onChange={setUserAnswers}
@@ -250,15 +266,27 @@ export default function PracticeExercisePage() {
               }}>
                 Recommencer
               </button>
-              <Link href="/practice" style={{ flex: 1, textDecoration: 'none' }}>
-                <button style={{
-                  width: '100%', background: A.primary, color: '#fff', border: 'none',
-                  padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
-                  fontFamily: A.font, cursor: 'pointer',
-                }}>
-                  Continuer
-                </button>
-              </Link>
+              {nextExoId ? (
+                <Link href={`/practice/${nextExoId}`} style={{ flex: 1, textDecoration: 'none' }}>
+                  <button style={{
+                    width: '100%', background: A.primary, color: '#fff', border: 'none',
+                    padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                    fontFamily: A.font, cursor: 'pointer',
+                  }}>
+                    Exercice suivant
+                  </button>
+                </Link>
+              ) : (
+                <Link href="/practice" style={{ flex: 1, textDecoration: 'none' }}>
+                  <button style={{
+                    width: '100%', background: A.primary, color: '#fff', border: 'none',
+                    padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                    fontFamily: A.font, cursor: 'pointer',
+                  }}>
+                    Retour
+                  </button>
+                </Link>
+              )}
             </>
           )}
         </div>
