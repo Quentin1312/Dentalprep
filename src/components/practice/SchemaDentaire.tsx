@@ -141,8 +141,15 @@ function Arch({ teeth, arch, state, expected, showCorrection, onPaint }: ArchPro
         const labelColor = user === 'sain' ? '#6B7280' : c.text
 
         return (
-          <g key={t} onClick={() => onPaint(t)} style={{ cursor: showCorrection ? 'default' : 'pointer' }}>
-            <path d={toothPath(x, w)} fill={c.bg} stroke={stroke} strokeWidth={strokeW} strokeLinejoin="round" />
+          <g key={t} style={{ cursor: showCorrection ? 'default' : 'pointer' }}>
+            <path
+              d={toothPath(x, w)}
+              fill={c.bg}
+              stroke={stroke}
+              strokeWidth={strokeW}
+              strokeLinejoin="round"
+              style={{ pointerEvents: 'none' }}
+            />
             <text
               x={x + w / 2}
               y={numberY}
@@ -163,8 +170,20 @@ function Arch({ teeth, arch, state, expected, showCorrection, onPaint }: ArchPro
                 fill="#EF4444"
                 stroke="#fff"
                 strokeWidth={1.5}
+                style={{ pointerEvents: 'none' }}
               />
             )}
+            {/* Hit target invisible qui couvre toute la zone de la dent (clic fiable mobile + desktop) */}
+            <rect
+              x={x - 1}
+              y={PADDING - 1}
+              width={w + 2}
+              height={TOOTH_H + 2}
+              fill="transparent"
+              onClick={() => onPaint(t)}
+              onTouchEnd={(e) => { e.preventDefault(); onPaint(t) }}
+              style={{ cursor: showCorrection ? 'default' : 'pointer' }}
+            />
           </g>
         )
       })}

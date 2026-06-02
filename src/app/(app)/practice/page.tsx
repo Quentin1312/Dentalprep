@@ -42,6 +42,7 @@ export default function PracticePage() {
   const [attempts, setAttempts] = useState<Attempt[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createClient() as any
@@ -107,58 +108,100 @@ export default function PracticePage() {
         </div>
       </div>
 
-      {/* Pills horizontales — catégories */}
-      {!loading && visibleCats.length > 0 && (
-        <div style={{
-          position: 'sticky', top: 0, zIndex: 5,
-          background: 'rgba(255,255,255,0.85)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderBottom: `1px solid ${A.border}`,
-          padding: '10px 0',
-        }}>
-          <div style={{
-            display: 'flex', gap: 8, padding: '0 16px',
-            overflowX: 'auto', scrollbarWidth: 'none',
-          }}
-            // Hide webkit scrollbar
+      {/* Sélecteur compact de catégorie */}
+      {!loading && activeCat && (
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '4px 16px 8px' }}>
+          <button
+            onClick={() => setSheetOpen(true)}
+            style={{
+              width: '100%',
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px',
+              borderRadius: 12,
+              border: `1px solid ${A.border}`,
+              background: '#fff',
+              fontFamily: A.font, cursor: 'pointer', textAlign: 'left',
+            }}
           >
-            <style>{`.pills-row::-webkit-scrollbar { display: none; }`}</style>
-            <div className="pills-row" style={{ display: 'flex', gap: 8 }}>
-              {visibleCats.map(cat => {
-                const active = cat.id === activeCatId
-                const complete = cat.done === cat.total && cat.total > 0
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCat(cat.id)}
-                    style={{
-                      flexShrink: 0,
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                      padding: '8px 14px',
-                      borderRadius: 999,
-                      border: active ? `2px solid ${A.primary}` : `1px solid ${A.border}`,
-                      background: active ? A.primary : '#fff',
-                      color: active ? '#fff' : A.text,
-                      fontSize: 13, fontWeight: 700,
-                      fontFamily: A.font, cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <span style={{ fontSize: 14 }}>{cat.emoji}</span>
-                    {cat.label}
-                    <span style={{
-                      fontSize: 10, fontWeight: 800,
-                      padding: '2px 6px', borderRadius: 999,
-                      background: active ? 'rgba(255,255,255,0.25)' : (complete ? '#DCFCE7' : '#F4F6FA'),
-                      color: active ? '#fff' : (complete ? '#16A34A' : A.textMuted),
-                    }}>
-                      {cat.done}/{cat.total}
-                    </span>
-                  </button>
-                )
-              })}
+            <span style={{ fontSize: 18 }}>{activeCat.emoji}</span>
+            <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: A.text }}>
+              {activeCat.label}
+            </span>
+            <span style={{
+              fontSize: 11, fontWeight: 800,
+              padding: '2px 8px', borderRadius: 999,
+              background: activeCat.done === activeCat.total ? '#DCFCE7' : '#F4F6FA',
+              color: activeCat.done === activeCat.total ? '#16A34A' : A.textMuted,
+            }}>
+              {activeCat.done}/{activeCat.total}
+            </span>
+            <Icon name="chevronD" size={16} color={A.textMuted} />
+          </button>
+        </div>
+      )}
+
+      {/* Bottom sheet sélecteur de catégorie */}
+      {sheetOpen && (
+        <div
+          onClick={() => setSheetOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+            zIndex: 50, display: 'flex', alignItems: 'flex-end',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxHeight: '75vh', overflowY: 'auto',
+              background: '#fff',
+              borderTopLeftRadius: 22, borderTopRightRadius: 22,
+              padding: '12px 12px 28px',
+              fontFamily: A.font,
+              boxShadow: '0 -10px 30px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div style={{
+              width: 40, height: 4, background: '#D1D7E0',
+              borderRadius: 999, margin: '0 auto 14px',
+            }} />
+            <div style={{ fontSize: 18, fontWeight: 900, color: A.text, padding: '0 4px 12px' }}>
+              Catégories
             </div>
+            {visibleCats.map(cat => {
+              const active = cat.id === activeCatId
+              const complete = cat.done === cat.total && cat.total > 0
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => { setSelectedCat(cat.id); setSheetOpen(false) }}
+                  style={{
+                    width: '100%',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 14px',
+                    borderRadius: 12,
+                    border: active ? `2px solid ${A.primary}` : `1px solid ${A.border}`,
+                    background: active ? '#EEF4FF' : '#fff',
+                    fontFamily: A.font, cursor: 'pointer', textAlign: 'left',
+                    marginBottom: 6,
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{cat.emoji}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: A.text }}>{cat.label}</div>
+                    <div style={{ fontSize: 11, color: A.textMuted, marginTop: 2 }}>{cat.description}</div>
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 800,
+                    padding: '3px 10px', borderRadius: 999,
+                    background: complete ? '#DCFCE7' : '#F4F6FA',
+                    color: complete ? '#16A34A' : A.textMuted,
+                    flexShrink: 0,
+                  }}>
+                    {cat.done}/{cat.total}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
@@ -171,46 +214,6 @@ export default function PracticePage() {
 
         {!loading && activeCat && (
           <>
-            {/* Bannière de la catégorie */}
-            <div style={{
-              background: '#fff', borderRadius: 16, padding: '14px 16px',
-              border: `1px solid ${A.border}`, marginBottom: 12,
-              display: 'flex', alignItems: 'center', gap: 12,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: '#EEF4FF',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22,
-              }}>
-                {activeCat.emoji}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: A.text, letterSpacing: -0.2 }}>
-                  {activeCat.label}
-                </div>
-                <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>
-                  {activeCat.description}
-                </div>
-              </div>
-              {/* Mini barre de progression */}
-              <div style={{ minWidth: 70 }}>
-                <div style={{
-                  height: 6, borderRadius: 999, background: '#F4F6FA', overflow: 'hidden',
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: activeCat.total > 0 ? `${(activeCat.done / activeCat.total) * 100}%` : '0%',
-                    background: activeCat.done === activeCat.total ? '#16A34A' : A.primary,
-                    transition: 'width 0.3s',
-                  }} />
-                </div>
-                <div style={{ fontSize: 10, color: A.textMuted, marginTop: 4, textAlign: 'right', fontWeight: 700 }}>
-                  {activeCat.done}/{activeCat.total}
-                </div>
-              </div>
-            </div>
-
             {/* Liste des exos de la catégorie active */}
             <div style={{
               background: '#fff', borderRadius: 16,
