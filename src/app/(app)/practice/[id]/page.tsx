@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -41,6 +41,14 @@ type Exercise = {
 type LessonExo = { id: string; n: number; score: number | null }
 
 export default function PracticeExercisePage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Chargement…</div>}>
+      <PracticeExerciseInner />
+    </Suspense>
+  )
+}
+
+function PracticeExerciseInner() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()

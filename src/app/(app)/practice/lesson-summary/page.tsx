@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +14,14 @@ type Attempt = { exercise_id: string; score: number; created_at: string }
 const LESSON_SIZE = 5
 
 export default function LessonSummaryPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Chargement…</div>}>
+      <LessonSummaryInner />
+    </Suspense>
+  )
+}
+
+function LessonSummaryInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const lessonKey = searchParams?.get('lesson') ?? null
