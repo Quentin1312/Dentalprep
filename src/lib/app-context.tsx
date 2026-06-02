@@ -20,6 +20,8 @@ interface AppData {
   todayMinutes: number
   flashXpBonus: number
   flashcardsDueCount: number
+  recentWrongQuestionCount: number     // questions dont la dernière tentative = fausse
+  practiceTodoCount: number             // cas pratiques pas validés à 100%
 }
 
 interface AppContextValue {
@@ -63,7 +65,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const today = new Date().toISOString().split('T')[0]
     const supaAny = supabase as any
-    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes] = await Promise.all([
+    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes] = await Promise.all([
       supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
@@ -73,7 +75,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         .select('flashcard_id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .lte('next_review_at', new Date().toISOString()),
+      supaAny.from('practical_exercises').select('id').eq('user_id', user.id),
+      supaAny.from('practical_attempts').select('exercise_id,score,created_at').eq('user_id', user.id),
+      supabase.from('quiz_attempts').select('question_id,is_correct,created_at').eq('user_id', user.id).order('created_at', { ascending: true }),
     ])
+
+    // last-wrong : pour chaque question, on garde la dernière tentative
+    const lastWrong = new Map<string, boolean>()
+    for (const a of (attemptsTimedRes.data ?? []) as { question_id: string; is_correct: boolean }[]) {
+      lastWrong.set(a.question_id, a.is_correct)
+    }
+    const recentWrongQuestionCount = Array.from(lastWrong.values()).filter(c => c === false).length
+
+    // practice todo : exos jamais validés à 100%
+    const bestScore = new Map<string, number>()
+    for (const a of (practicalAttemptsRes.data ?? []) as { exercise_id: string; score: number }[]) {
+      bestScore.set(a.exercise_id, Math.max(bestScore.get(a.exercise_id) ?? 0, a.score))
+    }
+    const practiceExoIds: string[] = ((practicalExosRes.data ?? []) as { id: string }[]).map(e => e.id)
+    const practiceTodoCount = practiceExoIds.filter(id => (bestScore.get(id) ?? 0) < 1).length
 
     if (!profRes.data?.full_name) { router.replace('/setup'); return }
 
@@ -92,6 +112,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       todayMinutes: todayRes.data?.minutes_studied ?? 0,
       flashXpBonus: readFlashXP(),
       flashcardsDueCount: (dueCardsRes as any).count ?? 0,
+      recentWrongQuestionCount,
+      practiceTodoCount,
     }
     writeCache(fresh)
     setData(fresh)

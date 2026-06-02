@@ -9,6 +9,8 @@ import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { computeXP, xpProgress } from '@/lib/xp'
 import { quizCompletionPct, quizCompletionCount } from '@/lib/quiz-progress'
+import { buildStudyPlan, planTotalMinutes } from '@/lib/study-plan'
+import type { ModuleId } from '@/types/database'
 
 function daysUntil(d: string | null) {
   if (!d) return null
@@ -206,35 +208,76 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Banner : flashcards dues aujourd'hui (SM-2) */}
-      {!loading && (data?.flashcardsDueCount ?? 0) > 0 && (
-        <div style={{ padding: '10px 20px 0' }}>
-          <Link href="/library" style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`,
-              padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12,
-              cursor: 'pointer',
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12,
-                background: A.primarySoft,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <Icon name="cards" size={20} color={A.primary} strokeWidth={2} />
+      {/* Plan de révision du jour — bloc "Aujourd'hui" */}
+      {!loading && data && (() => {
+        const plan = buildStudyPlan({
+          daysUntilExam: days,
+          dailyGoalMinutes: goalMin,
+          flashcardsDueCount: data.flashcardsDueCount,
+          attempts,
+          moduleStats: moduleStats.map(m => ({
+            id: m.id as ModuleId,
+            label: m.label,
+            pct: m.pct,
+            doneQuestions: m.doneQuestions,
+            totalQuestions: m.totalQuestions,
+          })),
+          practiceTodoCount: data.practiceTodoCount,
+          recentWrongQuestionCount: data.recentWrongQuestionCount,
+          totalQuestionsCount: data.questions.length,
+        })
+        const totalMin = planTotalMinutes(plan)
+        if (plan.length === 0) return null
+        return (
+          <div style={{ padding: '14px 20px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase' }}>
+                Aujourd&apos;hui
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: A.text }}>
-                  {data!.flashcardsDueCount} flashcard{data!.flashcardsDueCount > 1 ? 's' : ''} à revoir
-                </div>
-                <div style={{ fontSize: 11, color: A.textMuted, marginTop: 1 }}>
-                  Tes révisions du jour t'attendent
-                </div>
+              <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600 }}>
+                ≈ {totalMin} min
               </div>
-              <Icon name="chevronR" size={16} color={A.textMuted} />
             </div>
-          </Link>
-        </div>
-      )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {plan.map(item => (
+                <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    background: A.surface, borderRadius: 14, border: `0.5px solid ${A.border}`,
+                    padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(15,27,45,0.04)',
+                  }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 11,
+                      background: `${item.accent}18`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <Icon name={item.icon} size={18} color={item.accent} strokeWidth={2} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: A.text, letterSpacing: -0.1 }}>
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: A.textMuted, marginTop: 1 }}>
+                        {item.detail}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: 10, fontWeight: 800, color: item.accent,
+                      background: `${item.accent}15`, padding: '3px 8px', borderRadius: 999,
+                      flexShrink: 0,
+                    }}>
+                      {item.estimatedMin} min
+                    </div>
+                    <Icon name="chevronR" size={14} color={A.textMuted} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Pet celebration banner — only when goal done */}
       {!loading && goalDone && (
