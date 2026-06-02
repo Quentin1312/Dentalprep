@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { A } from '@/lib/theme'
 import { useAppData } from '@/lib/app-context'
@@ -43,7 +43,9 @@ type LessonExo = { id: string; n: number; score: number | null }
 export default function PracticeExercisePage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const id = params?.id as string
+  const lessonKey = searchParams?.get('lesson') ?? null
   const [themeId] = useThemeBg()
   const { data: appData, refresh } = useAppData()
   const startRef = useRef<number>(Date.now())
@@ -395,27 +397,62 @@ export default function PracticeExercisePage() {
               }}>
                 Recommencer
               </button>
-              {nextExoId ? (
-                <Link href={`/practice/${nextExoId}`} style={{ flex: 1, textDecoration: 'none' }}>
-                  <button style={{
-                    width: '100%', background: A.primary, color: '#fff', border: 'none',
-                    padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
-                    fontFamily: A.font, cursor: 'pointer',
-                  }}>
-                    Cas suivant
-                  </button>
-                </Link>
-              ) : (
-                <Link href="/practice" style={{ flex: 1, textDecoration: 'none' }}>
-                  <button style={{
-                    width: '100%', background: A.primary, color: '#fff', border: 'none',
-                    padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
-                    fontFamily: A.font, cursor: 'pointer',
-                  }}>
-                    Retour
-                  </button>
-                </Link>
-              )}
+              {(() => {
+                // Si on est dans le contexte d'une leçon → next = cas suivant dans la leçon
+                // sinon → next = cas n+1 de la catégorie (comportement standalone)
+                const nextInLesson = lessonKey ? lessonExos[positionInLesson + 1] : null
+                const isLastOfLesson = lessonKey && positionInLesson + 1 >= lessonExos.length
+                if (isLastOfLesson) {
+                  return (
+                    <Link href={`/practice/lesson-summary?lesson=${lessonKey}`} style={{ flex: 1, textDecoration: 'none' }}>
+                      <button style={{
+                        width: '100%', background: A.primary, color: '#fff', border: 'none',
+                        padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                        fontFamily: A.font, cursor: 'pointer',
+                      }}>
+                        Voir le récap
+                      </button>
+                    </Link>
+                  )
+                }
+                if (nextInLesson) {
+                  return (
+                    <Link href={`/practice/${nextInLesson.id}?lesson=${lessonKey}`} style={{ flex: 1, textDecoration: 'none' }}>
+                      <button style={{
+                        width: '100%', background: A.primary, color: '#fff', border: 'none',
+                        padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                        fontFamily: A.font, cursor: 'pointer',
+                      }}>
+                        Cas suivant
+                      </button>
+                    </Link>
+                  )
+                }
+                if (nextExoId) {
+                  return (
+                    <Link href={`/practice/${nextExoId}`} style={{ flex: 1, textDecoration: 'none' }}>
+                      <button style={{
+                        width: '100%', background: A.primary, color: '#fff', border: 'none',
+                        padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                        fontFamily: A.font, cursor: 'pointer',
+                      }}>
+                        Cas suivant
+                      </button>
+                    </Link>
+                  )
+                }
+                return (
+                  <Link href="/practice" style={{ flex: 1, textDecoration: 'none' }}>
+                    <button style={{
+                      width: '100%', background: A.primary, color: '#fff', border: 'none',
+                      padding: '14px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
+                      fontFamily: A.font, cursor: 'pointer',
+                    }}>
+                      Retour
+                    </button>
+                  </Link>
+                )
+              })()}
             </>
           )}
         </div>

@@ -300,6 +300,7 @@ export default function PracticePage() {
           <LessonCard
             key={lesson.idx}
             n={lesson.idx + 1}
+            lessonKey={`${activeCat.id}-${lesson.idx}`}
             status={lesson.status}
             done={lesson.done}
             total={lesson.exercises.length}
@@ -328,9 +329,10 @@ export default function PracticePage() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function LessonCard({
-  n, status, done, total, exercises, accent, bestScore,
+  n, lessonKey, status, done, total, exercises, accent, bestScore,
 }: {
   n: number
+  lessonKey: string
   status: LessonStatus
   done: number
   total: number
@@ -405,7 +407,7 @@ function LessonCard({
 
         {!isLocked && (
           <Link
-            href={`/practice/${nextExo.id}`}
+            href={`/practice/${nextExo.id}?lesson=${lessonKey}`}
             onClick={e => e.stopPropagation()}
             style={{ textDecoration: 'none', flexShrink: 0 }}
           >
@@ -432,7 +434,7 @@ function LessonCard({
             const isDone = (score ?? 0) >= 1
             const isStarted = score !== null && !isDone
             return (
-              <Link key={e.id} href={`/practice/${e.id}`} style={{ textDecoration: 'none' }}>
+              <Link key={e.id} href={`/practice/${e.id}?lesson=${lessonKey}`} style={{ textDecoration: 'none' }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 16px',
