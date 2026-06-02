@@ -13,7 +13,15 @@
       "Bash(git commit -m 'fix\\(quiz\\): refonte ORDRE drag-to-reorder et ASSOCIATION style Duolingo *)",
       "Bash(git push *)",
       "Bash(git add *)",
-      "Bash(git commit -m 'fix\\(quiz\\): typage explicite string sur bg/border pour eviter erreur as const *)"
+      "Bash(git commit -m 'fix\\(quiz\\): typage explicite string sur bg/border pour eviter erreur as const *)",
+      "Bash(py -c \"import fitz, os, glob, sys; sys.stdout.reconfigure\\(encoding='utf-8'\\); matches = glob.glob\\(r'C:\\\\Users\\\\quent\\\\Downloads\\\\Cours bb\\\\Dossier patient*.pdf'\\); doc = fitz.open\\(matches[0]\\); print\\(f'{len\\(doc\\)} pages'\\); out = r'C:\\\\Users\\\\quent\\\\Downloads\\\\pages_tmp'; os.makedirs\\(out, exist_ok=True\\); [p.get_pixmap\\(matrix=fitz.Matrix\\(1.5,1.5\\)\\).save\\(f'{out}/page_{i+1:03d}.jpg'\\) for i, p in enumerate\\(doc\\)]; print\\('OK'\\)\")",
+      "Bash(py insert_bb_17.py)",
+      "Bash(py insert_bb_16.py)",
+      "Bash(git rebase *)",
+      "Bash(rm -rf .git/rebase-merge .git/REBASE_HEAD && git status)",
+      "Bash(py insert_practice_full.py)",
+      "Bash(npx tsc *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

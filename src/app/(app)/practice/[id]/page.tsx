@@ -8,6 +8,7 @@ import { A } from '@/lib/theme'
 import { useThemeBg, themeBgStyle } from '@/lib/theme-bg'
 import Icon from '@/components/ui/Icon'
 import FeuilleSoins, { scoreFeuille, type FsRow } from '@/components/practice/FeuilleSoins'
+import CcamHelp from '@/components/practice/CcamHelp'
 
 type Exercise = {
   id: string
@@ -96,6 +97,9 @@ export default function PracticeExercisePage() {
               {exo.prompt}
             </div>
           )}
+          <div style={{ marginTop: 12 }}>
+            <CcamHelp />
+          </div>
         </div>
 
         {/* Feuille de soins */}
