@@ -79,6 +79,7 @@ function cellOK(user: any, expected: any, key?: keyof FsRow): boolean {
 
 export default function FeuilleSoins({ expected, showCorrection, onChange, onValidate }: Props) {
   const [rows, setRows] = useState<FsRow[]>(() => expected.map(() => ({})))
+  const [legendOpen, setLegendOpen] = useState(false)
   const FIELDS = visibleFields(expected)
 
   function updateCell(rowIdx: number, key: keyof FsRow, value: string) {
@@ -110,10 +111,84 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
         background: 'linear-gradient(180deg, #1F2D3D 0%, #0F1B2D 100%)',
         color: '#fff',
         padding: '10px 14px',
-        fontSize: 13, fontWeight: 800, letterSpacing: 0.3, textAlign: 'center',
+        fontSize: 13, fontWeight: 800, letterSpacing: 0.3,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        ACTES EFFECTUÉS
+        <span style={{ flex: 1, textAlign: 'center', marginLeft: 60 /* compense le bouton */ }}>
+          ACTES EFFECTUÉS
+        </span>
+        <button
+          onClick={() => setLegendOpen(true)}
+          style={{
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            color: '#fff',
+            padding: '4px 10px', borderRadius: 999,
+            fontSize: 10, fontWeight: 700, cursor: 'pointer',
+            fontFamily: A.font,
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          <span style={{
+            width: 13, height: 13, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.3)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 9, fontWeight: 900,
+          }}>?</span>
+          Légende
+        </button>
       </div>
+
+      {legendOpen && (
+        <div
+          onClick={() => setLegendOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            zIndex: 60, display: 'flex', alignItems: 'flex-end',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxHeight: '80vh', overflowY: 'auto',
+              background: '#fff',
+              borderTopLeftRadius: 22, borderTopRightRadius: 22,
+              padding: '12px 16px 32px',
+              fontFamily: A.font,
+              boxShadow: '0 -10px 30px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div style={{
+              width: 40, height: 4, background: '#D1D7E0',
+              borderRadius: 999, margin: '0 auto 14px',
+            }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontSize: 17, fontWeight: 900, color: A.text }}>Légende des colonnes</div>
+              <button onClick={() => setLegendOpen(false)} style={{
+                background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
+                fontSize: 22, color: A.textMuted, lineHeight: 1,
+              }}>×</button>
+            </div>
+            {ALL_FIELDS.map(f => (
+              <div key={f.key} style={{
+                display: 'flex', gap: 12, padding: '10px 0',
+                borderBottom: `1px solid ${A.border}`,
+              }}>
+                <div style={{
+                  minWidth: 100,
+                  fontSize: 12, fontWeight: 800, color: A.primary,
+                  textTransform: 'uppercase', letterSpacing: 0.5,
+                }}>
+                  {f.label}
+                </div>
+                <div style={{ fontSize: 12, color: A.text, lineHeight: 1.45, flex: 1 }}>
+                  {f.help}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Header columns */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${A.border}`, background: '#F4F6FA' }}>
