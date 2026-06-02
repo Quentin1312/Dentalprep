@@ -21,7 +21,9 @@
       "Bash(rm -rf .git/rebase-merge .git/REBASE_HEAD && git status)",
       "Bash(py insert_practice_full.py)",
       "Bash(npx tsc *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(npx --yes -p typescript tsc --noEmit)",
+      "Bash(npm exec *)"
     ]
   }
 }

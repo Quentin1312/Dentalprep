@@ -9,11 +9,12 @@ import { useThemeBg, themeBgStyle } from '@/lib/theme-bg'
 import Icon from '@/components/ui/Icon'
 import FeuilleSoins, { scoreFeuille, type FsRow } from '@/components/practice/FeuilleSoins'
 import SchemaDentaire, { scoreSchema, type ToothMap } from '@/components/practice/SchemaDentaire'
+import TextQuestions, { scoreQuestions, type TextQuestion, type AnswerMap } from '@/components/practice/TextQuestions'
 import CcamHelp from '@/components/practice/CcamHelp'
 
 type ExtraData = {
   schema_dentaire?: ToothMap
-  // calculs, devis, questions à venir
+  questions?: TextQuestion[]
 }
 
 type Exercise = {
@@ -36,6 +37,7 @@ export default function PracticeExercisePage() {
   const [loading, setLoading] = useState(true)
   const [userRows, setUserRows] = useState<FsRow[]>([])
   const [userSchema, setUserSchema] = useState<ToothMap>({})
+  const [userAnswers, setUserAnswers] = useState<AnswerMap>({})
   const [validated, setValidated] = useState(false)
   const [result, setResult] = useState<{ cellsCorrect: number; cellsTotal: number; score: number } | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -65,6 +67,11 @@ export default function PracticeExercisePage() {
       cellsCorrect += sc.cellsCorrect
       cellsTotal += sc.cellsTotal
     }
+    if (exo.extra?.questions && exo.extra.questions.length > 0) {
+      const qs = scoreQuestions(userAnswers, exo.extra.questions)
+      cellsCorrect += qs.cellsCorrect
+      cellsTotal += qs.cellsTotal
+    }
     const score = cellsTotal > 0 ? cellsCorrect / cellsTotal : 0
     const r = { cellsCorrect, cellsTotal, score }
     setResult(r)
@@ -73,7 +80,7 @@ export default function PracticeExercisePage() {
     await supabase.from('practical_attempts').insert({
       user_id: userId,
       exercise_id: exo.id,
-      answers: { rows: userRows, schema_dentaire: userSchema },
+      answers: { rows: userRows, schema_dentaire: userSchema, questions: userAnswers },
       cells_correct: r.cellsCorrect,
       cells_total: r.cellsTotal,
       score: r.score,
@@ -85,12 +92,14 @@ export default function PracticeExercisePage() {
     setResult(null)
     setUserRows(exo!.rows.map(() => ({})))
     setUserSchema({})
+    setUserAnswers({})
   }
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Chargement…</div>
   if (!exo)   return <div style={{ padding: 24, textAlign: 'center', color: A.textMuted }}>Exercice introuvable.</div>
 
   const hasSchema = !!exo.extra?.schema_dentaire
+  const hasQuestions = !!(exo.extra?.questions && exo.extra.questions.length > 0)
 
   return (
     <div style={{ minHeight: '100%', ...themeBgStyle(themeId), paddingBottom: 120 }}>
@@ -140,6 +149,17 @@ export default function PracticeExercisePage() {
             showCorrection={validated}
             onChange={setUserRows}
           />
+        )}
+
+        {/* Questions ouvertes */}
+        {hasQuestions && (
+          <div style={{ marginTop: 14 }}>
+            <TextQuestions
+              questions={exo.extra!.questions!}
+              showCorrection={validated}
+              onChange={setUserAnswers}
+            />
+          </div>
         )}
 
         {/* Résultat */}

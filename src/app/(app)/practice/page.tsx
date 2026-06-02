@@ -29,6 +29,9 @@ const CATEGORIES: { id: string; label: string; emoji: string; description: strin
   { id: 'modificateurs',      label: 'Modificateurs',        emoji: '⚡', description: 'N, E, U, F, M, MCD, 9...' },
   { id: 'prothese_fixe',      label: 'Prothèse fixe',        emoji: '👑', description: 'Couronnes, inlay-cores, bridges' },
   { id: 'cmu_css',            label: 'CMU / CSS',            emoji: '💳', description: 'Patients bénéficiaires CSS' },
+  { id: 'ebd',                label: 'EBD',                  emoji: '🩺', description: 'Examen bucco-dentaire de prévention' },
+  { id: 'devis',              label: 'Devis',                emoji: '📝', description: 'Établir un devis dentaire' },
+  { id: 'cas_complet',        label: 'Cas complets',         emoji: '📋', description: 'Cas patients complets (admin + schéma + feuille)' },
 ]
 
 export default function PracticePage() {
