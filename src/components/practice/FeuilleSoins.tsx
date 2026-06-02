@@ -25,26 +25,30 @@ interface Props {
   onValidate?: (result: { cellsCorrect: number; cellsTotal: number; score: number; rows: FsRow[] }) => void
 }
 
-const ALL_FIELDS: { key: keyof FsRow; label: string; width: number; type: 'text' | 'number' }[] = [
-  { key: 'date',          label: 'Date',        width: 90,  type: 'text'   },
-  { key: 'code_ccam',     label: 'Code',        width: 90,  type: 'text'   },
-  { key: 'ccs_vvs',       label: 'C/CS/V/VS',   width: 70,  type: 'text'   },
-  { key: 'autres',        label: 'Modif./asso.', width: 110, type: 'text'   },
-  { key: 'montant',       label: 'Honoraires',  width: 90,  type: 'number' },
-  { key: 'depassement',   label: 'Dépass.',     width: 70,  type: 'number' },
-  { key: 'frais_id_md',   label: 'ID/MD',       width: 60,  type: 'text'   },
-  { key: 'frais_nbre',    label: 'Nbre km',     width: 70,  type: 'number' },
-  { key: 'frais_montant', label: '€ km',        width: 70,  type: 'number' },
-  { key: 'localisation',  label: 'Localis.',    width: 70,  type: 'text'   },
+const ALL_FIELDS: { key: keyof FsRow; label: string; help: string; width: number; type: 'text' | 'number' }[] = [
+  { key: 'date',          label: 'Date',         help: 'Date de réalisation de l\'acte (jj/mm/aaaa)',                                       width: 90,  type: 'text'   },
+  { key: 'code_ccam',     label: 'Code',         help: 'Code CCAM (4 lettres + 3 chiffres) ou NGAP (C, CS, BR4, BDC...)',                  width: 90,  type: 'text'   },
+  { key: 'ccs_vvs',       label: 'C/CS/V/VS',    help: 'Consultation / Consult. Spécialisée / Visite / Visite Spécialisée (codes NGAP)', width: 70,  type: 'text'   },
+  { key: 'autres',        label: 'Modif./asso.', help: 'Modificateurs (N, E, U, F, MCD) et codes d\'association (1, 2, 4)',                width: 110, type: 'text'   },
+  { key: 'montant',       label: 'Honoraires',   help: 'Montant des honoraires facturés (€)',                                              width: 90,  type: 'number' },
+  { key: 'depassement',   label: 'Dépass.',      help: 'Dépassement d\'honoraires en € (laisser vide si pas de dépassement)',              width: 70,  type: 'number' },
+  { key: 'frais_id_md',   label: 'ID/MD',        help: 'Indemnité de Déplacement (ID) ou Mémoire de Déplacement (MD)',                     width: 60,  type: 'text'   },
+  { key: 'frais_nbre',    label: 'Nbre km',      help: 'Nombre de kilomètres parcourus',                                                   width: 70,  type: 'number' },
+  { key: 'frais_montant', label: '€ km',         help: 'Indemnité kilométrique (€)',                                                       width: 70,  type: 'number' },
+  { key: 'localisation',  label: 'Localis.',     help: 'Numéro de la dent concernée (notation FDI : 11-48)',                               width: 70,  type: 'text'   },
 ]
 
-// On garde une colonne uniquement si au moins une ligne attendue a une valeur sur cette colonne.
+// On garde une colonne uniquement si au moins une ligne attendue a une valeur "utile".
+// Les zéros numériques sont traités comme "pas de valeur" (sinon depassement: 0 forcerait la colonne).
+function isEmpty(v: any): boolean {
+  if (v === null || v === undefined || v === '') return true
+  if (typeof v === 'number' && v === 0) return true
+  return false
+}
+
 function visibleFields(expected: FsRow[]) {
   return ALL_FIELDS.filter(f =>
-    expected.some(r => {
-      const v = r?.[f.key]
-      return v !== null && v !== undefined && v !== ''
-    })
+    expected.some(r => !isEmpty(r?.[f.key]))
   )
 }
 
@@ -64,7 +68,7 @@ function isFullCcam(code: string): boolean {
 }
 
 function cellOK(user: any, expected: any, key?: keyof FsRow): boolean {
-  if (expected === null || expected === undefined || expected === '') return user === null || user === undefined || user === ''
+  if (isEmpty(expected)) return isEmpty(user)
   const u = norm(user), e = norm(expected)
   if (key === 'code_ccam' && isFullCcam(e)) {
     // Compare seulement les 4 premières lettres (la "grammaire" CCAM).
@@ -114,14 +118,26 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
       {/* Header columns */}
       <div style={{ display: 'flex', borderBottom: `1px solid ${A.border}`, background: '#F4F6FA' }}>
         {FIELDS.map(f => (
-          <div key={f.key} style={{
-            width: f.width, minWidth: f.width,
-            padding: '8px 6px',
-            fontSize: 10, fontWeight: 700, color: A.textMuted,
-            textAlign: 'center', borderRight: `1px solid ${A.border}`,
-            textTransform: 'uppercase', letterSpacing: 0.3,
-          }}>
+          <div
+            key={f.key}
+            title={f.help}
+            style={{
+              width: f.width, minWidth: f.width,
+              padding: '8px 6px',
+              fontSize: 10, fontWeight: 700, color: A.textMuted,
+              textAlign: 'center', borderRight: `1px solid ${A.border}`,
+              textTransform: 'uppercase', letterSpacing: 0.3,
+              cursor: 'help',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
+            }}
+          >
             {f.label}
+            <span style={{
+              fontSize: 8, color: A.textMuted, opacity: 0.6,
+              border: `1px solid ${A.textMuted}`, borderRadius: '50%',
+              width: 11, height: 11, display: 'inline-flex',
+              alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+            }}>?</span>
           </div>
         ))}
       </div>
@@ -190,8 +206,9 @@ export function scoreFeuille(user: FsRow[], expected: FsRow[]): { cellsCorrect: 
   for (let i = 0; i < expected.length; i++) {
     for (const f of ALL_FIELDS) {
       const e = expected[i]?.[f.key]
-      // Only count cells that have an expected value (not null/empty in the answer key)
-      if (e !== null && e !== undefined && e !== '') {
+      // On ne note que les cellules qui ont une vraie valeur attendue
+      // (0 numérique traité comme "pas de valeur" pour ne pas forcer les colonnes vides)
+      if (!isEmpty(e)) {
         total++
         if (cellOK(user[i]?.[f.key], e, f.key)) correct++
       }
