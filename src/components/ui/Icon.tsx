@@ -52,6 +52,15 @@ export default function Icon({ name, size = 20, color = 'currentColor', strokeWi
     eye:        <><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></>,
     trash:      <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></>,
     edit:       <><path d="M9 4H5a2 2 0 00-2 2v13a2 2 0 002 2h13a2 2 0 002-2v-4"/><path d="M18.5 2.5a2.12 2.12 0 113 3L12 15l-4 1 1-4z"/></>,
+    crown:      <><path d="M3 9l3 4 6-8 6 8 3-4-1 11H4z"/><path d="M4 20h16"/></>,
+    creditCard: <><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 11h20"/><path d="M6 16h4"/></>,
+    stethoscope:<><path d="M6 4v6a4 4 0 008 0V4"/><path d="M6 4H4M8 4H6M16 4h-2M18 4h-2"/><path d="M10 14v2a4 4 0 008 0v-2"/><circle cx="18" cy="11" r="2"/></>,
+    calculator: <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/><circle cx="8.5" cy="12" r="0.8" fill="currentColor"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/><circle cx="15.5" cy="12" r="0.8" fill="currentColor"/><circle cx="8.5" cy="16" r="0.8" fill="currentColor"/><circle cx="12" cy="16" r="0.8" fill="currentColor"/><circle cx="15.5" cy="16" r="0.8" fill="currentColor"/></>,
+    clipboard:  <><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><path d="M8 10h8M8 14h8M8 18h5"/></>,
+    link2:      <><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></>,
+    layers:     <><path d="M12 2L2 7l10 5 10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></>,
+    lock:       <><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></>,
+    play:       <><path d="M6 4l14 8-14 8z"/></>,
   }
 
   return <svg {...props}>{paths[name] ?? null}</svg>
