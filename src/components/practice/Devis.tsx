@@ -84,7 +84,7 @@ export default function Devis({ rows, showCorrection, onChange }: Props) {
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
           <thead style={{ background: '#F4F6FA' }}>
             <tr>
-              <th style={th()}>Acte</th>
+              <th style={{ ...th(), textAlign: 'left', paddingLeft: 14, minWidth: 180 }}>Acte</th>
               {codeEditable && <th style={th()}>Code</th>}
               {visibleNum.map(f => (
                 <th key={f.key} style={th()}>{f.label}</th>
@@ -94,10 +94,10 @@ export default function Devis({ rows, showCorrection, onChange }: Props) {
           <tbody>
             {rows.map((r, i) => (
               <tr key={i} style={{ borderTop: `1px solid ${A.border}` }}>
-                <td style={td()}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: A.text }}>{r.libelle}</div>
+                <td style={{ ...td(), padding: '10px 14px', textAlign: 'left', minWidth: 180 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: A.text, lineHeight: 1.3 }}>{r.libelle}</div>
                   {r.code && !codeEditable && (
-                    <div style={{ fontSize: 10, color: A.textMuted, fontFamily: 'monospace', marginTop: 2 }}>{r.code}</div>
+                    <div style={{ fontSize: 10, color: A.textMuted, fontFamily: 'monospace', marginTop: 3 }}>{r.code}</div>
                   )}
                 </td>
                 {codeEditable && (

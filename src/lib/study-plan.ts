@@ -38,48 +38,56 @@ const MODULE_ACCENT: Record<string, string> = {
   M4: '#E11D48', M5: '#D97706', M6: '#5B21B6',
 }
 
+// Cap les nombres pour ne pas effrayer l'étudiant (109 flashcards = panique)
+const CARDS_PER_SESSION = 15
+const PRACTICE_PER_SESSION = 3
+const WRONG_PER_SESSION = 10
+
 export function buildStudyPlan(i: Input): StudyPlanItem[] {
   const items: StudyPlanItem[] = []
 
-  // 1. Flashcards dues (priorité absolue — la mémoire décroît chaque jour)
+  // 1. Flashcards dues (priorité absolue) — capé à 15 par session
   if (i.flashcardsDueCount > 0) {
-    const min = Math.max(3, Math.ceil(i.flashcardsDueCount * 0.5))   // ~30s/carte
+    const shown = Math.min(i.flashcardsDueCount, CARDS_PER_SESSION)
     items.push({
       id: 'due-cards',
       icon: 'cards',
-      title: `${i.flashcardsDueCount} flashcard${i.flashcardsDueCount > 1 ? 's' : ''} à revoir`,
-      detail: 'Tes révisions du jour (répétition espacée)',
-      estimatedMin: min,
+      title: `Réviser ${shown} flashcard${shown > 1 ? 's' : ''}`,
+      detail: i.flashcardsDueCount > CARDS_PER_SESSION
+        ? `${i.flashcardsDueCount} en attente · on commence par les + urgentes`
+        : 'Répétition espacée — quelques minutes',
+      estimatedMin: Math.max(5, Math.ceil(shown * 0.5)),
       href: '/library',
       accent: '#0A66E0',
       priority: 0,
     })
   }
 
-  // 2. Quiz ratés à reprendre
-  if (i.recentWrongQuestionCount > 0) {
+  // 2. Quiz ratés à reprendre — capé à 10
+  if (i.recentWrongQuestionCount >= 3) {                  // n'apparaît qu'à partir de 3 erreurs
+    const shown = Math.min(i.recentWrongQuestionCount, WRONG_PER_SESSION)
     items.push({
       id: 'wrong-quiz',
       icon: 'refresh',
-      title: `Tes ${i.recentWrongQuestionCount} erreurs récentes`,
-      detail: 'Refais les questions où tu t\'es trompé',
-      estimatedMin: Math.min(15, i.recentWrongQuestionCount),
+      title: `Reprendre ${shown} erreur${shown > 1 ? 's' : ''}`,
+      detail: 'Refaire les questions que tu as ratées',
+      estimatedMin: Math.min(12, shown),
       href: '/mes-erreurs',
       accent: '#E11D48',
       priority: 1,
     })
   }
 
-  // 3. Module le plus faible (< 60% de précision avec assez de tentatives)
+  // 3. Module faible — seulement si ≥ 15 tentatives ET < 60% (sinon "0% sur 0" = pas faible, jamais touché)
   const weakestModule = i.moduleStats
-    .filter(m => m.totalQuestions >= 10 && m.pct < 60)
+    .filter(m => m.totalQuestions >= 15 && m.pct < 60)
     .sort((a, b) => a.pct - b.pct)[0]
   if (weakestModule) {
     items.push({
       id: `weak-${weakestModule.id}`,
       icon: 'target',
-      title: `${weakestModule.id} — module à renforcer`,
-      detail: `${weakestModule.pct}% de précision · "${weakestModule.label}"`,
+      title: `Renforcer ${weakestModule.id}`,
+      detail: `${weakestModule.pct}% de précision · ${weakestModule.label}`,
       estimatedMin: 15,
       href: `/quiz/${weakestModule.id}?mode=smart`,
       accent: MODULE_ACCENT[weakestModule.id] ?? '#0A66E0',
@@ -87,41 +95,29 @@ export function buildStudyPlan(i: Input): StudyPlanItem[] {
     })
   }
 
-  // 4. Cas pratiques en cours / pas faits
-  if (i.practiceTodoCount > 0) {
+  // 4. Cas pratiques — n'apparaît QUE si rien d'autre de plus urgent OU peu de cas restants
+  // et capé à 3 pour pas effrayer
+  if (i.practiceTodoCount > 0 && items.length < 2) {
+    const shown = Math.min(i.practiceTodoCount, PRACTICE_PER_SESSION)
     items.push({
       id: 'practice',
       icon: 'edit',
-      title: `${i.practiceTodoCount} cas pratique${i.practiceTodoCount > 1 ? 's' : ''} à faire`,
+      title: `${shown} cas pratique${shown > 1 ? 's' : ''}`,
       detail: 'Coder une feuille de soins CCAM',
-      estimatedMin: Math.min(20, i.practiceTodoCount * 4),
+      estimatedMin: shown * 4,
       href: '/practice',
       accent: '#D97706',
       priority: 3,
     })
   }
 
-  // 5. Filler : urgence pré-examen (J-30 et moins → push session générale)
-  if (i.daysUntilExam !== null && i.daysUntilExam <= 30 && items.length < 2) {
-    items.push({
-      id: 'general',
-      icon: 'sparkle',
-      title: 'Quiz tout-modules',
-      detail: 'Brassage mélangé pour entretenir',
-      estimatedMin: 10,
-      href: '/global-quiz',
-      accent: '#5B21B6',
-      priority: 4,
-    })
-  }
-
-  // 6. Backup si rien à proposer
+  // 5. Backup si rien à proposer (utilisateur tout neuf ou parfait)
   if (items.length === 0) {
     items.push({
       id: 'discover',
       icon: 'bookOpen',
-      title: 'Découvre un nouveau fascicule',
-      detail: 'Continue ton apprentissage à ton rythme',
+      title: 'Continue ton apprentissage',
+      detail: 'Découvre tes cours dans la bibliothèque',
       estimatedMin: i.dailyGoalMinutes,
       href: '/library',
       accent: '#0A66E0',
@@ -129,7 +125,8 @@ export function buildStudyPlan(i: Input): StudyPlanItem[] {
     })
   }
 
-  return items.sort((a, b) => a.priority - b.priority).slice(0, 4)
+  // Limite à 2 items max — un plan trop long décourage
+  return items.sort((a, b) => a.priority - b.priority).slice(0, 2)
 }
 
 export function planTotalMinutes(items: StudyPlanItem[]): number {

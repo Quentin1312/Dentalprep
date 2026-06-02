@@ -370,11 +370,11 @@ export default function PetCompanion({
           </div>
         )}
 
-        {/* Level 4+: crown above head */}
+        {/* Level 4+: crown above head — abaissée pour qu'elle touche le crâne */}
         {hasCrown && (
           <div style={{
             position: 'absolute',
-            top: -size * 0.28,
+            top: -size * 0.12,
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'none',
