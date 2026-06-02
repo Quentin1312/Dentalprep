@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon'
 import type { ModuleId } from '@/types/database'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType, PetState } from '@/components/pet/PetCompanion'
+import ExplainSheet from '@/components/ExplainSheet'
 import { computeXP } from '@/lib/xp'
 import QuizSummary from './QuizSummary'
 
@@ -394,6 +395,9 @@ export default function QuizClient({
             <ResultExplain
               correct={picked === q.correct_index}
               text={q.explanation}
+              question={q.question}
+              userAnswer={pickedAnswerText({ q, picked })}
+              correctAnswer={correctAnswerText(q)}
             />
           )}
         </div>
@@ -462,7 +466,13 @@ function ScoreChip({ kind, count }: { kind: 'ok' | 'bad'; count: number }) {
 // Explanation block (post-result)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ResultExplain({ correct, text }: { correct: boolean; text: string }) {
+function ResultExplain({ correct, text, question, userAnswer, correctAnswer }: {
+  correct: boolean
+  text: string
+  question: string
+  userAnswer?: string
+  correctAnswer?: string
+}) {
   const col = correct ? A.green : A.red
   const bg = correct ? A.greenSoft : '#FCE8E8'
   const title = correct ? 'Bonne réponse' : 'Pas tout à fait'
@@ -482,8 +492,35 @@ function ResultExplain({ correct, text }: { correct: boolean; text: string }) {
         <div style={{ fontSize: 14.5, fontWeight: 700, color: col }}>{title}</div>
       </div>
       <div style={{ fontSize: 13.5, color: A.text, lineHeight: 1.5, opacity: 0.92 }}>{text}</div>
+      {!correct && (
+        <div style={{ marginTop: 10 }}>
+          <ExplainSheet
+            question={question}
+            userAnswer={userAnswer}
+            correctAnswer={correctAnswer}
+            explanation={text}
+          />
+        </div>
+      )}
     </div>
   )
+}
+
+function pickedAnswerText({ q, picked }: { q: Question; picked: number | null }): string | undefined {
+  if (picked === null) return undefined
+  const choices = q.choices
+  if (Array.isArray(choices) && typeof choices[picked] === 'string') {
+    return choices[picked] as string
+  }
+  return undefined
+}
+
+function correctAnswerText(q: Question): string | undefined {
+  const choices = q.choices
+  if (Array.isArray(choices) && typeof choices[q.correct_index] === 'string') {
+    return choices[q.correct_index] as string
+  }
+  return undefined
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

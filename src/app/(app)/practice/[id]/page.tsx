@@ -19,6 +19,7 @@ import TextQuestions, { scoreQuestions, type TextQuestion, type AnswerMap } from
 import CalculsAmoAmc, { scoreCalculs, type CalculsExpected, type CalculsAnswers } from '@/components/practice/CalculsAmoAmc'
 import Devis, { scoreDevis, type DevisRowExpected, type DevisRowAnswer } from '@/components/practice/Devis'
 import CcamHelp from '@/components/practice/CcamHelp'
+import ExplainSheet from '@/components/ExplainSheet'
 
 type ExtraData = {
   schema_dentaire?: ToothMap
@@ -383,6 +384,14 @@ function PracticeExerciseInner() {
             </div>
             {exo.explanation && (
               <div style={{ fontSize: 12, color: A.text, marginTop: 8, lineHeight: 1.5 }}>{exo.explanation}</div>
+            )}
+            {result.score < 1 && (
+              <div style={{ marginTop: 10 }}>
+                <ExplainSheet
+                  question={`${exo.title}\n\n${exo.prompt}`}
+                  explanation={exo.explanation ?? ''}
+                />
+              </div>
             )}
           </div>
         )}
