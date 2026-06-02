@@ -26,17 +26,17 @@ export default function TabBar() {
       borderTop: `0.5px solid ${A.border}`,
       zIndex: 20,
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '0 8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TABS.length}, 1fr)`, alignItems: 'center', padding: '0 4px' }}>
         {TABS.map(tab => {
           const isActive = pathname === tab.href || (pathname.startsWith(tab.href + '/') && tab.href !== '/dashboard')
           return (
             <Link key={tab.id} href={tab.href} style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
-              padding: '6px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-              fontFamily: A.font, textDecoration: 'none',
+              padding: '6px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+              fontFamily: A.font, textDecoration: 'none', minWidth: 0,
             }}>
               <Icon name={tab.icon} size={22} color={isActive ? A.primary : A.textDim} strokeWidth={isActive ? 2.2 : 1.75} />
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.1, color: isActive ? A.primary : A.textDim }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.1, color: isActive ? A.primary : A.textDim, whiteSpace: 'nowrap' }}>
                 {tab.label}
               </div>
             </Link>
