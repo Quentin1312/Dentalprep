@@ -4,77 +4,82 @@ import { useState } from 'react'
 import { A } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
-type CodeRow = { code: string; label: string }
-type Section = { title: string; rows: CodeRow[] }
-
-const SECTIONS: Section[] = [
-  {
-    title: 'Diagnostic / Radio',
-    rows: [
-      { code: 'HBQK002', label: 'Radio rétro-alvéolaire (1 à 3 dents contiguës)' },
-      { code: 'HBQK040', label: 'Radio rétro-alvéolaire (4 à 6 dents)' },
-      { code: 'LAQK002', label: 'Panoramique dentomaxillaire' },
-      { code: 'HBQK010', label: 'Examen bucco-dentaire (EBD)' },
-      { code: 'C / CS',  label: 'Consultation (NGAP)' },
-    ],
-  },
-  {
-    title: 'Prophylaxie',
-    rows: [
-      { code: 'HBJD001', label: 'Détartrage et polissage 2 arcades (par séance)' },
-      { code: 'HBBD002', label: 'Scellement prophylactique des sillons (1 dent)' },
-      { code: 'HBLD034', label: 'Application topique de fluorures (vernis fluoré)' },
-    ],
-  },
-  {
-    title: 'Restaurations',
-    rows: [
-      { code: 'HBMD038', label: 'Restauration 1 face' },
-      { code: 'HBMD039', label: 'Restauration 2 faces' },
-      { code: 'HBMD040', label: 'Restauration 3 faces' },
-      { code: 'HBMD041', label: 'Restauration 4 faces et +' },
-      { code: 'HBMD050', label: 'Restauration avec ancrage radiculaire / inlay-onlay' },
-    ],
-  },
-  {
-    title: 'Endodontie',
-    rows: [
-      { code: 'HBFD021', label: 'Coiffage pulpaire direct' },
-      { code: 'HBFD031', label: 'Pulpectomie / exérèse contenu canalaire monoradiculée' },
-      { code: 'HBFD032', label: 'Pulpotomie sur dent temporaire' },
-    ],
-  },
-  {
-    title: 'Avulsions',
-    rows: [
-      { code: 'HBGD036', label: 'Avulsion dent permanente sur arcade' },
-      { code: 'HBGD037', label: 'Avulsion + alvéolectomie / séparation racines' },
-      { code: 'HBGD021', label: 'Avulsion dent temporaire' },
-      { code: 'HBGD019', label: 'Avulsion dent retenue (sagesse)' },
-    ],
-  },
-  {
-    title: 'Prothèses',
-    rows: [
-      { code: 'HBLD036', label: 'Pose inlay-core' },
-      { code: 'HBLD031', label: 'Pose couronne (céramométal / implanto-portée)' },
-      { code: 'HBLD090', label: 'Pose couronne transitoire' },
-      { code: 'HBLD035', label: 'Adjonction sur prothèse amovible' },
-      { code: 'HBMD040', label: 'Réparation prothèse amovible résine' },
-    ],
-  },
-  {
-    title: 'Modificateurs',
-    rows: [
-      { code: 'N',    label: '+15,7% — enfant < 13 ans (soins conservateurs / endo)' },
-      { code: 'E',    label: '+49% — enfant < 5 ans (radiologie)' },
-      { code: 'U',    label: 'Forfait 25,15€ — urgence 20h-8h' },
-      { code: 'F',    label: 'Forfait perm. des soins (dimanche / jour férié)' },
-      { code: 'MCD',  label: '30€ jour férié / 19€ hors permanence' },
-      { code: '9',    label: '+30% permanence des soins' },
-    ],
-  },
+const POS_1_2 = [
+  { code: 'HB', label: 'Bouche, dent, parodonte' },
+  { code: 'LA', label: 'Squelette de la face / sans précision' },
+  { code: 'LB', label: 'Maxillaire ou mandibule' },
+  { code: 'L',  label: 'Os, articulations et tissus mous — tête, cou, tronc' },
 ]
+
+const POS_3 = [
+  { code: 'B', label: 'Comblement, contention, scellement de sillons' },
+  { code: 'D', label: 'Fixer, contention' },
+  { code: 'E', label: 'Déplacer, greffer, repositionner' },
+  { code: 'F', label: 'Exciser, exérèse, endodontie' },
+  { code: 'G', label: 'Évider, extraire, avulsion, curetage' },
+  { code: 'J', label: 'Drainer, évacuer, nettoyer, détartrage' },
+  { code: 'L', label: 'Ajouter sans retirer, pose de prothèse' },
+  { code: 'M', label: 'Confection, préparation, réglage, adjonction sur PPA/PAC' },
+  { code: 'P', label: 'Coiffage' },
+  { code: 'Q', label: 'Repérage, acquisition de données, radio' },
+]
+
+const POS_4 = [
+  { code: 'D', label: 'Accès transorificiel (voie naturelle)' },
+  { code: 'K', label: 'Acte par Rx sans accès' },
+]
+
+const MODIFICATEURS = [
+  { code: 'N',   label: '+15,7% — soins conservateurs / endo chez enfant < 13 ans' },
+  { code: 'E',   label: '+49% — radiologie chez enfant < 5 ans' },
+  { code: 'U',   label: 'Forfait 25,15€ — urgence entre 20h et 8h' },
+  { code: 'F',   label: 'Forfait perm. des soins (dimanche / jour férié) — 30€ permanence, 19,06€ hors' },
+  { code: 'MCD', label: 'Variante du F (selon les conditions)' },
+  { code: '9',   label: '+30% — soins conservateurs en permanence' },
+]
+
+const ASSOCIATIONS = [
+  { code: '1', label: 'Acte le plus cher (facturé 100%)' },
+  { code: '2', label: 'Acte(s) associé(s) (facturé(s) 50%)' },
+  { code: '4', label: 'Actes associables entre eux à 100% (gingivectomie, détartrage, radios non panoramique)' },
+]
+
+type Row = { code: string; label: string }
+
+function Block({ title, rows }: { title: string; rows: Row[] }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{
+        fontSize: 10, fontWeight: 800, color: A.textMuted,
+        letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 6,
+      }}>
+        {title}
+      </div>
+      <div style={{
+        background: '#F7F9FC', borderRadius: 12,
+        border: `1px solid ${A.border}`, overflow: 'hidden',
+      }}>
+        {rows.map((r, i) => (
+          <div key={r.code} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '8px 12px',
+            borderTop: i > 0 ? `1px solid ${A.border}` : 'none',
+          }}>
+            <div style={{
+              fontFamily: 'monospace', fontSize: 13, fontWeight: 800,
+              color: A.primary, minWidth: 50,
+            }}>
+              {r.code}
+            </div>
+            <div style={{ fontSize: 12, color: A.text, lineHeight: 1.35 }}>
+              {r.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function CcamHelp() {
   const [open, setOpen] = useState(false)
@@ -91,7 +96,7 @@ export default function CcamHelp() {
           fontFamily: A.font, cursor: 'pointer',
         }}
       >
-        <Icon name="info" size={14} color={A.primary} /> Aide codes CCAM
+        <Icon name="info" size={14} color={A.primary} /> Méthode CCAM
       </button>
 
       {open && (
@@ -117,9 +122,9 @@ export default function CcamHelp() {
               width: 40, height: 4, background: '#D1D7E0',
               borderRadius: 999, margin: '0 auto 12px',
             }} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <div style={{ fontSize: 18, fontWeight: 900, color: A.text, letterSpacing: -0.3 }}>
-                Aide codes CCAM
+                Méthode CCAM
               </div>
               <button onClick={() => setOpen(false)} style={{
                 background: 'transparent', border: 'none', cursor: 'pointer', padding: 6,
@@ -128,41 +133,34 @@ export default function CcamHelp() {
               </button>
             </div>
             <div style={{ fontSize: 11, color: A.textMuted, marginBottom: 14, lineHeight: 1.5 }}>
-              Sélection des codes les plus fréquents. Pour un acte non listé, voir le fascicule 18 (CCAM).
+              Un code CCAM = <strong>4 lettres + 3 chiffres</strong>. Décode chaque position pour reconstituer le code de l'acte.
             </div>
 
-            {SECTIONS.map(sec => (
-              <div key={sec.title} style={{ marginBottom: 14 }}>
-                <div style={{
-                  fontSize: 10, fontWeight: 800, color: A.textMuted,
-                  letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 6,
-                }}>
-                  {sec.title}
-                </div>
-                <div style={{
-                  background: '#F7F9FC', borderRadius: 12,
-                  border: `1px solid ${A.border}`, overflow: 'hidden',
-                }}>
-                  {sec.rows.map((r, i) => (
-                    <div key={r.code} style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 12px',
-                      borderTop: i > 0 ? `1px solid ${A.border}` : 'none',
-                    }}>
-                      <div style={{
-                        fontFamily: 'monospace', fontSize: 12, fontWeight: 800,
-                        color: A.primary, minWidth: 78,
-                      }}>
-                        {r.code}
-                      </div>
-                      <div style={{ fontSize: 12, color: A.text, lineHeight: 1.35 }}>
-                        {r.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Schéma structure */}
+            <div style={{
+              background: 'linear-gradient(180deg, #EEF4FF 0%, #F7F9FC 100%)',
+              borderRadius: 12, padding: 14, marginBottom: 16,
+              border: `1px solid #C7D9F9`,
+            }}>
+              <div style={{
+                fontFamily: 'monospace', fontSize: 18, fontWeight: 900,
+                color: A.primary, textAlign: 'center', letterSpacing: 2, marginBottom: 8,
+              }}>
+                HB <span style={{ color: '#16A34A' }}>G</span> <span style={{ color: '#D97706' }}>D</span> 022
               </div>
-            ))}
+              <div style={{ fontSize: 11, color: A.text, lineHeight: 1.6 }}>
+                <div><strong>HB</strong> = localisation anatomique (bouche, dent, parodonte)</div>
+                <div><span style={{ color: '#16A34A', fontWeight: 700 }}>G</span> = action générale (avulsion)</div>
+                <div><span style={{ color: '#D97706', fontWeight: 700 }}>D</span> = voie d'abord / technique (transorificiel)</div>
+                <div><strong>022</strong> = compteur (aléatoire, sans signification)</div>
+              </div>
+            </div>
+
+            <Block title="Position 1-2 — localisation" rows={POS_1_2} />
+            <Block title="Position 3 — action générale" rows={POS_3} />
+            <Block title="Position 4 — voie d'abord / technique" rows={POS_4} />
+            <Block title="Modificateurs" rows={MODIFICATEURS} />
+            <Block title="Codes d'association" rows={ASSOCIATIONS} />
           </div>
         </div>
       )}

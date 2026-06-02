@@ -25,7 +25,7 @@ interface Props {
   onValidate?: (result: { cellsCorrect: number; cellsTotal: number; score: number; rows: FsRow[] }) => void
 }
 
-const FIELDS: { key: keyof FsRow; label: string; width: number; type: 'text' | 'number' }[] = [
+const ALL_FIELDS: { key: keyof FsRow; label: string; width: number; type: 'text' | 'number' }[] = [
   { key: 'date',          label: 'Date',        width: 90,  type: 'text'   },
   { key: 'code_ccam',     label: 'Code',        width: 90,  type: 'text'   },
   { key: 'ccs_vvs',       label: 'C/CS/V/VS',   width: 70,  type: 'text'   },
@@ -37,6 +37,16 @@ const FIELDS: { key: keyof FsRow; label: string; width: number; type: 'text' | '
   { key: 'frais_montant', label: '€ km',        width: 70,  type: 'number' },
   { key: 'localisation',  label: 'Localis.',    width: 70,  type: 'text'   },
 ]
+
+// On garde une colonne uniquement si au moins une ligne attendue a une valeur sur cette colonne.
+function visibleFields(expected: FsRow[]) {
+  return ALL_FIELDS.filter(f =>
+    expected.some(r => {
+      const v = r?.[f.key]
+      return v !== null && v !== undefined && v !== ''
+    })
+  )
+}
 
 function norm(v: any): string {
   if (v === null || v === undefined || v === '') return ''
@@ -51,6 +61,7 @@ function cellOK(user: any, expected: any): boolean {
 
 export default function FeuilleSoins({ expected, showCorrection, onChange, onValidate }: Props) {
   const [rows, setRows] = useState<FsRow[]>(() => expected.map(() => ({})))
+  const FIELDS = visibleFields(expected)
 
   function updateCell(rowIdx: number, key: keyof FsRow, value: string) {
     const next = rows.map((r, i) => {
@@ -163,7 +174,7 @@ export function scoreFeuille(user: FsRow[], expected: FsRow[]): { cellsCorrect: 
   let correct = 0
   let total = 0
   for (let i = 0; i < expected.length; i++) {
-    for (const f of FIELDS) {
+    for (const f of ALL_FIELDS) {
       const e = expected[i]?.[f.key]
       // Only count cells that have an expected value (not null/empty in the answer key)
       if (e !== null && e !== undefined && e !== '') {
