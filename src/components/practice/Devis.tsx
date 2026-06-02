@@ -29,7 +29,9 @@ interface Props {
   onChange?: (rows: DevisRowAnswer[]) => void
 }
 
-const NUM_FIELDS: { key: keyof DevisRowExpected; label: string }[] = [
+type NumKey = 'honoraires' | 'base_remb' | 'amo' | 'amc' | 'rac'
+
+const NUM_FIELDS: { key: NumKey; label: string }[] = [
   { key: 'honoraires', label: 'Honoraires' },
   { key: 'base_remb',  label: 'Base remb.' },
   { key: 'amo',        label: 'AMO' },
