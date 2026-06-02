@@ -349,7 +349,7 @@ function LessonCard({
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: A.text, letterSpacing: -0.2 }}>
-            Leçon {n}
+            Exercice {n}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
             {exercises.map((e, i) => {
