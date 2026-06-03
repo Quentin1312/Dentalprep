@@ -24,7 +24,17 @@
       "Bash(git commit -m ' *)",
       "Bash(npx --yes -p typescript tsc --noEmit)",
       "Bash(npm exec *)",
-      "Bash(py insert_ccam_codes.py)"
+      "Bash(py insert_ccam_codes.py)",
+      "Bash(ls \"C:\\\\Users\\\\quent\\\\Documents\\\\Codex\\\\2026-05-29\\\\files-mentioned-by-the-user-consolidate\\\\\" | head -50)",
+      "Bash(ls \"C:/Users/quent/OneDrive - Université Clermont Auvergne/Bureau/Tissus à rentrer/\")",
+      "Bash(ls -la /tmp/dentalapp_design/_export/)",
+      "Bash(cat /tmp/dentalapp_design/_export/dp-foundations.jsx | head -100)",
+      "Bash(cat /tmp/dentalapp_design/_export/dp-components.jsx | head -80)",
+      "Bash(cat /tmp/dentalapp_design/_export/dp-screens.jsx | head -60)",
+      "Bash(cat \"/tmp/dentalapp_design/_export/DentalPrep DS.html\" | head -50)",
+      "Bash(grep -n \"function Screen\\\\|function PhoneShell\\\\|function FeuilleSoins\\\\|function Devis\\\\|function Schema\" /tmp/dentalapp_design/_export/dp-screens.jsx | head -20)",
+      "Bash(sed -n '422,510p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
+      "Bash(sed -n '123,186p' /tmp/dentalapp_design/_export/dp-screens.jsx)"
     ]
   }
 }
