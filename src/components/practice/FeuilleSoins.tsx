@@ -191,90 +191,91 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
         </div>
       )}
 
-      {/* Header columns */}
-      <div style={{ display: 'flex', borderBottom: `1px solid ${PALETTE.rule}`, background: PALETTE.surfaceAlt }}>
-        {FIELDS.map(f => (
-          <div
-            key={f.key}
-            title={f.help}
-            style={{
-              width: f.width, minWidth: f.width,
-              padding: `${sp(2)}px ${sp(1)}px`,
-              ...monoStyle('xs', 'med', PALETTE.inkMute),
-              textAlign: 'center',
-              borderRight: `1px solid ${PALETTE.ruleSoft}`,
-              textTransform: 'uppercase', letterSpacing: 1,
-              cursor: 'help',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
-            }}
-          >
-            {f.label}
-            <span style={{
-              fontSize: 8, color: PALETTE.inkDim, opacity: 0.6,
-              border: `1px solid ${PALETTE.inkDim}`, borderRadius: '50%',
-              width: 11, height: 11, display: 'inline-flex',
-              alignItems: 'center', justifyContent: 'center', fontWeight: 700,
-            }}>?</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Rows */}
-      <div style={{ overflowX: 'auto' }}>
+      {/* Cards par acte — layout mobile-first, plus de grille Excel */}
+      <div style={{ padding: sp(3), display: 'flex', flexDirection: 'column', gap: sp(3) }}>
         {expected.map((_, rowIdx) => (
           <div key={rowIdx} style={{
-            display: 'flex',
-            borderBottom: rowIdx < expected.length - 1 ? `1px solid ${PALETTE.ruleSoft}` : 'none',
+            background: PALETTE.surfaceAlt,
+            borderRadius: RADIUS.md,
+            border: `1px solid ${PALETTE.ruleSoft}`,
+            padding: sp(3),
           }}>
-            {FIELDS.map(f => {
-              const status = getStatus(rowIdx, f.key)
-              const value = rows[rowIdx]?.[f.key]
-              const displayValue = value === null || value === undefined ? '' : String(value)
-              const bg = status === 'correct' ? PALETTE.greenSoft
-                       : status === 'wrong'   ? PALETTE.redSoft
-                       : PALETTE.surface
-              const borderC = status === 'correct' ? PALETTE.green
-                            : status === 'wrong'   ? PALETTE.red
-                            : PALETTE.rule
-              const isMono = f.key === 'code_ccam' || f.key === 'localisation' || f.key === 'date'
-              return (
-                <div key={f.key} style={{
-                  width: f.width, minWidth: f.width,
-                  borderRight: `1px solid ${PALETTE.ruleSoft}`,
-                  position: 'relative',
-                }}>
-                  <input
-                    type={f.type === 'number' ? 'text' : 'text'}
-                    inputMode={f.type === 'number' ? 'decimal' : 'text'}
-                    value={displayValue}
-                    onChange={e => updateCell(rowIdx, f.key, e.target.value)}
-                    disabled={showCorrection}
-                    style={{
-                      width: '100%', height: 40,
-                      border: 'none', outline: 'none',
-                      padding: `0 ${sp(2)}px`,
-                      fontSize: 13,
-                      fontFamily: isMono ? FONT_MONO : 'inherit',
-                      color: PALETTE.ink,
-                      background: bg,
-                      borderBottom: status !== 'empty' ? `2px solid ${borderC}` : 'none',
-                      textAlign: 'center',
-                      transition: 'background 220ms',
-                    }}
-                  />
-                  {showCorrection && status === 'wrong' && (
-                    <div style={{
-                      position: 'absolute', left: 0, right: 0, top: '100%',
-                      padding: '4px 6px',
-                      ...monoStyle('xs', 'med', PALETTE.red),
-                      background: PALETTE.redSoft, textAlign: 'center',
-                    }}>
-                      → {norm(expected[rowIdx]?.[f.key]) || '∅'}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+            {/* Label acte */}
+            <div style={{
+              ...monoStyle('xs', 'med', PALETTE.brand),
+              textTransform: 'uppercase', letterSpacing: 1.2,
+              marginBottom: sp(2),
+              display: 'flex', alignItems: 'baseline', gap: sp(2),
+            }}>
+              <span>Acte {rowIdx + 1}</span>
+              <span style={{ flex: 1, height: 1, background: PALETTE.ruleSoft, alignSelf: 'center' }} />
+            </div>
+
+            {/* Champs en grille adaptative */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: sp(2),
+            }}>
+              {FIELDS.map(f => {
+                const status = getStatus(rowIdx, f.key)
+                const value = rows[rowIdx]?.[f.key]
+                const displayValue = value === null || value === undefined ? '' : String(value)
+                const bg = status === 'correct' ? PALETTE.greenSoft
+                         : status === 'wrong'   ? PALETTE.redSoft
+                         : PALETTE.surface
+                const borderC = status === 'correct' ? PALETTE.green
+                              : status === 'wrong'   ? PALETTE.red
+                              : PALETTE.rule
+                const isMono = f.key === 'code_ccam' || f.key === 'localisation' || f.key === 'date'
+                  || f.key === 'montant' || f.key === 'depassement' || f.key === 'frais_nbre' || f.key === 'frais_montant'
+                return (
+                  <div key={f.key} style={{ minWidth: 0 }}>
+                    <label
+                      title={f.help}
+                      style={{
+                        display: 'block',
+                        ...monoStyle('xs', 'med', PALETTE.inkDim),
+                        textTransform: 'uppercase', letterSpacing: 0.8,
+                        marginBottom: 4, cursor: 'help',
+                      }}
+                    >
+                      {f.label}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode={f.type === 'number' ? 'decimal' : 'text'}
+                      value={displayValue}
+                      onChange={e => updateCell(rowIdx, f.key, e.target.value)}
+                      disabled={showCorrection}
+                      style={{
+                        width: '100%', height: 38,
+                        border: `1.5px solid ${borderC}`,
+                        borderRadius: RADIUS.sm,
+                        padding: `0 ${sp(2)}px`,
+                        fontSize: 14,
+                        fontFamily: isMono ? FONT_MONO : 'inherit',
+                        color: PALETTE.ink,
+                        background: bg,
+                        outline: 'none',
+                        fontVariantNumeric: 'tabular-nums',
+                        textAlign: 'center',
+                        transition: 'background 220ms, border-color 220ms',
+                      }}
+                    />
+                    {showCorrection && status === 'wrong' && (
+                      <div style={{
+                        marginTop: 4,
+                        ...monoStyle('xs', 'med', '#7A1F1D'),
+                        textAlign: 'center',
+                      }}>
+                        → {norm(expected[rowIdx]?.[f.key]) || '∅'}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         ))}
       </div>
