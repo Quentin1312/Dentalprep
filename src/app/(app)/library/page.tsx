@@ -227,11 +227,17 @@ export default function LibraryPage() {
               if (node.kind === 'fasc') {
                 const f = node.fascicule!
                 const course = node.course
+                // ⚠️ Filtre par module ET par cours pour rester cohérent avec
+                // le sheet en bas qui découpe les leçons par module.
+                // Avant : on prenait toutes les questions du cours tous modules
+                // confondus → le nœud ne passait jamais au vert pour les
+                // fascicules multi-modules même si l'élève avait tout fini
+                // pour le module en cours.
                 const fascAttempts = course
-                  ? attempts.filter(a => questionCourseMap[a.question_id] === course.id)
+                  ? attempts.filter(a => questionCourseMap[a.question_id] === course.id && a.module_id === m.id)
                   : []
                 const courseQuestions = course
-                  ? questions.filter(q => q.course_id === course.id)
+                  ? questions.filter(q => q.course_id === course.id && q.module_id === m.id)
                   : []
                 const correctIds = new Set(fascAttempts.filter(a => a.is_correct).map(a => a.question_id))
                 const totalLessons = Math.ceil(courseQuestions.length / LESSON_SIZE)
