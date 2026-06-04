@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, sp, monoStyle, typeStyle } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
 const POS_1_2 = [
@@ -90,13 +90,14 @@ export default function CcamHelp() {
         onClick={() => setOpen(true)}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: '#EEF4FF', color: A.primary,
-          border: `1px solid #C7D9F9`, borderRadius: 999,
-          padding: '6px 12px', fontSize: 12, fontWeight: 700,
-          fontFamily: A.font, cursor: 'pointer',
+          background: PALETTE.brandSoft, color: PALETTE.brand,
+          border: `1px solid ${PALETTE.brandSoft}`, borderRadius: RADIUS.pill,
+          padding: `${sp(1)}px ${sp(3)}px`,
+          ...monoStyle('xs', 'med', PALETTE.brand),
+          cursor: 'pointer',
         }}
       >
-        <Icon name="info" size={14} color={A.primary} /> Méthode CCAM
+        <Icon name="info" size={14} color={PALETTE.brand} /> Méthode CCAM
       </button>
 
       {open && (

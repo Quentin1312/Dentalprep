@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, SHADOW, sp, monoStyle, displayStyle, typeStyle } from '@/lib/theme'
 import { useThemeBg, themeBgStyle } from '@/lib/theme-bg'
 import Icon from '@/components/ui/Icon'
 
@@ -126,17 +126,20 @@ export default function PracticePage() {
   return (
     <div style={{ minHeight: '100%', ...themeBgStyle(themeId), paddingBottom: 100 }}>
       {/* Header */}
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '20px 16px 8px' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted, letterSpacing: 1.4, textTransform: 'uppercase' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: `${sp(5)}px ${sp(4)}px ${sp(2)}px` }}>
+        <div style={{
+          ...monoStyle('xs', 'med', PALETTE.brand),
+          textTransform: 'uppercase', letterSpacing: 1.4,
+        }}>
           Entraînement CCAM
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4 }}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: A.text, letterSpacing: -0.6 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: sp(1) }}>
+          <div style={displayStyle('3xl', 'bold')}>
             Cas pratiques
           </div>
           {!loading && totalExos > 0 && (
-            <div style={{ fontSize: 13, fontWeight: 700, color: A.textMuted }}>
-              {totalDone}/{totalExos} <span style={{ fontSize: 11, color: A.textMuted }}>terminés</span>
+            <div style={monoStyle('sm', 'med', PALETTE.inkMute)}>
+              {totalDone}/{totalExos} <span style={monoStyle('xs', 'body', PALETTE.inkDim)}>terminés</span>
             </div>
           )}
         </div>
@@ -383,7 +386,7 @@ function LessonCard({
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: A.text, letterSpacing: -0.2 }}>
+          <div style={displayStyle('base', 'bold')}>
             Exercice {n}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
@@ -412,11 +415,11 @@ function LessonCard({
             style={{ textDecoration: 'none', flexShrink: 0 }}
           >
             <div style={{
-              padding: '8px 16px', borderRadius: 999,
-              background: isComplete ? '#F4F6FA' : accent,
-              color: isComplete ? A.text : '#fff',
-              fontSize: 12, fontWeight: 800,
-              fontFamily: A.font,
+              padding: `${sp(2)}px ${sp(4)}px`, borderRadius: RADIUS.pill,
+              background: isComplete ? PALETTE.surfaceAlt : accent,
+              color: isComplete ? PALETTE.ink : '#fff',
+              ...monoStyle('xs', 'med', isComplete ? PALETTE.ink : '#fff'),
+              letterSpacing: 0.4,
               textAlign: 'center',
               whiteSpace: 'nowrap',
             }}>

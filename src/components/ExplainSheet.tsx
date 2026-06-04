@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, sp, monoStyle } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
@@ -98,14 +98,15 @@ export default function ExplainSheet({ question, userAnswer, correctAnswer, expl
         onClick={() => setOpen(true)}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: '#EEF4FF', color: A.primary,
-          border: `1px solid #C7D9F9`, borderRadius: 999,
-          padding: '6px 12px', fontSize: 12, fontWeight: 700,
-          fontFamily: A.font, cursor: 'pointer',
+          background: PALETTE.accentSoft, color: PALETTE.accent,
+          border: `1px solid ${PALETTE.accentSoft}`, borderRadius: RADIUS.pill,
+          padding: `${sp(1)}px ${sp(3)}px`,
+          ...monoStyle('xs', 'med', PALETTE.accent),
+          cursor: 'pointer',
         }}
       >
-        <Icon name="sparkle" size={13} color={A.primary} strokeWidth={2} />
-        J'ai pas compris
+        <Icon name="sparkle" size={13} color={PALETTE.accent} strokeWidth={2} />
+        J&apos;ai pas compris
       </button>
 
       {open && (

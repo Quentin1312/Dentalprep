@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES } from '@/lib/modules'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, SHADOW, sp, monoStyle, displayStyle, typeStyle } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
@@ -81,15 +81,23 @@ export default function DashboardPage() {
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: '62px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ padding: `${sp(12)}px ${sp(5)}px 0`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: 13, color: A.textMuted, fontWeight: 500 }}>
-            {loading && !data ? <Skeleton w={80} h={13} /> : `Bonjour${firstName ? ` ${firstName}` : ''} 👋`}
+          <div style={{
+            ...monoStyle('xs', 'med', PALETTE.brand),
+            textTransform: 'uppercase', letterSpacing: 1.4,
+          }}>
+            {loading && !data ? <Skeleton w={80} h={13} /> : `Bonjour${firstName ? `, ${firstName}` : ''}`}
           </div>
-          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, marginTop: 2 }}>DentalPrep</div>
+          <div style={{ ...displayStyle('3xl', 'bold'), marginTop: sp(1) }}>DentalPrep</div>
         </div>
-        <Link href="/profile" style={{ width: 40, height: 40, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-          <Icon name="user" size={18} color={A.text} />
+        <Link href="/profile" style={{
+          width: 40, height: 40, borderRadius: RADIUS.md,
+          background: PALETTE.surface, border: `1px solid ${PALETTE.rule}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
+          boxShadow: SHADOW.sm,
+        }}>
+          <Icon name="user" size={18} color={PALETTE.ink} />
         </Link>
       </div>
 
