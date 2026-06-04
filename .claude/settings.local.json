@@ -36,7 +36,8 @@
       "Bash(sed -n '422,510p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
       "Bash(sed -n '123,186p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
       "Bash(sed -n '285,348p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
-      "Bash(sed -n '555,640p' /tmp/dentalapp_design/_export/dp-screens.jsx)"
+      "Bash(sed -n '555,640p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
+      "Bash(py verify_ccam_codes.py)"
     ]
   }
 }
