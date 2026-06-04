@@ -135,8 +135,20 @@ export default function QuizClient({
     if (picked === null) return
     setShowResult(true)
     const isCorrect = picked === q.correct_index
-    if (isCorrect) { setCompleted(c => c + 1); setXpAnim(n => n + 1) }
-    else { setWrongAttemptIds(prev => new Set([...prev, q.id])) }
+    if (isCorrect) {
+      setCompleted(c => c + 1)
+      setXpAnim(n => n + 1)
+      // Si la question était dans le set des erreurs (retry après échec),
+      // on l'en retire : l'élève l'a maîtrisée, le score final doit le refléter.
+      setWrongAttemptIds(prev => {
+        if (!prev.has(q.id)) return prev
+        const next = new Set(prev)
+        next.delete(q.id)
+        return next
+      })
+    } else {
+      setWrongAttemptIds(prev => new Set([...prev, q.id]))
+    }
     const supabase = createClient()
     supabase.from('quiz_attempts').insert({
       user_id: userId,
