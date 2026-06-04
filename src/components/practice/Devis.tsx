@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, SHADOW, sp, monoStyle, typeStyle } from '@/lib/theme'
 
 // Une ligne de devis : libellé pré-rempli, l'élève saisit les montants
 export type DevisRowExpected = {
@@ -69,22 +69,24 @@ export default function Devis({ rows, showCorrection, onChange }: Props) {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 14, overflow: 'hidden',
-      border: `1px solid ${A.border}`, fontFamily: A.font,
+      background: PALETTE.surface, borderRadius: RADIUS.lg, overflow: 'hidden',
+      border: `1px solid ${PALETTE.rule}`, boxShadow: SHADOW.sm,
     }}>
       <div style={{
-        background: 'linear-gradient(180deg, #1F2D3D 0%, #0F1B2D 100%)',
-        color: '#fff', padding: '10px 14px',
-        fontSize: 13, fontWeight: 800, letterSpacing: 0.3, textAlign: 'center',
+        background: PALETTE.brand,
+        color: '#fff', padding: `${sp(2)}px ${sp(4)}px`,
+        textAlign: 'center',
+        ...monoStyle('xs', 'med', '#fff'),
+        textTransform: 'uppercase', letterSpacing: 1.4,
       }}>
-        DEVIS
+        Devis
       </div>
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
-          <thead style={{ background: '#F4F6FA' }}>
+          <thead style={{ background: PALETTE.surfaceAlt }}>
             <tr>
-              <th style={{ ...th(), textAlign: 'left', paddingLeft: 14, minWidth: 180 }}>Acte</th>
+              <th style={{ ...th(), textAlign: 'left', paddingLeft: sp(4), minWidth: 180 }}>Acte</th>
               {codeEditable && <th style={th()}>Code</th>}
               {visibleNum.map(f => (
                 <th key={f.key} style={th()}>{f.label}</th>
@@ -93,11 +95,11 @@ export default function Devis({ rows, showCorrection, onChange }: Props) {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={i} style={{ borderTop: `1px solid ${A.border}` }}>
-                <td style={{ ...td(), padding: '10px 14px', textAlign: 'left', minWidth: 180 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: A.text, lineHeight: 1.3 }}>{r.libelle}</div>
+              <tr key={i} style={{ borderTop: `1px solid ${PALETTE.ruleSoft}` }}>
+                <td style={{ ...td(), padding: `${sp(3)}px ${sp(4)}px`, textAlign: 'left', minWidth: 180 }}>
+                  <div style={typeStyle('sm', 'med')}>{r.libelle}</div>
                   {r.code && !codeEditable && (
-                    <div style={{ fontSize: 10, color: A.textMuted, fontFamily: 'monospace', marginTop: 3 }}>{r.code}</div>
+                    <div style={{ ...monoStyle('xs', 'body', PALETTE.inkDim), marginTop: 3 }}>{r.code}</div>
                   )}
                 </td>
                 {codeEditable && (
@@ -132,13 +134,14 @@ export default function Devis({ rows, showCorrection, onChange }: Props) {
 
 function th(): React.CSSProperties {
   return {
-    padding: '8px 6px', fontSize: 10, fontWeight: 700, color: A.textMuted,
-    textTransform: 'uppercase', letterSpacing: 0.3, textAlign: 'center',
-    borderRight: `1px solid ${A.border}`,
+    padding: `${sp(2)}px ${sp(2)}px`,
+    ...monoStyle('xs', 'med', PALETTE.inkDim),
+    textTransform: 'uppercase', letterSpacing: 1.2, textAlign: 'center',
+    borderRight: `1px solid ${PALETTE.ruleSoft}`,
   }
 }
 function td(): React.CSSProperties {
-  return { padding: 0, borderRight: `1px solid ${A.border}`, verticalAlign: 'middle' }
+  return { padding: 0, borderRight: `1px solid ${PALETTE.ruleSoft}`, verticalAlign: 'middle' }
 }
 
 function Cell({ value, expected, isText, showCorrection, onChange }: {
@@ -154,11 +157,11 @@ function Cell({ value, expected, isText, showCorrection, onChange }: {
     : isText
       ? String(value ?? '').trim().toUpperCase() === String(expected ?? '').trim().toUpperCase()
       : near(typeof value === 'number' ? value : null, expected)
-  const bg = ok === true  ? '#E7F8EE'
-           : ok === false ? '#FDECEC'
-           : '#fff'
-  const borderB = ok === true  ? '2px solid #16A34A'
-                : ok === false ? '2px solid #EF4444'
+  const bg = ok === true  ? PALETTE.greenSoft
+           : ok === false ? PALETTE.redSoft
+           : PALETTE.surface
+  const borderB = ok === true  ? `2px solid ${PALETTE.green}`
+                : ok === false ? `2px solid ${PALETTE.red}`
                 : 'none'
   return (
     <div style={{ position: 'relative' }}>
@@ -169,18 +172,20 @@ function Cell({ value, expected, isText, showCorrection, onChange }: {
         onChange={e => onChange(e.target.value)}
         disabled={showCorrection}
         style={{
-          width: '100%', padding: '8px 6px',
+          width: '100%', padding: `${sp(2)}px ${sp(2)}px`,
           border: 'none', outline: 'none', background: bg,
           textAlign: 'center',
-          fontSize: 12, fontFamily: A.font, color: A.text,
+          ...(isText ? typeStyle('sm', 'med') : monoStyle('sm', 'med')),
+          fontVariantNumeric: 'tabular-nums',
           borderBottom: borderB,
         }}
       />
       {showCorrection && ok === false && (
         <div style={{
           position: 'absolute', left: 0, right: 0, top: '100%',
-          padding: '4px 4px', fontSize: 10, color: '#B91C1C',
-          background: '#FEE2E2', fontWeight: 700, textAlign: 'center',
+          padding: `${sp(1)}px ${sp(1)}px`,
+          ...monoStyle('xs', 'med', '#7A1F1D'),
+          background: PALETTE.redSoft, textAlign: 'center',
         }}>
           {isText ? expected : (typeof expected === 'number' ? expected.toFixed(2) : '')}
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, SHADOW, FONT_MONO, sp, monoStyle, typeStyle } from '@/lib/theme'
 
 export type FsRow = {
   date?: string | null              // JJ/MM/AAAA
@@ -101,39 +101,41 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
 
   return (
     <div style={{
-      background: '#fff',
-      borderRadius: 14,
-      border: `1px solid ${A.border}`,
+      background: PALETTE.surface,
+      borderRadius: RADIUS.lg,
+      border: `1px solid ${PALETTE.rule}`,
       overflow: 'hidden',
-      fontFamily: A.font,
+      boxShadow: SHADOW.sm,
     }}>
       <div style={{
-        background: 'linear-gradient(180deg, #1F2D3D 0%, #0F1B2D 100%)',
+        background: PALETTE.brand,
         color: '#fff',
-        padding: '10px 14px',
-        fontSize: 13, fontWeight: 800, letterSpacing: 0.3,
+        padding: `${sp(2)}px ${sp(4)}px`,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{ flex: 1, textAlign: 'center', marginLeft: 60 /* compense le bouton */ }}>
-          ACTES EFFECTUÉS
+        <span style={{
+          ...monoStyle('xs', 'med', '#fff'),
+          textTransform: 'uppercase', letterSpacing: 1.4,
+        }}>
+          Feuille de soins
         </span>
         <button
           onClick={() => setLegendOpen(true)}
           style={{
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.25)',
+            background: 'rgba(255,255,255,0.14)',
+            border: '1px solid rgba(255,255,255,0.22)',
             color: '#fff',
-            padding: '4px 10px', borderRadius: 999,
-            fontSize: 10, fontWeight: 700, cursor: 'pointer',
-            fontFamily: A.font,
+            padding: '4px 10px', borderRadius: RADIUS.pill,
+            cursor: 'pointer',
+            ...monoStyle('xs', 'med', '#fff'),
             display: 'inline-flex', alignItems: 'center', gap: 4,
           }}
         >
           <span style={{
             width: 13, height: 13, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.3)',
+            background: 'rgba(255,255,255,0.28)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 9, fontWeight: 900,
+            fontSize: 9, fontWeight: 700,
           }}>?</span>
           Légende
         </button>
@@ -151,37 +153,36 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxHeight: '80vh', overflowY: 'auto',
-              background: '#fff',
-              borderTopLeftRadius: 22, borderTopRightRadius: 22,
-              padding: '12px 16px 32px',
-              fontFamily: A.font,
-              boxShadow: '0 -10px 30px rgba(0,0,0,0.18)',
+              background: PALETTE.surface,
+              borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+              padding: `${sp(3)}px ${sp(4)}px ${sp(8)}px`,
+              boxShadow: '0 -10px 30px rgba(10,22,20,0.18)',
             }}
           >
             <div style={{
-              width: 40, height: 4, background: '#D1D7E0',
-              borderRadius: 999, margin: '0 auto 14px',
+              width: 40, height: 4, background: PALETTE.rule,
+              borderRadius: RADIUS.pill, margin: '0 auto 14px',
             }} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontSize: 17, fontWeight: 900, color: A.text }}>Légende des colonnes</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: sp(3) }}>
+              <div style={typeStyle('lg', 'bold')}>Légende des colonnes</div>
               <button onClick={() => setLegendOpen(false)} style={{
                 background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
-                fontSize: 22, color: A.textMuted, lineHeight: 1,
+                fontSize: 22, color: PALETTE.inkMute, lineHeight: 1,
               }}>×</button>
             </div>
             {ALL_FIELDS.map(f => (
               <div key={f.key} style={{
-                display: 'flex', gap: 12, padding: '10px 0',
-                borderBottom: `1px solid ${A.border}`,
+                display: 'flex', gap: sp(3), padding: `${sp(2)}px 0`,
+                borderBottom: `1px solid ${PALETTE.ruleSoft}`,
               }}>
                 <div style={{
                   minWidth: 100,
-                  fontSize: 12, fontWeight: 800, color: A.primary,
+                  ...monoStyle('xs', 'med', PALETTE.brand),
                   textTransform: 'uppercase', letterSpacing: 0.5,
                 }}>
                   {f.label}
                 </div>
-                <div style={{ fontSize: 12, color: A.text, lineHeight: 1.45, flex: 1 }}>
+                <div style={{ ...typeStyle('sm', 'body', PALETTE.ink), flex: 1 }}>
                   {f.help}
                 </div>
               </div>
@@ -191,25 +192,26 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
       )}
 
       {/* Header columns */}
-      <div style={{ display: 'flex', borderBottom: `1px solid ${A.border}`, background: '#F4F6FA' }}>
+      <div style={{ display: 'flex', borderBottom: `1px solid ${PALETTE.rule}`, background: PALETTE.surfaceAlt }}>
         {FIELDS.map(f => (
           <div
             key={f.key}
             title={f.help}
             style={{
               width: f.width, minWidth: f.width,
-              padding: '8px 6px',
-              fontSize: 10, fontWeight: 700, color: A.textMuted,
-              textAlign: 'center', borderRight: `1px solid ${A.border}`,
-              textTransform: 'uppercase', letterSpacing: 0.3,
+              padding: `${sp(2)}px ${sp(1)}px`,
+              ...monoStyle('xs', 'med', PALETTE.inkMute),
+              textAlign: 'center',
+              borderRight: `1px solid ${PALETTE.ruleSoft}`,
+              textTransform: 'uppercase', letterSpacing: 1,
               cursor: 'help',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
             }}
           >
             {f.label}
             <span style={{
-              fontSize: 8, color: A.textMuted, opacity: 0.6,
-              border: `1px solid ${A.textMuted}`, borderRadius: '50%',
+              fontSize: 8, color: PALETTE.inkDim, opacity: 0.6,
+              border: `1px solid ${PALETTE.inkDim}`, borderRadius: '50%',
               width: 11, height: 11, display: 'inline-flex',
               alignItems: 'center', justifyContent: 'center', fontWeight: 700,
             }}>?</span>
@@ -222,22 +224,23 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
         {expected.map((_, rowIdx) => (
           <div key={rowIdx} style={{
             display: 'flex',
-            borderBottom: rowIdx < expected.length - 1 ? `1px solid ${A.border}` : 'none',
+            borderBottom: rowIdx < expected.length - 1 ? `1px solid ${PALETTE.ruleSoft}` : 'none',
           }}>
             {FIELDS.map(f => {
               const status = getStatus(rowIdx, f.key)
               const value = rows[rowIdx]?.[f.key]
               const displayValue = value === null || value === undefined ? '' : String(value)
-              const bg = status === 'correct' ? '#E7F8EE'
-                       : status === 'wrong'   ? '#FDECEC'
-                       : '#fff'
-              const borderC = status === 'correct' ? '#22C55E'
-                            : status === 'wrong'   ? '#EF4444'
-                            : A.border
+              const bg = status === 'correct' ? PALETTE.greenSoft
+                       : status === 'wrong'   ? PALETTE.redSoft
+                       : PALETTE.surface
+              const borderC = status === 'correct' ? PALETTE.green
+                            : status === 'wrong'   ? PALETTE.red
+                            : PALETTE.rule
+              const isMono = f.key === 'code_ccam' || f.key === 'localisation' || f.key === 'date'
               return (
                 <div key={f.key} style={{
                   width: f.width, minWidth: f.width,
-                  borderRight: `1px solid ${A.border}`,
+                  borderRight: `1px solid ${PALETTE.ruleSoft}`,
                   position: 'relative',
                 }}>
                   <input
@@ -247,20 +250,24 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
                     onChange={e => updateCell(rowIdx, f.key, e.target.value)}
                     disabled={showCorrection}
                     style={{
-                      width: '100%', height: 38,
+                      width: '100%', height: 40,
                       border: 'none', outline: 'none',
-                      padding: '0 8px',
-                      fontSize: 13, fontFamily: A.font, color: A.text,
+                      padding: `0 ${sp(2)}px`,
+                      fontSize: 13,
+                      fontFamily: isMono ? FONT_MONO : 'inherit',
+                      color: PALETTE.ink,
                       background: bg,
                       borderBottom: status !== 'empty' ? `2px solid ${borderC}` : 'none',
                       textAlign: 'center',
+                      transition: 'background 220ms',
                     }}
                   />
                   {showCorrection && status === 'wrong' && (
                     <div style={{
                       position: 'absolute', left: 0, right: 0, top: '100%',
-                      padding: '4px 6px', fontSize: 10, color: '#B91C1C',
-                      background: '#FEE2E2', fontWeight: 700, textAlign: 'center',
+                      padding: '4px 6px',
+                      ...monoStyle('xs', 'med', PALETTE.red),
+                      background: PALETTE.redSoft, textAlign: 'center',
                     }}>
                       → {norm(expected[rowIdx]?.[f.key]) || '∅'}
                     </div>

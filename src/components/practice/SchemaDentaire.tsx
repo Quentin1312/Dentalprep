@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, SHADOW, sp, monoStyle, typeStyle } from '@/lib/theme'
 
 export type ToothState =
   | 'sain'
@@ -26,7 +26,7 @@ const COLORS: Record<ToothState, { bg: string; label: string; text: string }> = 
   amalgame:           { bg: '#2563EB', label: 'Amalgame',           text: '#FFFFFF' },
 }
 
-const PALETTE: ToothState[] = [
+const TOOTH_PALETTE: ToothState[] = [
   'sain', 'carie', 'racine', 'composite', 'canalaire',
   'prothese_conjointe', 'prothese_adjointe', 'amalgame',
 ]
@@ -216,19 +216,19 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 14, padding: 14,
-      border: `1px solid ${A.border}`, fontFamily: A.font,
+      background: PALETTE.surface, borderRadius: RADIUS.lg, padding: sp(4),
+      border: `1px solid ${PALETTE.rule}`, boxShadow: SHADOW.sm,
     }}>
       <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: sp(3),
       }}>
         <div style={{
-          fontSize: 11, fontWeight: 800, color: A.textMuted,
-          letterSpacing: 1.4, textTransform: 'uppercase',
+          ...monoStyle('xs', 'med', PALETTE.inkDim),
+          textTransform: 'uppercase', letterSpacing: 1.4,
         }}>
           Schéma dentaire
         </div>
-        <div style={{ fontSize: 10, color: A.textMuted }}>
+        <div style={monoStyle('xs', 'body', PALETTE.inkDim)}>
           patient face à toi
         </div>
       </div>
@@ -236,11 +236,11 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
       {/* Palette */}
       {!showCorrection && (
         <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14,
-          padding: '8px 10px', background: '#F7F9FC', borderRadius: 10,
-          border: `1px solid ${A.border}`,
+          display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: sp(4),
+          padding: `${sp(2)}px ${sp(3)}px`, background: PALETTE.surfaceAlt, borderRadius: RADIUS.md,
+          border: `1px solid ${PALETTE.ruleSoft}`,
         }}>
-          {PALETTE.map(s => {
+          {TOOTH_PALETTE.map(s => {
             const c = COLORS[s]
             const active = brush === s
             return (
@@ -271,30 +271,34 @@ export default function SchemaDentaire({ expected, showCorrection, onChange }: P
 
       {/* Maxillaire */}
       <div style={{
-        fontSize: 9, fontWeight: 700, color: A.textMuted,
-        textAlign: 'center', letterSpacing: 1.2, marginBottom: 2,
+        ...monoStyle('xs', 'med', PALETTE.inkDim),
+        textAlign: 'center', letterSpacing: 1.4, marginBottom: 2,
+        textTransform: 'uppercase',
       }}>
-        MAXILLAIRE
+        Maxillaire
       </div>
       <Arch teeth={UPPER} arch="upper" state={state} expected={expected} showCorrection={showCorrection} onPaint={paint} />
 
-      <div style={{ margin: '6px 0', height: 1, background: A.border }} />
+      <div style={{ margin: `${sp(2)}px 0`, height: 1, background: PALETTE.ruleSoft }} />
 
       {/* Mandibule */}
       <Arch teeth={LOWER} arch="lower" state={state} expected={expected} showCorrection={showCorrection} onPaint={paint} />
       <div style={{
-        fontSize: 9, fontWeight: 700, color: A.textMuted,
-        textAlign: 'center', letterSpacing: 1.2, marginTop: 2,
+        ...monoStyle('xs', 'med', PALETTE.inkDim),
+        textAlign: 'center', letterSpacing: 1.4, marginTop: 2,
+        textTransform: 'uppercase',
       }}>
-        MANDIBULE
+        Mandibule
       </div>
 
       {!showCorrection && (
         <div style={{
-          fontSize: 11, color: A.textMuted, marginTop: 12, textAlign: 'center',
-          padding: '8px 10px', background: '#EEF4FF', borderRadius: 8,
+          ...typeStyle('xs', 'body', PALETTE.inkMute),
+          marginTop: sp(3), textAlign: 'center',
+          padding: `${sp(2)}px ${sp(3)}px`,
+          background: PALETTE.brandSoft, borderRadius: RADIUS.sm,
         }}>
-          1. Sélectionne une <strong>couleur</strong> → 2. tap les <strong>dents</strong> concernées.
+          1. Sélectionne une <strong>couleur</strong> → 2. tape les <strong>dents</strong> concernées.
         </div>
       )}
     </div>

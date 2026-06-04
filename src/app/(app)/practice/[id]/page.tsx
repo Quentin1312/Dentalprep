@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { A } from '@/lib/theme'
+import { A, PALETTE, RADIUS, SHADOW, sp, typeStyle, displayStyle, monoStyle } from '@/lib/theme'
 import { useAppData } from '@/lib/app-context'
 import { useThemeBg, themeBgStyle } from '@/lib/theme-bg'
 import { recordSession } from '@/lib/recordSession'
@@ -299,23 +299,27 @@ function PracticeExerciseInner() {
       </div>
 
       {/* Énoncé + sections */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '8px 12px' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: `${sp(2)}px ${sp(3)}px` }}>
         <div style={{
-          background: '#fff', borderRadius: 16, padding: 18,
-          border: `1px solid ${A.border}`, marginBottom: 14,
+          background: PALETTE.surface, borderRadius: RADIUS.lg, padding: sp(5),
+          border: `1px solid ${PALETTE.rule}`, marginBottom: sp(3),
+          boxShadow: SHADOW.md,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: A.textMuted, letterSpacing: 1.4, textTransform: 'uppercase' }}>
-            Cas #{exo.n}
+          <div style={{
+            ...monoStyle('xs', 'med', PALETTE.brand),
+            textTransform: 'uppercase', letterSpacing: 1.4,
+          }}>
+            Cas clinique · #{exo.n}
           </div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: A.text, marginTop: 4, letterSpacing: -0.3 }}>
+          <div style={{ ...displayStyle('xl', 'bold'), marginTop: sp(1) }}>
             {exo.title}
           </div>
           {exo.prompt && exo.prompt !== exo.title && (
-            <div style={{ fontSize: 13, color: A.text, marginTop: 10, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+            <div style={{ ...typeStyle('sm', 'body'), marginTop: sp(3), whiteSpace: 'pre-wrap' }}>
               {exo.prompt}
             </div>
           )}
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: sp(3) }}>
             <CcamHelp />
           </div>
         </div>
