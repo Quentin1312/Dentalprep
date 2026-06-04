@@ -305,20 +305,40 @@ function PracticeExerciseInner() {
           border: `1px solid ${PALETTE.rule}`, marginBottom: sp(3),
           boxShadow: SHADOW.md,
         }}>
+          {/* Eyebrow : catégorie + n° de cas */}
           <div style={{
             ...monoStyle('xs', 'med', PALETTE.brand),
             textTransform: 'uppercase', letterSpacing: 1.4,
           }}>
-            Cas clinique · #{exo.n}
+            Cas {exo.n}{exo.category ? ` · ${categoryLabel(exo.category)}` : ''}
           </div>
+
+          {/* Titre */}
           <div style={{ ...displayStyle('xl', 'bold'), marginTop: sp(1) }}>
             {exo.title}
           </div>
+
+          {/* Chips infos : cas clinique + durée estimée + sections */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: sp(1), marginTop: sp(2) }}>
+            <Chip tone="brand">Cas clinique</Chip>
+            <Chip tone="neutral">~{estimatedMinutes(exo)} min</Chip>
+            {hasSchema && <Chip tone="neutral">Schéma</Chip>}
+            {hasDevis && <Chip tone="neutral">Devis</Chip>}
+            {hasCalculs && <Chip tone="neutral">Calculs</Chip>}
+            {hasQuestions && <Chip tone="neutral">{exo.extra!.questions!.length} question{exo.extra!.questions!.length > 1 ? 's' : ''}</Chip>}
+          </div>
+
+          {/* Énoncé en typeStyle, plus aéré */}
           {exo.prompt && exo.prompt !== exo.title && (
-            <div style={{ ...typeStyle('sm', 'body'), marginTop: sp(3), whiteSpace: 'pre-wrap' }}>
+            <div style={{
+              ...typeStyle('base', 'body'),
+              marginTop: sp(3), whiteSpace: 'pre-wrap', lineHeight: '24px',
+            }}>
               {exo.prompt}
             </div>
           )}
+
+          {/* Aide CCAM bouton */}
           <div style={{ marginTop: sp(3) }}>
             <CcamHelp />
           </div>
@@ -479,5 +499,54 @@ function PracticeExerciseInner() {
         </div>
       </div>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers locaux
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CATEGORY_LABELS: Record<string, string> = {
+  actes_isoles:    'Actes isolés',
+  procedures:      'Procédures',
+  gestes_compl:    'Gestes complémentaires',
+  associations:    'Associations',
+  modificateurs:   'Modificateurs',
+  prothese_fixe:   'Prothèse fixe',
+  cmu_css:         'CMU / CSS',
+  ebd:             'EBD',
+  devis:           'Devis',
+  calculs_amo_amc: 'Calculs AMO/AMC',
+  cas_complet:     'Cas complet',
+}
+function categoryLabel(cat: string): string {
+  return CATEGORY_LABELS[cat] ?? cat
+}
+
+function estimatedMinutes(exo: { rows?: FsRow[]; extra?: ExtraData | null }): number {
+  // ~1 min par ligne de feuille + 2 min par section additionnelle
+  let min = 2
+  if (exo.rows) min += exo.rows.length
+  if (exo.extra?.schema_dentaire) min += 2
+  if (exo.extra?.devis && exo.extra.devis.length > 0) min += 3
+  if (exo.extra?.calculs) min += 2
+  if (exo.extra?.questions && exo.extra.questions.length > 0) min += exo.extra.questions.length
+  return Math.max(2, Math.round(min))
+}
+
+function Chip({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'brand' | 'neutral' }) {
+  const bg = tone === 'brand' ? PALETTE.brandSoft : PALETTE.surfaceAlt
+  const fg = tone === 'brand' ? PALETTE.brand : PALETTE.inkMute
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      ...monoStyle('xs', 'med', fg),
+      background: bg, padding: '4px 9px',
+      borderRadius: RADIUS.sm,
+      letterSpacing: 0.5,
+      border: `1px solid ${PALETTE.ruleSoft}`,
+    }}>
+      {children}
+    </span>
   )
 }

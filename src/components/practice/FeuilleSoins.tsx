@@ -191,23 +191,69 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
         </div>
       )}
 
-      {/* Cards par acte — layout mobile-first, plus de grille Excel */}
+      {/* Cards par acte — layout mobile-first inspiré du design Clinique */}
       <div style={{ padding: sp(3), display: 'flex', flexDirection: 'column', gap: sp(3) }}>
-        {expected.map((_, rowIdx) => (
+        {expected.map((_, rowIdx) => {
+          const exp = expected[rowIdx]
+          const filled = rows[rowIdx]?.code_ccam || rows[rowIdx]?.localisation
+          // statut résumé de la ligne (pour la pastille gauche)
+          let lineStatus: 'idle' | 'partial' | 'ok' | 'ko' = 'idle'
+          if (showCorrection) {
+            const total = FIELDS.filter(f => !isEmpty(exp?.[f.key])).length
+            const correct = FIELDS.filter(f => !isEmpty(exp?.[f.key]) && cellOK(rows[rowIdx]?.[f.key], exp?.[f.key], f.key)).length
+            lineStatus = total > 0 && correct === total ? 'ok' : correct > 0 ? 'partial' : 'ko'
+          } else if (filled) {
+            lineStatus = 'partial'
+          }
+          const pastilleColors = {
+            idle:    { bg: PALETTE.brandSoft, fg: PALETTE.brand,  border: PALETTE.brand,  ring: PALETTE.brand },
+            partial: { bg: PALETTE.brandSoft, fg: PALETTE.brand,  border: PALETTE.brand,  ring: PALETTE.brand },
+            ok:      { bg: PALETTE.greenSoft, fg: PALETTE.green,  border: PALETTE.green,  ring: PALETTE.green },
+            ko:      { bg: PALETTE.redSoft,   fg: PALETTE.red,    border: PALETTE.red,    ring: PALETTE.red   },
+          }[lineStatus]
+          const pastilleText = exp?.localisation ?? '—'
+          return (
           <div key={rowIdx} style={{
             background: PALETTE.surfaceAlt,
             borderRadius: RADIUS.md,
             border: `1px solid ${PALETTE.ruleSoft}`,
             padding: sp(3),
+            display: 'flex', gap: sp(3),
           }}>
+            {/* Pastille dent (gauche) — style design Clinique */}
+            <div style={{ flexShrink: 0 }}>
+              <div style={{
+                width: 40, minHeight: 44,
+                background: pastilleColors.bg, color: pastilleColors.fg,
+                border: `1.5px solid ${pastilleColors.border}`,
+                borderRadius: RADIUS.sm,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                ...monoStyle('sm', 'med', pastilleColors.fg),
+                fontWeight: 700,
+              }}>
+                {pastilleText}
+              </div>
+            </div>
+
+            {/* Contenu acte */}
+            <div style={{ flex: 1, minWidth: 0 }}>
             {/* Label acte */}
             <div style={{
-              ...monoStyle('xs', 'med', PALETTE.brand),
+              ...monoStyle('xs', 'med', pastilleColors.fg),
               textTransform: 'uppercase', letterSpacing: 1.2,
               marginBottom: sp(2),
               display: 'flex', alignItems: 'baseline', gap: sp(2),
             }}>
               <span>Acte {rowIdx + 1}</span>
+              {showCorrection && lineStatus === 'ok' && (
+                <span style={{ ...monoStyle('xs', 'med', PALETTE.green) }}>• OK</span>
+              )}
+              {showCorrection && lineStatus === 'ko' && (
+                <span style={{ ...monoStyle('xs', 'med', PALETTE.red) }}>• à revoir</span>
+              )}
+              {showCorrection && lineStatus === 'partial' && (
+                <span style={{ ...monoStyle('xs', 'med', PALETTE.amber) }}>• partiel</span>
+              )}
               <span style={{ flex: 1, height: 1, background: PALETTE.ruleSoft, alignSelf: 'center' }} />
             </div>
 
@@ -276,8 +322,10 @@ export default function FeuilleSoins({ expected, showCorrection, onChange, onVal
                 )
               })}
             </div>
+            </div>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
