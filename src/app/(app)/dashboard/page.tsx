@@ -107,22 +107,59 @@ export default function DashboardPage() {
           <div style={{ borderRadius: 20, height: 130, background: '#C8D8F5' }} />
         ) : (
           <Link href={profile?.exam_date ? '/profile' : '/setup'} style={{ textDecoration: 'none', display: 'block' }}>
-            <div style={{ background: `linear-gradient(135deg, ${A.primary} 0%, ${A.primaryDark} 100%)`, borderRadius: 20, padding: '18px 20px', color: '#fff', boxShadow: '0 10px 30px rgba(10,102,224,0.28)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', right: -30, top: -30, width: 160, height: 160, border: '20px solid rgba(255,255,255,0.07)', borderRadius: '50%' }} />
-              <div style={{ fontSize: 12, opacity: 0.8, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Icon name="calendar" size={12} color="#fff" />
-                {profile?.exam_date
-                  ? `Examen CNQAOS · ${new Date(profile.exam_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`
-                  : 'Configurer la date →'}
+            <div style={{
+              background: `linear-gradient(135deg, ${PALETTE.brand} 0%, ${PALETTE.brandDeep} 100%)`,
+              borderRadius: RADIUS.xl, padding: '18px 20px', color: '#fff',
+              boxShadow: `0 10px 30px ${PALETTE.brandDeep}55`,
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {/* Pattern décoratif sable */}
+              <div style={{
+                position: 'absolute', top: -20, right: -20, width: 200, height: 200,
+                backgroundImage: `radial-gradient(circle, ${PALETTE.accent}66 1.5px, transparent 1.5px)`,
+                backgroundSize: '12px 12px', opacity: 0.4, pointerEvents: 'none',
+              }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    ...monoStyle('xs', 'med', 'rgba(255,255,255,0.7)'),
+                    textTransform: 'uppercase', letterSpacing: 1.4,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <Icon name="calendar" size={11} color="#fff" />
+                    {profile?.exam_date
+                      ? `CNQAOS · ${new Date(profile.exam_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
+                      : 'Configurer la date →'}
+                  </div>
+                  <div style={{
+                    ...displayStyle('4xl', 'bold', '#fff'),
+                    fontVariantNumeric: 'tabular-nums',
+                    marginTop: sp(1), lineHeight: 1,
+                  }}>
+                    {days !== null ? <>J<span style={{ opacity: 0.6 }}>−</span>{days}</> : '—'}
+                  </div>
+                </div>
+
+                {/* Pet companion en sticker */}
+                {!loading && (
+                  <div style={{
+                    width: 64, height: 64, flexShrink: 0,
+                    filter: `drop-shadow(0 6px 14px ${PALETTE.brandDeep}99)`,
+                  }}>
+                    <PetCompanion petType={petType} state="idle" size={64} hideName level={xpInfo.level} />
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: -2, lineHeight: 1, marginTop: 6 }}>
-                {days !== null ? `J−${days}` : '—'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-                <div style={{ fontSize: 13, opacity: 0.8 }}>{overallProgress}% de progression</div>
-              </div>
-              <div style={{ marginTop: 8, height: 5, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{ width: `${overallProgress}%`, height: '100%', background: '#fff', borderRadius: 4, transition: 'width 0.8s ease' }} />
+
+              {/* Barre de progression globale */}
+              <div style={{ marginTop: sp(3), position: 'relative' }}>
+                <div style={{ ...monoStyle('xs', 'med', 'rgba(255,255,255,0.75)'), marginBottom: 6 }}>
+                  {overallProgress}% de progression
+                </div>
+                <div style={{ height: 5, background: 'rgba(255,255,255,0.2)', borderRadius: 999, overflow: 'hidden' }}>
+                  <div style={{ width: `${overallProgress}%`, height: '100%', background: '#fff', borderRadius: 999, transition: 'width 0.8s ease' }} />
+                </div>
               </div>
             </div>
           </Link>
@@ -216,7 +253,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Plan de révision du jour — bloc "Aujourd'hui" */}
+      {/* Carte Reprendre — la prochaine action recommandée mise en avant */}
       {!loading && data && (() => {
         const plan = buildStudyPlan({
           daysUntilExam: days,
@@ -234,55 +271,50 @@ export default function DashboardPage() {
           recentWrongQuestionCount: data.recentWrongQuestionCount,
           totalQuestionsCount: data.questions.length,
         })
-        const totalMin = planTotalMinutes(plan)
-        if (plan.length === 0) return null
+        const top = plan[0]
+        if (!top) return null
         return (
-          <div style={{ padding: '14px 20px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase' }}>
-                Aujourd&apos;hui
-              </div>
-              <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 600 }}>
-                ≈ {totalMin} min
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {plan.map(item => (
-                <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
+          <div style={{ padding: `${sp(4)}px ${sp(5)}px 0` }}>
+            <Link href={top.href} style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{
+                background: PALETTE.surface,
+                borderRadius: RADIUS.lg,
+                border: `1px solid ${PALETTE.rule}`,
+                padding: sp(4),
+                boxShadow: SHADOW.md,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: sp(1) }}>
                   <div style={{
-                    background: A.surface, borderRadius: 14, border: `0.5px solid ${A.border}`,
-                    padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(15,27,45,0.04)',
+                    ...monoStyle('xs', 'med', PALETTE.accent),
+                    textTransform: 'uppercase', letterSpacing: 1.4,
                   }}>
-                    <div style={{
-                      width: 38, height: 38, borderRadius: 11,
-                      background: `${item.accent}18`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      <Icon name={item.icon} size={18} color={item.accent} strokeWidth={2} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 700, color: A.text, letterSpacing: -0.1 }}>
-                        {item.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: A.textMuted, marginTop: 1 }}>
-                        {item.detail}
-                      </div>
-                    </div>
-                    <div style={{
-                      fontSize: 10, fontWeight: 800, color: item.accent,
-                      background: `${item.accent}15`, padding: '3px 8px', borderRadius: 999,
-                      flexShrink: 0,
-                    }}>
-                      {item.estimatedMin} min
-                    </div>
-                    <Icon name="chevronR" size={14} color={A.textMuted} />
+                    Reprendre
                   </div>
-                </Link>
-              ))}
-            </div>
+                  <div style={{
+                    ...monoStyle('xs', 'med', PALETTE.inkDim),
+                    background: PALETTE.surfaceAlt, padding: '2px 8px', borderRadius: RADIUS.sm,
+                  }}>
+                    ≈ {top.estimatedMin} min
+                  </div>
+                </div>
+                <div style={displayStyle('xl', 'bold')}>{top.title}</div>
+                <div style={{ ...typeStyle('sm', 'body', PALETTE.inkMute), marginTop: 2 }}>
+                  {top.detail}
+                </div>
+                <div style={{
+                  marginTop: sp(3),
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: `${sp(2)}px ${sp(4)}px`,
+                  background: PALETTE.brand, color: '#fff',
+                  borderRadius: RADIUS.pill,
+                  ...monoStyle('xs', 'med', '#fff'),
+                  letterSpacing: 0.4,
+                }}>
+                  Continuer
+                  <Icon name="chevronR" size={12} color="#fff" strokeWidth={2.4} />
+                </div>
+              </div>
+            </Link>
           </div>
         )
       })()}
@@ -302,42 +334,60 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Module progress */}
-      <div style={{ padding: '20px 20px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: A.textMuted, letterSpacing: 0.3, textTransform: 'uppercase' }}>Progression par module</div>
-          <Link href="/library" style={{ fontSize: 12, color: A.primary, fontWeight: 600, textDecoration: 'none' }}>Bibliothèque →</Link>
+      {/* Modules tiles — 2 colonnes style ModuleTile du DS */}
+      <div style={{ padding: `${sp(5)}px ${sp(5)}px 0` }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: sp(2) }}>
+          <div style={displayStyle('base', 'bold')}>Tes modules</div>
+          <Link href="/library" style={{
+            ...monoStyle('xs', 'med', PALETTE.brand),
+            textTransform: 'uppercase', letterSpacing: 0.6, textDecoration: 'none',
+          }}>
+            Bibliothèque →
+          </Link>
         </div>
         {loading && !data ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[1,2,3,4,5,6].map(i => <Skeleton key={i} w="100%" h={60} r={14} />)}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: sp(2) }}>
+            {[1,2,3,4,5,6].map(i => <Skeleton key={i} w="100%" h={88} r={14} />)}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: sp(2) }}>
             {moduleStats.map(m => {
-              const color = m.pct >= 100 ? A.green : m.pct > 0 ? A.amber : A.textDim
+              // Statut couleur cohérent DS
+              const status = m.pct >= 80 ? 'mastered' : m.pct >= 40 ? 'progress' : m.pct > 0 ? 'weak' : 'todo'
+              const c = status === 'mastered' ? { bg: PALETTE.greenSoft, fg: PALETTE.green,  ring: PALETTE.green  }
+                      : status === 'progress' ? { bg: PALETTE.brandSoft, fg: PALETTE.brand,  ring: PALETTE.brand  }
+                      : status === 'weak'     ? { bg: PALETTE.amberSoft, fg: PALETTE.amber,  ring: PALETTE.amber  }
+                      :                         { bg: PALETTE.surfaceAlt, fg: PALETTE.inkDim, ring: PALETTE.rule  }
               return (
                 <Link key={m.id} href={`/module/${m.id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ background: A.surface, borderRadius: 14, padding: '12px 14px', border: `0.5px solid ${A.border}`, boxShadow: '0 1px 3px rgba(15,27,45,0.05)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 9, background: m.pct >= 100 ? A.greenSoft : m.pct > 0 ? A.amberSoft : '#F1F3F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color }}>{m.id}</span>
+                  <div style={{
+                    background: PALETTE.surface, border: `1px solid ${PALETTE.rule}`,
+                    borderRadius: RADIUS.md, padding: sp(3),
+                    display: 'flex', flexDirection: 'column', gap: sp(1),
+                    minWidth: 0,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: sp(1) }}>
+                      <div style={{
+                        ...monoStyle('xs', 'med', c.fg),
+                        background: c.bg, padding: '2px 6px',
+                        borderRadius: RADIUS.sm, letterSpacing: 0.6,
+                      }}>{m.id}</div>
+                      <div style={{ ...monoStyle('xs', 'med', PALETTE.inkDim), fontVariantNumeric: 'tabular-nums' }}>
+                        {m.pct}%
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.label}</div>
-                        {m.totalQuestions > 0
-                          ? <div style={{ fontSize: 11, color, marginTop: 1, fontWeight: 600 }}>{m.doneQuestions}/{m.totalQuestions} questions validées</div>
-                          : <div style={{ fontSize: 11, color: A.textDim, marginTop: 1 }}>{m.uploaded}/{m.total} fascicules scannés</div>}
-                      </div>
-                      <div style={{ width: 36, height: 36, position: 'relative', flexShrink: 0 }}>
-                        <svg width="36" height="36" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="14" fill="none" stroke="#E9ECF2" strokeWidth="3" />
-                          <circle cx="18" cy="18" r="14" fill="none" stroke={color} strokeWidth="3"
-                            strokeDasharray={`${(m.pct / 100) * 88} 88`} strokeLinecap="round"
-                            transform="rotate(-90 18 18)" />
-                        </svg>
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color }}>{m.pct}%</div>
-                      </div>
+                    </div>
+                    <div style={{
+                      ...typeStyle('sm', 'med'),
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>{m.label}</div>
+                    <div style={{
+                      height: 4, background: PALETTE.ruleSoft,
+                      borderRadius: RADIUS.pill, overflow: 'hidden', marginTop: 2,
+                    }}>
+                      <div style={{
+                        width: `${m.pct}%`, height: '100%', background: c.ring,
+                        borderRadius: RADIUS.pill, transition: 'width 0.8s ease',
+                      }} />
                     </div>
                   </div>
                 </Link>
