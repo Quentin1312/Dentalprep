@@ -146,6 +146,7 @@ export function PathNode({
   accent = '#0A66E0',
   onClick,
   disabled,
+  justCompleted = false,
 }: {
   state?: PathNodeState
   icon?: PathIconName
@@ -156,6 +157,8 @@ export function PathNode({
   accent?: string
   onClick?: () => void
   disabled?: boolean
+  /** Anime le passage à completed (bounce + ring + étoile pop). */
+  justCompleted?: boolean
 }) {
   const SIZE = isBoss ? 90 : size
   const DEPTH = 7
@@ -195,7 +198,30 @@ export function PathNode({
         </>
       )}
 
-      <div style={{ position: 'relative', width: SIZE, height: SIZE + DEPTH }}>
+      {/* Ripple celebration (passe orange → vert) */}
+      {justCompleted && state === 'completed' && (
+        <>
+          <div style={{
+            position: 'absolute', top: 0, left: '50%',
+            width: SIZE, height: SIZE, marginLeft: -SIZE / 2,
+            borderRadius: '50%', border: `3px solid ${p.ringCol}`,
+            opacity: 0.85, animation: 'dp-celebrate-ring 1s ease-out forwards',
+            pointerEvents: 'none', zIndex: 4,
+          }} />
+          <div style={{
+            position: 'absolute', top: 0, left: '50%',
+            width: SIZE, height: SIZE, marginLeft: -SIZE / 2,
+            borderRadius: '50%', border: `3px solid ${p.ringCol}`,
+            opacity: 0.85, animation: 'dp-celebrate-ring 1s 0.18s ease-out forwards',
+            pointerEvents: 'none', zIndex: 4,
+          }} />
+        </>
+      )}
+
+      <div style={{
+        position: 'relative', width: SIZE, height: SIZE + DEPTH,
+        animation: justCompleted && state === 'completed' ? 'dp-celebrate-bounce 0.65s cubic-bezier(.34,1.56,.64,1)' : undefined,
+      }}>
         <div style={{
           position: 'absolute', left: 0, top: DEPTH, width: SIZE, height: SIZE,
           background: p.edge, borderRadius: '50%',
@@ -207,6 +233,7 @@ export function PathNode({
           boxShadow: state === 'locked'
             ? 'inset 0 -2px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)'
             : `inset 0 -3px 0 rgba(0,0,0,0.10), inset 0 2px 0 rgba(255,255,255,0.25), 0 1px 2px rgba(15,27,45,0.08)`,
+          transition: 'background 420ms ease',
         }}>
           {state === 'completed' ? (
             <PathIcon name="check" size={isBoss ? 40 : 32} color={p.iconCol} strokeWidth={3.2} />
@@ -224,6 +251,7 @@ export function PathNode({
             background: 'linear-gradient(135deg, #FFD84A 0%, #F59E0B 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 2px 6px rgba(245,158,11,0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
+            animation: justCompleted ? 'dp-celebrate-star 0.7s 0.2s cubic-bezier(.34,1.56,.64,1) both' : undefined,
           }}>
             <PathIcon name="star" size={13} color="#fff" strokeWidth={0} />
           </div>
@@ -675,6 +703,22 @@ export function PathSystemStyles() {
       @keyframes dp-pulse { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
       @keyframes dp-bob   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
       @keyframes dp-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+      /* Animation "passage à completed" — célèbre la validation d'un fascicule */
+      @keyframes dp-celebrate-bounce {
+        0%   { transform: scale(1); }
+        30%  { transform: scale(1.18); }
+        60%  { transform: scale(0.96); }
+        100% { transform: scale(1); }
+      }
+      @keyframes dp-celebrate-ring {
+        0%   { transform: scale(1); opacity: 0.85; }
+        100% { transform: scale(2); opacity: 0; }
+      }
+      @keyframes dp-celebrate-star {
+        0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
+        60%  { transform: scale(1.4) rotate(15deg); opacity: 1; }
+        100% { transform: scale(1) rotate(0deg); opacity: 1; }
+      }
     `}</style>
   )
 }

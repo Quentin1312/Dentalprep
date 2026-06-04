@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES, type Fascicule } from '@/lib/modules'
 import type { ModuleId } from '@/types/database'
@@ -66,6 +66,8 @@ type LessonProgress = {
   }[]
 }
 
+const CELEBRATED_KEY = 'lib_celebrated_fasc_v1'
+
 export default function LibraryPage() {
   const router = useRouter()
   const { data, loading } = useAppData()
@@ -76,6 +78,47 @@ export default function LibraryPage() {
   const attempts = data?.attempts ?? []
   const questions = data?.questions ?? []
   const questionCourseMap = data?.questionCourseMap ?? {}
+
+  // Détection "nouveau passage à completed" — déclenche l'anim 1 seule fois.
+  // Clé d'un fascicule complété = "{moduleId}:{fasciculeN}".
+  const completedSet = useMemo(() => {
+    const out = new Set<string>()
+    if (loading || !data) return out
+    for (const m of MODULES) {
+      const mFasc = FASCICULES.filter(f => f.modules.includes(m.id))
+      for (const f of mFasc) {
+        const course = courses.find(c => fasciculeN(c.title) === f.n)
+        if (!course) continue
+        const mQs = questions.filter(q => q.course_id === course.id && q.module_id === m.id)
+        if (mQs.length === 0) continue
+        const correct = new Set(attempts.filter(a => a.is_correct && a.module_id === m.id)
+          .map(a => a.question_id))
+        const allDone = mQs.every(q => correct.has(q.id))
+        if (allDone) out.add(`${m.id}:${f.n}`)
+      }
+    }
+    return out
+  }, [loading, data, courses, questions, attempts])
+
+  const [justCompleted, setJustCompleted] = useState<Set<string>>(() => new Set())
+  useEffect(() => {
+    if (loading || !data) return
+    let cached: string[] = []
+    try { cached = JSON.parse(localStorage.getItem(CELEBRATED_KEY) ?? '[]') } catch {}
+    const cachedSet = new Set(cached)
+    const fresh = new Set<string>()
+    for (const id of completedSet) if (!cachedSet.has(id)) fresh.add(id)
+    if (fresh.size > 0) {
+      setJustCompleted(fresh)
+      // Nettoie après que l'animation soit jouée (~1.2s) pour ne pas la rejouer sur re-render.
+      const t = setTimeout(() => setJustCompleted(new Set()), 1500)
+      try { localStorage.setItem(CELEBRATED_KEY, JSON.stringify([...completedSet])) } catch {}
+      return () => clearTimeout(t)
+    }
+    // Si rien de neuf mais le cache est obsolète (cas où un fasc redevient incomplet — impossible mais bon),
+    // resync quand même
+    try { localStorage.setItem(CELEBRATED_KEY, JSON.stringify([...completedSet])) } catch {}
+  }, [completedSet, loading, data])
 
   // Compute per-module stats once
   const moduleStats = MODULES.map(m => {
@@ -254,6 +297,7 @@ export default function LibraryPage() {
                       : 'current'
                 const icon = iconForFascicule(f.title)
                 const shortTitle = f.title.length > 26 ? f.title.slice(0, 24) + '…' : f.title
+                const just = justCompleted.has(`${m.id}:${f.n}`)
                 return (
                   <PathRow key={`f-${m.id}-${f.n}`} pos={pos} from={from}>
                     {course ? (
@@ -261,11 +305,11 @@ export default function LibraryPage() {
                         onClick={() => setSheet({ courseId: course.id, modId: m.id, title: f.title, n: f.n })}
                         style={{ cursor: 'pointer' }}
                       >
-                        <PathNode state={state} icon={icon} accent={accent} label={shortTitle} />
+                        <PathNode state={state} icon={icon} accent={accent} label={shortTitle} justCompleted={just} />
                       </div>
                     ) : (
                       <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none' }}>
-                        <PathNode state={state} icon={icon} accent={accent} label={shortTitle} />
+                        <PathNode state={state} icon={icon} accent={accent} label={shortTitle} justCompleted={just} />
                       </Link>
                     )}
                   </PathRow>
