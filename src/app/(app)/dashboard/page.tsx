@@ -101,26 +101,27 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Hero countdown */}
-      <div style={{ padding: '16px 20px 0' }}>
+      {/* Hero countdown — streak + objectif intégrés, pet sobre dans un cercle */}
+      <div style={{ padding: `${sp(4)}px ${sp(5)}px 0` }}>
         {loading && !data ? (
-          <div style={{ borderRadius: 20, height: 130, background: '#C8D8F5' }} />
+          <div style={{ borderRadius: RADIUS.xl, height: 160, background: PALETTE.brandSoft }} />
         ) : (
           <Link href={profile?.exam_date ? '/profile' : '/setup'} style={{ textDecoration: 'none', display: 'block' }}>
             <div style={{
               background: `linear-gradient(135deg, ${PALETTE.brand} 0%, ${PALETTE.brandDeep} 100%)`,
-              borderRadius: RADIUS.xl, padding: '18px 20px', color: '#fff',
+              borderRadius: RADIUS.xl, padding: '20px 22px', color: '#fff',
               boxShadow: `0 10px 30px ${PALETTE.brandDeep}55`,
               position: 'relative', overflow: 'hidden',
             }}>
-              {/* Pattern décoratif sable */}
+              {/* Décor cercle sobre top-right */}
               <div style={{
-                position: 'absolute', top: -20, right: -20, width: 200, height: 200,
-                backgroundImage: `radial-gradient(circle, ${PALETTE.accent}66 1.5px, transparent 1.5px)`,
-                backgroundSize: '12px 12px', opacity: 0.4, pointerEvents: 'none',
+                position: 'absolute', right: -40, top: -40,
+                width: 180, height: 180,
+                border: `18px solid rgba(255,255,255,0.06)`,
+                borderRadius: '50%', pointerEvents: 'none',
               }} />
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', gap: sp(3) }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     ...monoStyle('xs', 'med', 'rgba(255,255,255,0.7)'),
@@ -139,119 +140,85 @@ export default function DashboardPage() {
                   }}>
                     {days !== null ? <>J<span style={{ opacity: 0.6 }}>−</span>{days}</> : '—'}
                   </div>
+                  <div style={{
+                    ...monoStyle('xs', 'med', 'rgba(255,255,255,0.7)'),
+                    marginTop: 4,
+                  }}>
+                    {overallProgress}% de progression
+                  </div>
                 </div>
 
-                {/* Pet companion en sticker */}
-                {!loading && (
+                {/* Pet sobre dans un cercle propre — pas de couronne, pas de glow */}
+                <div style={{
+                  width: 72, height: 72, flexShrink: 0, position: 'relative',
+                  background: 'rgba(255,255,255,0.12)',
+                  border: `1px solid rgba(255,255,255,0.18)`,
+                  borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  overflow: 'hidden',
+                }}>
+                  <PetCompanion petType={petType} state="idle" size={60} hideName hideCrown hideOrbit level={xpInfo.level} />
+                </div>
+              </div>
+
+              {/* Streak + objectif intégrés dans une mini strip */}
+              <div style={{
+                marginTop: sp(4),
+                background: 'rgba(255,255,255,0.10)',
+                borderRadius: RADIUS.md,
+                padding: `${sp(2)}px ${sp(3)}px`,
+                display: 'flex', alignItems: 'center', gap: sp(4),
+              }}>
+                {/* Streak */}
+                <div style={{ flex: 1 }}>
                   <div style={{
-                    width: 64, height: 64, flexShrink: 0,
-                    filter: `drop-shadow(0 6px 14px ${PALETTE.brandDeep}99)`,
+                    ...monoStyle('xs', 'med', 'rgba(255,255,255,0.65)'),
+                    textTransform: 'uppercase', letterSpacing: 1,
                   }}>
-                    <PetCompanion petType={petType} state="idle" size={64} hideName level={xpInfo.level} />
+                    Série
                   </div>
-                )}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
+                    <div style={{
+                      ...displayStyle('lg', 'bold', '#fff'),
+                      fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+                    }}>{streak}</div>
+                    <div style={monoStyle('xs', 'body', 'rgba(255,255,255,0.65)')}>
+                      {streak === 1 ? 'jour' : 'jours'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Séparateur */}
+                <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.18)' }} />
+
+                {/* Objectif quotidien */}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    ...monoStyle('xs', 'med', 'rgba(255,255,255,0.65)'),
+                    textTransform: 'uppercase', letterSpacing: 1,
+                  }}>
+                    Objectif
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
+                    <div style={{
+                      ...displayStyle('lg', 'bold', goalDone ? PALETTE.accent : '#fff'),
+                      fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+                    }}>{todayMin}</div>
+                    <div style={monoStyle('xs', 'body', 'rgba(255,255,255,0.65)')}>
+                      /{goalMin} min
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Barre de progression globale */}
-              <div style={{ marginTop: sp(3), position: 'relative' }}>
-                <div style={{ ...monoStyle('xs', 'med', 'rgba(255,255,255,0.75)'), marginBottom: 6 }}>
-                  {overallProgress}% de progression
-                </div>
-                <div style={{ height: 5, background: 'rgba(255,255,255,0.2)', borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ width: `${overallProgress}%`, height: '100%', background: '#fff', borderRadius: 999, transition: 'width 0.8s ease' }} />
-                </div>
+              <div style={{ marginTop: sp(3), height: 5, background: 'rgba(255,255,255,0.18)', borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ width: `${overallProgress}%`, height: '100%', background: '#fff', borderRadius: 999, transition: 'width 0.8s ease' }} />
               </div>
             </div>
           </Link>
         )}
       </div>
-
-      {/* Streak + Daily goal widget */}
-      <div style={{ padding: '12px 20px 0' }}>
-        {loading && !data ? (
-          <div style={{ display: 'flex', gap: 10 }}><Skeleton w="50%" h={96} r={16} /><Skeleton w="50%" h={96} r={16} /></div>
-        ) : (
-          <div style={{ display: 'flex', gap: 10 }}>
-
-            {/* Streak card */}
-            <div style={{
-              flex: 1, background: streak > 0 ? 'linear-gradient(135deg,#FF6B1A 0%,#FF9500 100%)' : A.surface,
-              borderRadius: 16, padding: '14px 16px',
-              border: streak > 0 ? 'none' : `0.5px solid ${A.border}`,
-              boxShadow: streak > 0 ? '0 6px 20px rgba(255,107,26,0.32)' : 'none',
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: streak > 0 ? 'rgba(255,255,255,0.8)' : A.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' }}>Streak</div>
-                <span style={{
-                  fontSize: 22,
-                  display: 'inline-block',
-                  animation: streak > 0 ? 'flame-pulse 1.4s ease-in-out infinite' : undefined,
-                  transformOrigin: 'bottom center',
-                }}>🔥</span>
-              </div>
-              <div>
-                <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: -1.5, color: streak > 0 ? '#fff' : A.textDim, lineHeight: 1 }}>{streak}</div>
-                <div style={{ fontSize: 11, color: streak > 0 ? 'rgba(255,255,255,0.75)' : A.textDim, marginTop: 2, fontWeight: 500 }}>
-                  {streak === 0 ? 'Pas encore commencé' : streak === 1 ? 'jour de suite' : 'jours de suite'}
-                </div>
-              </div>
-            </div>
-
-            {/* Daily goal card */}
-            <div style={{
-              flex: 1, background: goalDone ? `linear-gradient(135deg, ${A.green} 0%, #14a358 100%)` : A.surface,
-              borderRadius: 16, padding: '14px 16px',
-              border: goalDone ? 'none' : `0.5px solid ${A.border}`,
-              boxShadow: goalDone ? '0 6px 20px rgba(22,163,74,0.28)' : 'none',
-              animation: goalDone ? 'goal-glow 2.5s ease-in-out infinite' : undefined,
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: goalDone ? 'rgba(255,255,255,0.8)' : A.textMuted, letterSpacing: 0.4, textTransform: 'uppercase' }}>Aujourd&apos;hui</div>
-                <Ring pct={goalPct} size={38} stroke={4} color={goalDone ? '#fff' : A.primary} />
-              </div>
-              <div>
-                <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -1, color: goalDone ? '#fff' : A.text, lineHeight: 1 }}>
-                  {todayMin}<span style={{ fontSize: 14, fontWeight: 600, opacity: 0.7 }}>/{goalMin}</span>
-                </div>
-                <div style={{ fontSize: 11, color: goalDone ? 'rgba(255,255,255,0.75)' : A.textMuted, marginTop: 2, fontWeight: 500 }}>
-                  {goalDone ? 'Objectif atteint !' : 'min étudiées'}
-                </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-      </div>
-
-      {/* XP mini widget */}
-      {!loading && (
-        <div style={{ padding: '10px 20px 0' }}>
-          <div style={{ background: A.surface, borderRadius: 16, border: `0.5px solid ${A.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flexShrink: 0, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <PetCompanion petType={petType} state="idle" size={40} hideName level={xpInfo.level} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: xpInfo.color }}>Niv. {xpInfo.level}</div>
-                  <div style={{ fontSize: 11, color: A.textMuted, fontWeight: 500 }}>{xpInfo.name}</div>
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: A.textMuted }}>{xp} XP</div>
-              </div>
-              <div style={{ height: 6, background: '#E9ECF2', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%', width: `${xpInfo.pct}%`,
-                  background: `linear-gradient(90deg, ${xpInfo.color}, ${xpInfo.color}CC)`,
-                  borderRadius: 3, transition: 'width 0.8s ease',
-                  boxShadow: `0 0 6px ${xpInfo.color}55`,
-                }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Carte Reprendre — la prochaine action recommandée mise en avant */}
       {!loading && data && (() => {
@@ -319,20 +286,7 @@ export default function DashboardPage() {
         )
       })()}
 
-      {/* Pet celebration banner — only when goal done */}
-      {!loading && goalDone && (
-        <div style={{ padding: '10px 20px 0' }}>
-          <div style={{ background: A.greenSoft, borderRadius: 16, border: `1px solid ${A.green}30`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <PetCompanion petType={petType} state="correct" size={48} hideName level={xpInfo.level} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: A.green }}>Objectif du jour atteint !</div>
-              <div style={{ fontSize: 12, color: A.textMuted, marginTop: 2 }}>Tu as étudié {todayMin} min. Continue comme ça !</div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Banner d'objectif atteint retiré — info maintenant intégrée au hero */}
 
       {/* Modules tiles — 2 colonnes style ModuleTile du DS */}
       <div style={{ padding: `${sp(5)}px ${sp(5)}px 0` }}>

@@ -275,12 +275,18 @@ export default function PetCompanion({
   state = 'idle',
   size = 60,
   hideName = false,
+  hideCrown = false,
+  hideOrbit = false,
   level = 1,
 }: {
   petType?: PetType
   state?: PetState
   size?: number
   hideName?: boolean
+  /** Cache la couronne dorée des niveaux 4+ (utile pour les avatars sobres). */
+  hideCrown?: boolean
+  /** Cache l'orbit décorative du niveau 5. */
+  hideOrbit?: boolean
   level?: number
 }) {
   const [bubble, setBubble] = useState<string | null>(null)
@@ -303,8 +309,8 @@ export default function PetCompanion({
   const glowColor = LEVEL_GLOW[Math.min(level, 5)] ?? 'transparent'
   // Aura disabled — the purple ring was distracting. Only keep crown/orbit for high levels.
   const hasAura = false
-  const hasCrown = level >= 4
-  const hasOrbit = level >= 5
+  const hasCrown = level >= 4 && !hideCrown
+  const hasOrbit = level >= 5 && !hideOrbit
 
   return (
     <>
