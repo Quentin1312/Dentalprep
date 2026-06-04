@@ -1,28 +1,7 @@
 import type { Metadata, Viewport } from "next"
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-
-// Fonts du design system Clinique — chargées une fois et exposées comme
-// variables CSS (--font-display / --font-body / --font-mono) consommées par
-// FONT_BODY / FONT_DISPLAY / FONT_MONO dans src/lib/theme.ts.
-const display = Bricolage_Grotesque({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-display',
-  display: 'swap',
-})
-const body = Geist({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-body',
-  display: 'swap',
-})
-const mono = Geist_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-mono',
-  display: 'swap',
-})
+// Polices : retour au stack système (SF Pro / system-ui).
+// theme.ts définit FONT_BODY / FONT_DISPLAY / FONT_MONO en conséquence.
 
 export const metadata: Metadata = {
   title: "DentalPrep — CNQAOS",
@@ -57,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={`h-full ${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="fr" className="h-full">
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           if (window.navigator.standalone) {
@@ -73,7 +52,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         `}} />
       </head>
       <body style={{
-        fontFamily: 'var(--font-body), -apple-system, "SF Pro Text", system-ui, sans-serif',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif',
         background: '#F4F5F2',
         color: '#0A1614',
         minHeight: '100%',

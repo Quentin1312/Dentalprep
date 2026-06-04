@@ -14,9 +14,11 @@
 // Fonts (chargées via next/font dans src/app/layout.tsx — variables CSS)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const FONT_DISPLAY = 'var(--font-display), "Bricolage Grotesque", -apple-system, "SF Pro Display", system-ui, sans-serif'
-export const FONT_BODY    = 'var(--font-body), "Geist", -apple-system, "SF Pro Text", system-ui, sans-serif'
-export const FONT_MONO    = 'var(--font-mono), "Geist Mono", "SF Mono", ui-monospace, monospace'
+// Polices système — pas de Google Fonts pour rester rapide et garder le look natif.
+// Le display utilise la version "Display" optimisée d'Apple pour les gros titres.
+export const FONT_DISPLAY = '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif'
+export const FONT_BODY    = '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif'
+export const FONT_MONO    = '"SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Couleurs — direction "Clinique" (light)

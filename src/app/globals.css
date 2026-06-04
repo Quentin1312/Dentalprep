@@ -22,6 +22,5 @@
 body {
   background: #F4F5F2;
   color: #0A1614;
-  font-family: var(--font-body), -apple-system, "SF Pro Text", system-ui, sans-serif;
-  font-feature-settings: "ss01", "cv11";
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
 }
