@@ -14,7 +14,6 @@ import {
   type RailModule, type ModuleBreakVariant,
 } from '@/components/ui/PathSystem'
 import { quizCompletionCount } from '@/lib/quiz-progress'
-import { fichesForFascicule, type Fiche } from '@/lib/fiches'
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -475,9 +474,6 @@ export default function LibraryPage() {
                 <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
               </div>
             </Link>
-
-            {/* Fiches de révision (PDF téléchargeables) */}
-            <FichesSection fiches={fichesForFascicule(sheet.n)} />
           </div>
         </>
         )
@@ -488,83 +484,4 @@ export default function LibraryPage() {
 
 function nodesAttempts(attempts: { module_id: string }[], modId: string): number {
   return attempts.filter(a => a.module_id === modId).length
-}
-
-function FichesSection({ fiches }: { fiches: Fiche[] }) {
-  if (fiches.length === 0) return null
-  return (
-    <div style={{ marginTop: 14 }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 8, padding: '0 2px',
-      }}>
-        <div style={{
-          fontSize: 11, fontWeight: 800, color: A.textMuted,
-          textTransform: 'uppercase', letterSpacing: 0.6,
-        }}>Fiches de révision</div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted }}>
-          {fiches.length} PDF
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {fiches.map(f => {
-          const isMemo = f.kind === 'memo'
-          const accent = isMemo ? A.primary : '#0D9488'
-          const accentSoft = isMemo ? A.primarySoft : '#E6FFFA'
-          return (
-            <a
-              key={f.file}
-              href={f.file}
-              download
-              style={{
-                textDecoration: 'none',
-                background: '#fff',
-                border: `1px solid ${A.border}`,
-                borderRadius: 14,
-                padding: '12px 14px',
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}
-            >
-              <div style={{
-                width: 40, height: 40, borderRadius: 11,
-                background: accentSoft,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <Icon name="book" size={20} color={accent} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2,
-                }}>
-                  {isMemo && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 800, color: accent,
-                      background: accentSoft, padding: '2px 6px',
-                      borderRadius: 5, textTransform: 'uppercase', letterSpacing: 0.5,
-                    }}>Récap</span>
-                  )}
-                  <div style={{
-                    fontSize: 14, fontWeight: 700, color: A.text,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>{f.title}</div>
-                </div>
-                {f.subtitle && (
-                  <div style={{
-                    fontSize: 11, color: A.textMuted,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>{f.subtitle}</div>
-                )}
-              </div>
-              <div style={{
-                fontSize: 10, fontWeight: 800, color: accent,
-                letterSpacing: 0.5, textTransform: 'uppercase',
-                flexShrink: 0,
-              }}>PDF</div>
-            </a>
-          )
-        })}
-      </div>
-    </div>
-  )
 }
