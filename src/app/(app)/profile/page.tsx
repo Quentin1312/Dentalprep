@@ -14,8 +14,12 @@ import { useThemeBg, themeBgStyle, THEMES, type ThemeBgId } from '@/lib/theme-bg
 import {
   PathSystemStyles, SectionLabel, shade, PathIcon,
 } from '@/components/ui/PathSystem'
+import {
+  ACCESSORIES, SLOT_LABELS, SLOT_ORDER, isUnlocked, unlockRuleLabel,
+  type AccessorySlot, type EquippedAccessories, type UnlockStats,
+} from '@/lib/accessories'
 
-type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null }
+type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null; equipped_accessories: EquippedAccessories | null }
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
 
 export default function ProfilePage() {
@@ -31,6 +35,7 @@ export default function ProfilePage() {
   const [examDate, setExamDate] = useState('')
   const [goal, setGoal] = useState(30)
   const [petType, setPetType] = useState<PetType>('cat')
+  const [equipped, setEquipped] = useState<EquippedAccessories>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [flashXpBonus, setFlashXpBonus] = useState(0)
@@ -44,12 +49,13 @@ export default function ProfilePage() {
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
       ]).then(([p, a]) => {
-        const prof = p.data
+        const prof = p.data as (Profile & { id: string }) | null
         setProfile(prof)
         setName(prof?.full_name ?? '')
         setExamDate(prof?.exam_date ?? '')
         setGoal(prof?.daily_goal_minutes ?? 30)
         if (prof?.pet_type) setPetType(prof.pet_type as PetType)
+        setEquipped((prof?.equipped_accessories as EquippedAccessories | null) ?? {})
         setAttempts((a.data ?? []) as Attempt[])
         setLoading(false)
       })
@@ -62,9 +68,11 @@ export default function ProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase.from('profiles').update({
+    await (supabase.from('profiles') as any).update({
       full_name: name, exam_date: examDate || null,
-      daily_goal_minutes: goal, updated_at: new Date().toISOString(),
+      daily_goal_minutes: goal,
+      equipped_accessories: equipped,
+      updated_at: new Date().toISOString(),
     }).eq('id', user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -174,7 +182,21 @@ export default function ProfilePage() {
           <BadgesRow badges={badges} />
 
           {/* Pet section */}
-          <PetSection name={PET_NAMES[petType]} petType={petType} level={xpInfo.level} />
+          <PetSection name={PET_NAMES[petType]} petType={petType} level={xpInfo.level} equipped={equipped} />
+
+          {/* Wardrobe */}
+          <WardrobeSection
+            petType={petType}
+            equipped={equipped}
+            onChange={setEquipped}
+            stats={{
+              xp,
+              streak: profile?.streak ?? 0,
+              attemptCount: attempts.length,
+              badgeCount: badges.filter(b => b.unlocked).length,
+              totalBadges: badges.length,
+            }}
+          />
 
           {/* Theme picker */}
           <ThemePicker active={themeId} onPick={setThemeBgFn} />
@@ -263,7 +285,7 @@ function BadgesRow({ badges }: { badges: Badge[] }) {
   )
 }
 
-function PetSection({ name, petType, level }: { name: string; petType: PetType; level: number }) {
+function PetSection({ name, petType, level, equipped }: { name: string; petType: PetType; level: number; equipped: EquippedAccessories }) {
   return (
     <div style={{ padding: '12px 16px 0' }}>
       <SectionLabel>Mon compagnon</SectionLabel>
@@ -276,7 +298,7 @@ function PetSection({ name, petType, level }: { name: string; petType: PetType; 
         overflow: 'hidden', minHeight: 96,
       }}>
         <div style={{ position: 'absolute', right: 16, bottom: -2 }}>
-          <PetCompanion petType={petType} state="idle" size={92} hideName level={level} />
+          <PetCompanion petType={petType} state="idle" size={92} hideName level={level} equipped={equipped} />
         </div>
         <div style={{
           fontSize: 11, fontWeight: 800, color: '#9F5A04',
@@ -294,6 +316,160 @@ function PetSection({ name, petType, level }: { name: string; petType: PetType; 
         </div>
       </div>
     </div>
+  )
+}
+
+function WardrobeSection({
+  petType, equipped, onChange, stats,
+}: {
+  petType: PetType
+  equipped: EquippedAccessories
+  onChange: (next: EquippedAccessories) => void
+  stats: UnlockStats
+}) {
+  const [activeSlot, setActiveSlot] = useState<AccessorySlot>('head')
+  const slotAccessories = ACCESSORIES.filter(a => a.slot === activeSlot)
+
+  function equip(slot: AccessorySlot, id: string | null) {
+    const next = { ...equipped }
+    if (id === null) delete next[slot]
+    else next[slot] = id
+    onChange(next)
+  }
+
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <SectionLabel>Garde-robe</SectionLabel>
+      <div style={{
+        background: '#fff', borderRadius: 18,
+        border: `1px solid #E4E8EE`, overflow: 'hidden',
+        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
+      }}>
+        {/* Preview live */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '14px 16px',
+          background: 'linear-gradient(135deg, #F2F5FA 0%, #E9EEF6 100%)',
+          borderBottom: `1px solid #E4E8EE`,
+        }}>
+          <PetCompanion petType={petType} state="idle" size={96} hideName equipped={equipped} />
+        </div>
+
+        {/* Onglets par slot */}
+        <div style={{
+          display: 'flex', overflowX: 'auto', borderBottom: `1px solid #E4E8EE`,
+          background: '#F9FAFC',
+        }} className="dp-rail">
+          {SLOT_ORDER.map(slot => {
+            const isActive = slot === activeSlot
+            const equippedHere = equipped[slot]
+            return (
+              <button
+                key={slot} onClick={() => setActiveSlot(slot)}
+                style={{
+                  flexShrink: 0, padding: '11px 14px',
+                  fontSize: 12.5, fontWeight: 800, letterSpacing: -0.1,
+                  fontFamily: 'inherit', cursor: 'pointer',
+                  background: 'transparent', border: 'none',
+                  color: isActive ? '#0A66E0' : '#5A6675',
+                  borderBottom: `2px solid ${isActive ? '#0A66E0' : 'transparent'}`,
+                  marginBottom: -1,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                {SLOT_LABELS[slot]}
+                {equippedHere && (
+                  <span style={{
+                    width: 7, height: 7, borderRadius: '50%', background: '#16A34A',
+                  }} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Liste accessoires du slot */}
+        <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {/* Option "aucun" */}
+          <WardrobeRow
+            label="Aucun"
+            sublabel="Slot vide"
+            isEquipped={!equipped[activeSlot]}
+            isLocked={false}
+            onClick={() => equip(activeSlot, null)}
+          />
+          {slotAccessories.map(acc => {
+            const unlocked = isUnlocked(acc, stats)
+            const isEquipped = equipped[activeSlot] === acc.id
+            return (
+              <WardrobeRow
+                key={acc.id}
+                label={acc.name}
+                sublabel={unlocked ? acc.description : `Verrouillé · ${unlockRuleLabel(acc.unlock)}`}
+                isEquipped={isEquipped}
+                isLocked={!unlocked}
+                onClick={() => unlocked && equip(activeSlot, acc.id)}
+              />
+            )
+          })}
+          {slotAccessories.length === 0 && (
+            <div style={{ fontSize: 12, color: '#8A95A5', textAlign: 'center', padding: 14 }}>
+              Aucun accessoire pour ce slot.
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: '#8A95A5', marginTop: 6, padding: '0 4px' }}>
+        Les modifications sont enregistrées avec le bouton « Enregistrer » en bas de page.
+      </div>
+    </div>
+  )
+}
+
+function WardrobeRow({
+  label, sublabel, isEquipped, isLocked, onClick,
+}: {
+  label: string; sublabel: string
+  isEquipped: boolean; isLocked: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={isLocked}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 10, padding: '10px 12px',
+        background: isEquipped ? '#EEF4FF' : isLocked ? '#F4F6F8' : '#fff',
+        border: `1.5px solid ${isEquipped ? '#0A66E0' : isLocked ? '#E4E8EE' : '#E4E8EE'}`,
+        borderRadius: 12,
+        cursor: isLocked ? 'not-allowed' : 'pointer',
+        fontFamily: 'inherit', textAlign: 'left',
+        opacity: isLocked ? 0.65 : 1,
+        transition: 'background 0.12s, border-color 0.12s',
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 14, fontWeight: 800, color: isLocked ? '#8A95A5' : '#0F1B2D',
+          letterSpacing: -0.1,
+        }}>{label}</div>
+        <div style={{
+          fontSize: 11.5, color: isLocked ? '#A0AAB8' : '#5A6675',
+          marginTop: 2, fontWeight: 500,
+        }}>{sublabel}</div>
+      </div>
+      {isLocked ? (
+        <PathIcon name="lock" size={14} color="#A0AAB8" strokeWidth={2.4} />
+      ) : isEquipped ? (
+        <div style={{
+          fontSize: 10.5, fontWeight: 900, color: '#0A66E0',
+          background: '#fff', border: `1.5px solid #0A66E0`,
+          padding: '3px 8px', borderRadius: 999,
+          letterSpacing: 0.4, textTransform: 'uppercase',
+        }}>Équipé</div>
+      ) : null}
+    </button>
   )
 }
 

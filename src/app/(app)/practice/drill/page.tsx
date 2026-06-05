@@ -232,7 +232,7 @@ export default function DrillPage() {
         transform: petState === 'idle' ? 'translateY(62px)' : 'translateY(0)',
         transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
       }}>
-        <PetCompanion petType={petType} state={petState} size={84} level={level} />
+        <PetCompanion petType={petType} state={petState} size={84} level={level} equipped={appData?.profile.equipped_accessories ?? {}} />
       </div>
 
       {/* Top bar */}

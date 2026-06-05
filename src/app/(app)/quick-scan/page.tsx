@@ -238,7 +238,7 @@ export default function QuickScanPage() {
           transform: petState === 'idle' ? 'translateY(62px)' : 'translateY(0)',
           transition: 'transform 0.42s cubic-bezier(0.34,1.56,0.64,1)',
         }}>
-          <PetCompanion petType={petType} state={petState} size={84} level={petLevel} />
+          <PetCompanion petType={petType} state={petState} size={84} level={petLevel} equipped={data?.profile.equipped_accessories ?? {}} />
         </div>
         <div style={{ padding: '60px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setPhase('flashcards')} style={{ width: 36, height: 36, borderRadius: 12, background: A.surface, border: `0.5px solid ${A.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>

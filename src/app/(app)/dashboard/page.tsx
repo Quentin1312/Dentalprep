@@ -157,7 +157,7 @@ export default function DashboardPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   overflow: 'hidden',
                 }}>
-                  <PetCompanion petType={petType} state="idle" size={60} hideName hideCrown hideOrbit level={xpInfo.level} />
+                  <PetCompanion petType={petType} state="idle" size={60} hideName level={xpInfo.level} equipped={data?.profile.equipped_accessories ?? {}} />
                 </div>
               </div>
 

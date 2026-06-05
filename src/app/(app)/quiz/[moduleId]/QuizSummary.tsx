@@ -8,6 +8,7 @@ import Icon from '@/components/ui/Icon'
 import PetCompanion, { PET_NAMES } from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { xpProgress, XP_PER_CORRECT, XP_PER_WRONG } from '@/lib/xp'
+import { useAppData } from '@/lib/app-context'
 
 type Question = {
   id: string
@@ -79,6 +80,8 @@ function ScoreRing({ pct, size = 160 }: { pct: number; size?: number }) {
 // PetHeader — pet + speech bubble + mood title
 // ─────────────────────────────────────────────────────────────────────────────
 function PetHeader({ mood, petType, level }: { mood: CompanionMood; petType: PetType; level: number }) {
+  const { data } = useAppData()
+  const equipped = data?.profile.equipped_accessories ?? {}
   const cfg = MOODS[mood]
   const isPositive = mood === 'perfect' || mood === 'good'
   // Use 'correct' so the pet does its excited bounce + auto-bubble.
@@ -93,7 +96,7 @@ function PetHeader({ mood, petType, level }: { mood: CompanionMood; petType: Pet
       position: 'relative',
     }}>
       <div style={{ flexShrink: 0, paddingTop: 4, paddingLeft: 4 }}>
-        <PetCompanion petType={petType} state={petState} size={78} level={level} hideName />
+        <PetCompanion petType={petType} state={petState} size={78} level={level} equipped={equipped} hideName />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>

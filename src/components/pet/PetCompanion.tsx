@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import AccessoryLayer from './AccessoryLayer'
+import type { EquippedAccessories } from '@/lib/accessories'
 
 export type PetType = 'cat' | 'dog' | 'bunny'
 export type PetState = 'idle' | 'correct' | 'wrong' | 'thinking'
@@ -275,19 +277,19 @@ export default function PetCompanion({
   state = 'idle',
   size = 60,
   hideName = false,
-  hideCrown = false,
-  hideOrbit = false,
+  hideAccessories = false,
   level = 1,
+  equipped,
 }: {
   petType?: PetType
   state?: PetState
   size?: number
   hideName?: boolean
-  /** Cache la couronne dorée des niveaux 4+ (utile pour les avatars sobres). */
-  hideCrown?: boolean
-  /** Cache l'orbit décorative du niveau 5. */
-  hideOrbit?: boolean
+  /** Cache tous les accessoires (utile pour les avatars sobres / setup). */
+  hideAccessories?: boolean
   level?: number
+  /** Équipement explicite. Si absent → fallback automatique basé sur le niveau XP. */
+  equipped?: EquippedAccessories
 }) {
   const [bubble, setBubble] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -307,10 +309,7 @@ export default function PetCompanion({
 
   const scale = size / 80
   const glowColor = LEVEL_GLOW[Math.min(level, 5)] ?? 'transparent'
-  // Aura disabled — the purple ring was distracting. Only keep crown/orbit for high levels.
-  const hasAura = false
-  const hasCrown = level >= 4 && !hideCrown
-  const hasOrbit = level >= 5 && !hideOrbit
+  const activeEquipped: EquippedAccessories = hideAccessories ? {} : (equipped ?? {})
 
   return (
     <>
@@ -324,11 +323,6 @@ export default function PetCompanion({
         @keyframes star-float  { 0%{opacity:1;transform:translateY(0) scale(1)}   100%{opacity:0;transform:translateY(-22px) scale(0.4)} }
         @keyframes star-float2 { 0%{opacity:1;transform:translateY(0) scale(1)}   100%{opacity:0;transform:translateY(-18px) scale(0.4)} }
         @keyframes bubble-in   { from{opacity:0;transform:scale(0.8) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes aura-pulse  { 0%,100%{opacity:0.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
-        @keyframes orbit1 { from{transform:rotate(0deg) translateX(${Math.round(size * 0.55)}px) rotate(0deg)} to{transform:rotate(360deg) translateX(${Math.round(size * 0.55)}px) rotate(-360deg)} }
-        @keyframes orbit2 { from{transform:rotate(120deg) translateX(${Math.round(size * 0.55)}px) rotate(-120deg)} to{transform:rotate(480deg) translateX(${Math.round(size * 0.55)}px) rotate(-480deg)} }
-        @keyframes orbit3 { from{transform:rotate(240deg) translateX(${Math.round(size * 0.55)}px) rotate(-240deg)} to{transform:rotate(600deg) translateX(${Math.round(size * 0.55)}px) rotate(-600deg)} }
-        @keyframes crown-bob  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
         .tail-sway  { animation: tail-sway  1.7s ease-in-out infinite; }
         .tail-fast  { animation: tail-fast  0.38s ease-in-out infinite; }
         .tail-still { animation: tail-still 3.2s ease-in-out infinite; }
@@ -338,64 +332,6 @@ export default function PetCompanion({
       `}</style>
 
       <div style={{ position: 'relative', display: 'inline-block', width: size, height: hideName ? size : size + 16 }}>
-
-        {/* Level 3–5: aura ring */}
-        {hasAura && (
-          <div style={{
-            position: 'absolute',
-            top: '50%', left: '50%',
-            width: size * 1.22, height: size * 1.22,
-            transform: 'translate(-50%, -50%)',
-            borderRadius: '50%',
-            background: level >= 5
-              ? 'conic-gradient(from 0deg, rgba(255,100,180,0.35), rgba(255,216,74,0.35), rgba(139,92,246,0.35), rgba(255,100,180,0.35))'
-              : level >= 4
-              ? `radial-gradient(circle, rgba(255,216,74,0.18) 40%, rgba(255,160,50,0.28) 100%)`
-              : `radial-gradient(circle, rgba(139,92,246,0.14) 40%, rgba(100,60,220,0.22) 100%)`,
-            boxShadow: `0 0 ${size * 0.3}px ${glowColor}`,
-            animation: 'aura-pulse 2.4s ease-in-out infinite',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }} />
-        )}
-
-        {/* Level 5: orbiting sparkles */}
-        {hasOrbit && (
-          <div style={{ position: 'absolute', top: '50%', left: '50%', width: 0, height: 0, zIndex: 2, pointerEvents: 'none' }}>
-            {['orbit1', 'orbit2', 'orbit3'].map((anim, i) => (
-              <div key={i} style={{
-                position: 'absolute',
-                width: size * 0.18, height: size * 0.18,
-                marginLeft: -size * 0.09, marginTop: -size * 0.09,
-                animation: `${anim} ${2.8 + i * 0.3}s linear infinite`,
-                fontSize: size * 0.18,
-                lineHeight: 1,
-                userSelect: 'none',
-              }}>✨</div>
-            ))}
-          </div>
-        )}
-
-        {/* Level 4+: crown above head — abaissée pour qu'elle touche le crâne */}
-        {hasCrown && (
-          <div style={{
-            position: 'absolute',
-            top: -size * 0.12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            pointerEvents: 'none',
-            zIndex: 3,
-          }}>
-            <div style={{
-              animation: 'crown-bob 2s ease-in-out infinite',
-              fontSize: size * 0.3,
-              lineHeight: 1,
-              filter: `drop-shadow(0 0 ${size * 0.08}px rgba(255,216,74,0.8))`,
-            }}>
-              {level >= 5 ? '🌈' : '👑'}
-            </div>
-          </div>
-        )}
 
         {/* Speech bubble */}
         {bubble && (
@@ -445,6 +381,13 @@ export default function PetCompanion({
             {petType === 'cat'   && <CatSVG   state={state} />}
             {petType === 'dog'   && <DogSVG   state={state} />}
             {petType === 'bunny' && <BunnySVG state={state} />}
+            {/* Couche d'accessoires (même viewBox que le pet) */}
+            <svg
+              width="80" height="80" viewBox="0 0 80 80"
+              style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none' }}
+            >
+              <AccessoryLayer pet={petType} equipped={activeEquipped} />
+            </svg>
           </div>
         </div>
 

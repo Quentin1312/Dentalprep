@@ -130,3 +130,7 @@ insert into storage.buckets (id, name, public) values ('course-images', 'course-
 create policy "course_images_own" on storage.objects for all using (
   bucket_id = 'course-images' and auth.uid()::text = (storage.foldername(name))[1]
 );
+
+-- Garde-robe du compagnon (accessoires équipés par slot)
+alter table public.profiles
+  add column if not exists equipped_accessories jsonb not null default '{}'::jsonb;

@@ -4,8 +4,9 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { readFlashXP } from '@/lib/flash-store'
+import type { EquippedAccessories } from '@/lib/accessories'
 
-type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number; pet_type: string | null }
+type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number; pet_type: string | null; equipped_accessories: EquippedAccessories }
 type Course = { id: string; module_id: string; title: string; page_count: number | null }
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
 type QuestionRef = { id: string; course_id: string; module_id: string }
@@ -66,7 +67,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const today = new Date().toISOString().split('T')[0]
     const supaAny = supabase as any
     const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes] = await Promise.all([
-      supabase.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type').eq('id', user.id).single(),
+      supaAny.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type,equipped_accessories').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
       supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
@@ -104,7 +105,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const fresh: AppData = {
       userId: user.id,
-      profile: profRes.data,
+      profile: { ...(profRes.data as Profile), equipped_accessories: (profRes.data as any).equipped_accessories ?? {} },
       courses: coursesRes.data ?? [],
       attempts: attemptsRes.data ?? [],
       questions: questionsRes.data ?? [],
