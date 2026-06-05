@@ -11,6 +11,7 @@ import { readFlashXP } from '@/lib/flash-store'
 import { computeBadges } from '@/lib/badges'
 import type { Badge } from '@/lib/badges'
 import { useThemeBg, themeBgStyle, THEMES, type ThemeBgId } from '@/lib/theme-bg'
+import { useAppData } from '@/lib/app-context'
 import {
   PathSystemStyles, SectionLabel, shade, PathIcon,
 } from '@/components/ui/PathSystem'
@@ -24,9 +25,11 @@ type Attempt = { module_id: string; is_correct: boolean; question_id: string }
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { refresh: refreshAppData } = useAppData()
   const [themeId, setThemeBgFn] = useThemeBg()
   const theme = THEMES[themeId]
 
+  const [userId, setUserId] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [email, setEmail] = useState('')
   const [attempts, setAttempts] = useState<Attempt[]>([])
@@ -44,6 +47,7 @@ export default function ProfilePage() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
+      setUserId(user.id)
       setEmail(user.email ?? '')
       Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
@@ -63,6 +67,17 @@ export default function ProfilePage() {
     setFlashXpBonus(readFlashXP())
   }, [router])
 
+  async function handleEquippedChange(next: EquippedAccessories) {
+    setEquipped(next)
+    if (!userId) return
+    const supabase = createClient()
+    await (supabase.from('profiles') as any)
+      .update({ equipped_accessories: next, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+    // Invalide le cache pour que les autres pages voient l'équipement à jour
+    void refreshAppData()
+  }
+
   async function handleSave() {
     setSaving(true)
     const supabase = createClient()
@@ -71,7 +86,6 @@ export default function ProfilePage() {
     await (supabase.from('profiles') as any).update({
       full_name: name, exam_date: examDate || null,
       daily_goal_minutes: goal,
-      equipped_accessories: equipped,
       updated_at: new Date().toISOString(),
     }).eq('id', user.id)
     setSaving(false); setSaved(true)
@@ -188,7 +202,7 @@ export default function ProfilePage() {
           <WardrobeSection
             petType={petType}
             equipped={equipped}
-            onChange={setEquipped}
+            onChange={handleEquippedChange}
             stats={{
               xp,
               streak: profile?.streak ?? 0,
@@ -420,7 +434,7 @@ function WardrobeSection({
         </div>
       </div>
       <div style={{ fontSize: 11, color: '#8A95A5', marginTop: 6, padding: '0 4px' }}>
-        Les modifications sont enregistrées avec le bouton « Enregistrer » en bas de page.
+        Enregistré automatiquement.
       </div>
     </div>
   )
