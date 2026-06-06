@@ -70,7 +70,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes, dueQuizRes] = await Promise.all([
       supaAny.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type,equipped_accessories').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
-      supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
+      // Ordre chronologique requis par computeXP (XP dégressif + combo)
+      supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id).order('created_at', { ascending: true }),
       supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
       supabase.from('quiz_questions').select('id,course_id,module_id').eq('user_id', user.id),
       supaAny.from('flashcard_progress')
