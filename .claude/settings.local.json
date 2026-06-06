@@ -38,7 +38,20 @@
       "Bash(sed -n '285,348p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
       "Bash(sed -n '555,640p' /tmp/dentalapp_design/_export/dp-screens.jsx)",
       "Bash(py verify_ccam_codes.py)",
-      "Bash(py patch_ccam_codes.py)"
+      "Bash(py patch_ccam_codes.py)",
+      "Bash(py -c \"import fitz; doc = fitz.open\\(r'C:\\\\Users\\\\quent\\\\Downloads\\\\Cours bb\\\\Travail au fauteuil.pdf'\\); print\\(len\\(doc\\)\\); [print\\(f'--- p{i+1} ---'\\); print\\(doc[i].get_text\\(\\)[:1500]\\) for i in [0,1,2,3,4,5,6,7]]\")",
+      "Bash(py \"C:\\\\Users\\\\quent\\\\Downloads\\\\_extract_toc.py\")",
+      "Bash(py \"C:\\\\Users\\\\quent\\\\Downloads\\\\_convert_pdf.py\")",
+      "Bash(py -m pip install reportlab)",
+      "Bash(py scripts/gen_fiches_f12.py)",
+      "Bash(py scripts/gen_fiches_f12_part2.py)",
+      "Bash(py scripts/gen_fiches_f12_part3.py)",
+      "Bash(py scripts/gen_fiches_f12_part4.py)",
+      "Bash(git -C \"C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep\" add public/fiches \"src/app/\\(app\\)/library/page.tsx\" src/lib/fiches.ts scripts/gen_fiches_f12.py scripts/gen_fiches_f12_part2.py scripts/gen_fiches_f12_part3.py scripts/gen_fiches_f12_part4.py)",
+      "Bash(git -C 'C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep' commit -m ' *)",
+      "Bash(git -C \"C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep\" add \"src/app/\\(app\\)/library/page.tsx\" src/lib/fiches.ts)",
+      "Bash(git -C \"C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep\" push)",
+      "Bash(py patch_ccam_v2.py)"
     ]
   }
 }
