@@ -1,0 +1,4022 @@
+{
+  "HBAA338": {
+    "code": "HBAA338",
+    "libelle": "Allongement coronaire par gingivectomie sur une dent",
+    "tarif": null
+  },
+  "HBBA001": {
+    "code": "HBBA001",
+    "libelle": "Obturation d’une résorption radiculaire dentaire externe, par abord parodontal",
+    "tarif": null
+  },
+  "HBBA002": {
+    "code": "HBBA002",
+    "libelle": "Ostéoplastie additive de l'arcade alvéolaire sur un secteur de 4 à 6 dents",
+    "tarif": 269.61
+  },
+  "HBBA003": {
+    "code": "HBBA003",
+    "libelle": "Ostéoplastie additive de l'arcade alvéolaire sur un secteur de 1 à 3 dents",
+    "tarif": 85.69
+  },
+  "HBBA004": {
+    "code": "HBBA004",
+    "libelle": "Ostéoplastie additive de l'arcade alvéolaire sur un secteur de 7 dents ou plus",
+    "tarif": 298.87
+  },
+  "HBBD001": {
+    "code": "HBBD001",
+    "libelle": "Obturation radiculaire d'une prémolaire autre que la première prémolaire maxillaire après apexification",
+    "tarif": 70.72
+  },
+  "HBBD002": {
+    "code": "HBBD002",
+    "libelle": "Obturation radiculaire d'une molaire après apexification",
+    "tarif": 109.2
+  },
+  "HBBD003": {
+    "code": "HBBD003",
+    "libelle": "Obturation radiculaire d'une incisive ou d'une canine après apexification",
+    "tarif": 48.88
+  },
+  "HBBD004": {
+    "code": "HBBD004",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 4 dents",
+    "tarif": 104.11
+  },
+  "HBBD005": {
+    "code": "HBBD005",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 1 dent",
+    "tarif": 26.03
+  },
+  "HBBD006": {
+    "code": "HBBD006",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 2 dents",
+    "tarif": 52.06
+  },
+  "HBBD007": {
+    "code": "HBBD007",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 3 dents",
+    "tarif": 78.08
+  },
+  "HBBD039": {
+    "code": "HBBD039",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 5 dents",
+    "tarif": 119.3
+  },
+  "HBBD098": {
+    "code": "HBBD098",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 7 dents",
+    "tarif": 167.01
+  },
+  "HBBD234": {
+    "code": "HBBD234",
+    "libelle": "Obturation radiculaire d'une première prémolaire maxillaire  après apexification",
+    "tarif": 70.72
+  },
+  "HBBD404": {
+    "code": "HBBD404",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 6 dents",
+    "tarif": 143.15
+  },
+  "HBBD427": {
+    "code": "HBBD427",
+    "libelle": "Comblement [Scellement] prophylactique des puits, sillons et fissures sur 8 dents",
+    "tarif": 190.87
+  },
+  "HBDD001": {
+    "code": "HBDD001",
+    "libelle": "Contention d'une arcade dentaire par dispositif fixe, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD002": {
+    "code": "HBDD002",
+    "libelle": "Contention d'une arcade dentaire par dispositif amovible, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD007": {
+    "code": "HBDD007",
+    "libelle": "Contention peropératoire des arcades dentaires par moyen autre qu'un arc vestibulaire continu",
+    "tarif": null
+  },
+  "HBDD008": {
+    "code": "HBDD008",
+    "libelle": "Contention peropératoire des arcades dentaires par arc vestibulaire continu",
+    "tarif": null
+  },
+  "HBDD009": {
+    "code": "HBDD009",
+    "libelle": "Contention des arcades dentaires par dispositif amovible, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD010": {
+    "code": "HBDD010",
+    "libelle": "Contention des arcades dentaires par dispositif fixe, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD011": {
+    "code": "HBDD011",
+    "libelle": "Contention des arcades dentaires par dispositif amovible bimaxillaire monobloc [tooth positioner], après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD013": {
+    "code": "HBDD013",
+    "libelle": "Contention des arcades dentaires par dispositif fixe sur l'une et dispositif amovible sur l'autre, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD014": {
+    "code": "HBDD014",
+    "libelle": "Contention peropératoire des arcades dentaires par un arc vestibulaire continu sur l'une, par autre moyen sur l'autre",
+    "tarif": null
+  },
+  "HBDD017": {
+    "code": "HBDD017",
+    "libelle": "Contention des arcades dentaires par dispositif amovible bimaxillaire monobloc [tooth positioner] et dispositif fixe sur 1 arcade, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBDD018": {
+    "code": "HBDD018",
+    "libelle": "Contention des arcades dentaires par dispositif amovible bimaxillaire monobloc [tooth positioner] et dispositif fixe sur 2 arcades, après traitement orthodontique",
+    "tarif": null
+  },
+  "HBED001": {
+    "code": "HBED001",
+    "libelle": "Réimplantation d'1 dent permanente expulsée",
+    "tarif": 96.4
+  },
+  "HBED002": {
+    "code": "HBED002",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 2 arcades, avec adjonction d'un dispositif associé",
+    "tarif": null
+  },
+  "HBED003": {
+    "code": "HBED003",
+    "libelle": "Réimplantation de 2 dents permanentes expulsées",
+    "tarif": 192.8
+  },
+  "HBED005": {
+    "code": "HBED005",
+    "libelle": "Autogreffe d'une dent sur arcade, dans un site naturel ou préparé chirurgicalement",
+    "tarif": null
+  },
+  "HBED007": {
+    "code": "HBED007",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 2 arcades, avec adjonction de 3 dispositifs associés",
+    "tarif": null
+  },
+  "HBED008": {
+    "code": "HBED008",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe bibague sur 2 arcades",
+    "tarif": null
+  },
+  "HBED009": {
+    "code": "HBED009",
+    "libelle": "Réduction de fracture alvéolaire en denture permanente",
+    "tarif": 104.5
+  },
+  "HBED010": {
+    "code": "HBED010",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe bibague sur 1 arcade",
+    "tarif": null
+  },
+  "HBED011": {
+    "code": "HBED011",
+    "libelle": "Réduction de luxation d'une dent",
+    "tarif": null
+  },
+  "HBED012": {
+    "code": "HBED012",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 1 arcade, sans adjonction de dispositif associé",
+    "tarif": null
+  },
+  "HBED013": {
+    "code": "HBED013",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 1 arcade, avec adjonction de dispositif associé",
+    "tarif": null
+  },
+  "HBED014": {
+    "code": "HBED014",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 2 arcades, sans adjonction de dispositif associé",
+    "tarif": null
+  },
+  "HBED015": {
+    "code": "HBED015",
+    "libelle": "Réduction de fracture alvéolaire en denture mixte ou incomplète",
+    "tarif": 104.5
+  },
+  "HBED016": {
+    "code": "HBED016",
+    "libelle": "Réduction de luxation de plusieurs dents",
+    "tarif": null
+  },
+  "HBED017": {
+    "code": "HBED017",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par un dispositif amovible sur 1 arcade",
+    "tarif": null
+  },
+  "HBED018": {
+    "code": "HBED018",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 2 arcades, avec adjonction de 2 dispositifs associés",
+    "tarif": null
+  },
+  "HBED019": {
+    "code": "HBED019",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par un dispositif amovible sur 2 arcades",
+    "tarif": null
+  },
+  "HBED020": {
+    "code": "HBED020",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache sectoriel",
+    "tarif": null
+  },
+  "HBED021": {
+    "code": "HBED021",
+    "libelle": "Réimplantation de 3 dents permanentes expulsées, ou plus",
+    "tarif": 289.2
+  },
+  "HBED022": {
+    "code": "HBED022",
+    "libelle": "Autogreffe d'un germe ou d'une dent retenue, dans un site naturel ou préparé chirurgicalement",
+    "tarif": 209.0
+  },
+  "HBED023": {
+    "code": "HBED023",
+    "libelle": "Greffe épithélioconjonctive ou conjonctive sur la gencive, sur un secteur de 1 à 3 dents",
+    "tarif": 79.42
+  },
+  "HBED024": {
+    "code": "HBED024",
+    "libelle": "Greffe épithélioconjonctive ou conjonctive sur la gencive, sur un sextant",
+    "tarif": 94.05
+  },
+  "HBED025": {
+    "code": "HBED025",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 1 arcade avec adjonction de dispositif associé, avec contention de l'autre arcade par dispositif fixe après traitement orthodontique",
+    "tarif": null
+  },
+  "HBED026": {
+    "code": "HBED026",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 1 arcade sans adjonction de dispositif associé, avec contention de l'autre arcade par dispositif amovible après traitement orthodontique",
+    "tarif": null
+  },
+  "HBED027": {
+    "code": "HBED027",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 1 arcade avec adjonction de dispositif associé, avec contention de l'autre arcade par dispositif amovible après traitement orthodontique",
+    "tarif": null
+  },
+  "HBED028": {
+    "code": "HBED028",
+    "libelle": "Réduction d'une malocclusion et/ou d'une malposition alvéolodentaire par dispositif fixe multiattache total sur 1 arcade sans adjonction de dispositif associé, avec contention de l'autre arcade par dispositif fixe après traitement orthodontique",
+    "tarif": null
+  },
+  "HBFA003": {
+    "code": "HBFA003",
+    "libelle": "Ostéoplastie soustractive de l'arcade alvéolaire sur un secteur de 7 dents ou plus",
+    "tarif": null
+  },
+  "HBFA004": {
+    "code": "HBFA004",
+    "libelle": "Ostéoplastie soustractive de l'arcade alvéolaire sur un secteur de 4 à 6 dents",
+    "tarif": null
+  },
+  "HBFA005": {
+    "code": "HBFA005",
+    "libelle": "Ostéoplastie soustractive de l'arcade alvéolaire sur un secteur de 1 à 3 dents",
+    "tarif": null
+  },
+  "HBFA006": {
+    "code": "HBFA006",
+    "libelle": "Gingivectomie sur un secteur de 1 à 3 dents",
+    "tarif": null
+  },
+  "HBFA007": {
+    "code": "HBFA007",
+    "libelle": "Gingivectomie sur un secteur de 4 à 6 dents",
+    "tarif": 41.8
+  },
+  "HBFA008": {
+    "code": "HBFA008",
+    "libelle": "Gingivectomie  sur un secteur de 7 dents ou plus",
+    "tarif": null
+  },
+  "HBFA012": {
+    "code": "HBFA012",
+    "libelle": "Exérèse d'hypertrophie gingivale ou de crête flottante sur une arcade maxillaire ou mandibulaire complète",
+    "tarif": null
+  },
+  "HBFA013": {
+    "code": "HBFA013",
+    "libelle": "Exérèse d'hypertrophie gingivale ou de crête flottante localisée",
+    "tarif": null
+  },
+  "HBFD001": {
+    "code": "HBFD001",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une incisive ou d’une canine permanente",
+    "tarif": 48.88
+  },
+  "HBFD003": {
+    "code": "HBFD003",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une prémolaire autre que la première prémolaire maxillaire",
+    "tarif": 70.72
+  },
+  "HBFD006": {
+    "code": "HBFD006",
+    "libelle": "Exérèse de la pulpe camérale [Biopulpotomie] d'une dent temporaire",
+    "tarif": 36.0
+  },
+  "HBFD008": {
+    "code": "HBFD008",
+    "libelle": "Exérèse de la pulpe vivante d’une molaire permanente",
+    "tarif": 104.0
+  },
+  "HBFD010": {
+    "code": "HBFD010",
+    "libelle": "Parage de plaie de la pulpe d'une dent avec coiffage direct",
+    "tarif": 62.400000000000006
+  },
+  "HBFD014": {
+    "code": "HBFD014",
+    "libelle": "Amputation et/ou séparation radiculaire ou coronoradiculaire d'une dent",
+    "tarif": null
+  },
+  "HBFD015": {
+    "code": "HBFD015",
+    "libelle": "Exérèse du contenu canalaire non vivant d'une incisive ou d'une canine temporaire",
+    "tarif": 48.88
+  },
+  "HBFD017": {
+    "code": "HBFD017",
+    "libelle": "Exérèse de la pulpe vivante d’une incisive ou d’une canine temporaire",
+    "tarif": 41.6
+  },
+  "HBFD019": {
+    "code": "HBFD019",
+    "libelle": "Exérèse de la pulpe vivante d’une molaire temporaire",
+    "tarif": 104.0
+  },
+  "HBFD021": {
+    "code": "HBFD021",
+    "libelle": "Exérèse de la pulpe vivante d’une première prémolaire maxillaire",
+    "tarif": 63.440000000000005
+  },
+  "HBFD024": {
+    "code": "HBFD024",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une molaire permanente",
+    "tarif": 114.4
+  },
+  "HBFD032": {
+    "code": "HBFD032",
+    "libelle": "Exérèse partielle de la pulpe vivante d'une dent permanente immature pour apexogénèse",
+    "tarif": null
+  },
+  "HBFD033": {
+    "code": "HBFD033",
+    "libelle": "Exérèse de la pulpe vivante d’une incisive ou d’une canine permanente",
+    "tarif": 41.6
+  },
+  "HBFD035": {
+    "code": "HBFD035",
+    "libelle": "Exérèse de la pulpe vivante d’une prémolaire autre que la première prémolaire maxillaire",
+    "tarif": 63.440000000000005
+  },
+  "HBFD150": {
+    "code": "HBFD150",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une molaire permanente immature",
+    "tarif": 114.4
+  },
+  "HBFD297": {
+    "code": "HBFD297",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une première prémolaire maxillaire",
+    "tarif": 70.72
+  },
+  "HBFD326": {
+    "code": "HBFD326",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une prémolaire immature autre que la première prémolaire maxillaire",
+    "tarif": 70.72
+  },
+  "HBFD395": {
+    "code": "HBFD395",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une première prémolaire maxillaire immature",
+    "tarif": 70.72
+  },
+  "HBFD458": {
+    "code": "HBFD458",
+    "libelle": "Exérèse du contenu canalaire non vivant d’une incisive ou d'une canine permanente immature",
+    "tarif": 48.88
+  },
+  "HBFD474": {
+    "code": "HBFD474",
+    "libelle": "Exérèse du contenu canalaire non vivant d'une molaire temporaire",
+    "tarif": 114.4
+  },
+  "HBGB001": {
+    "code": "HBGB001",
+    "libelle": "Curetage d'alvéole dentaire",
+    "tarif": null
+  },
+  "HBGB002": {
+    "code": "HBGB002",
+    "libelle": "Curetage périapical avec résection de l'apex et obturation radiculaire d'une prémolaire",
+    "tarif": 98.36
+  },
+  "HBGB003": {
+    "code": "HBGB003",
+    "libelle": "Curetage périapical avec résection de l'apex et obturation radiculaire d'une incisive ou d'une canine",
+    "tarif": 83.9
+  },
+  "HBGB004": {
+    "code": "HBGB004",
+    "libelle": "Curetage périapical avec résection de l'apex et obturation radiculaire d'une molaire",
+    "tarif": 132.1
+  },
+  "HBGB005": {
+    "code": "HBGB005",
+    "libelle": "Curetage périapical avec résection de l'apex d'une racine dentaire endodontiquement traitée",
+    "tarif": 50.16
+  },
+  "HBGB006": {
+    "code": "HBGB006",
+    "libelle": "Surfaçage radiculaire dentaire sur un sextant",
+    "tarif": null
+  },
+  "HBGD001": {
+    "code": "HBGD001",
+    "libelle": "Désobturation endodontique d’une prémolaire autre que la première prémolaire maxillaire",
+    "tarif": null
+  },
+  "HBGD002": {
+    "code": "HBGD002",
+    "libelle": "Avulsion de 2 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 50.16
+  },
+  "HBGD003": {
+    "code": "HBGD003",
+    "libelle": "Avulsion d'1 odontoïde inclus ou d'1 dent surnuméraire à l'état de germe",
+    "tarif": 83.6
+  },
+  "HBGD004": {
+    "code": "HBGD004",
+    "libelle": "Avulsion d'1 troisième molaire mandibulaire retenue ou à l'état de germe",
+    "tarif": 96.14
+  },
+  "HBGD005": {
+    "code": "HBGD005",
+    "libelle": "Ablation d’un ancrage coronoradiculaire",
+    "tarif": null
+  },
+  "HBGD009": {
+    "code": "HBGD009",
+    "libelle": "Ablation  d'une prothèse dentaire implantoportée",
+    "tarif": null
+  },
+  "HBGD011": {
+    "code": "HBGD011",
+    "libelle": "Ablation  d'un bloc métallique coulé ou d'une prothèse dentaire à tenon radiculaire scellé",
+    "tarif": 38.7
+  },
+  "HBGD012": {
+    "code": "HBGD012",
+    "libelle": "Ablation de corps étranger  d'un canal radiculaire d'une dent",
+    "tarif": null
+  },
+  "HBGD014": {
+    "code": "HBGD014",
+    "libelle": "Avulsion d'1 canine permanente retenue ou à l'état de germe",
+    "tarif": 104.5
+  },
+  "HBGD015": {
+    "code": "HBGD015",
+    "libelle": "Avulsion de 2 canines permanentes  retenues ou à l'état de germe",
+    "tarif": 156.75
+  },
+  "HBGD016": {
+    "code": "HBGD016",
+    "libelle": "Avulsion d'1 racine incluse",
+    "tarif": 83.6
+  },
+  "HBGD017": {
+    "code": "HBGD017",
+    "libelle": "Avulsion d'1 dent ectopique",
+    "tarif": 167.2
+  },
+  "HBGD018": {
+    "code": "HBGD018",
+    "libelle": "Avulsion d'1 troisième molaire maxillaire retenue ou à l'état de germe",
+    "tarif": 96.14
+  },
+  "HBGD021": {
+    "code": "HBGD021",
+    "libelle": "Avulsion de 3 troisièmes molaires retenues ou à l'état de germe",
+    "tarif": 192.28
+  },
+  "HBGD022": {
+    "code": "HBGD022",
+    "libelle": "Avulsion d'1 dent permanente sur arcade avec alvéolectomie",
+    "tarif": 43.0
+  },
+  "HBGD025": {
+    "code": "HBGD025",
+    "libelle": "Avulsion de 2 troisièmes molaires retenues ou à l'état de germe",
+    "tarif": 144.21
+  },
+  "HBGD026": {
+    "code": "HBGD026",
+    "libelle": "Avulsion de 2 dents temporaires retenues, incluses ou réincluses",
+    "tarif": 125.4
+  },
+  "HBGD027": {
+    "code": "HBGD027",
+    "libelle": "Ablation  d'une prothèse dentaire scellée unitaire",
+    "tarif": 38.7
+  },
+  "HBGD028": {
+    "code": "HBGD028",
+    "libelle": "Avulsion d'1 incisive permanente retenue ou à l'état de germe",
+    "tarif": 83.6
+  },
+  "HBGD030": {
+    "code": "HBGD030",
+    "libelle": "Désobturation endodontique d'une incisive ou d'une canine",
+    "tarif": null
+  },
+  "HBGD031": {
+    "code": "HBGD031",
+    "libelle": "Avulsion d'1 dent permanente sur arcade avec séparation des racines",
+    "tarif": 43.0
+  },
+  "HBGD032": {
+    "code": "HBGD032",
+    "libelle": "Avulsion de 2 dents permanentes sur arcade avec séparation des racines",
+    "tarif": 61.0
+  },
+  "HBGD033": {
+    "code": "HBGD033",
+    "libelle": "Désobturation endodontique d'une molaire",
+    "tarif": null
+  },
+  "HBGD034": {
+    "code": "HBGD034",
+    "libelle": "Avulsion de 2 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 61.0
+  },
+  "HBGD035": {
+    "code": "HBGD035",
+    "libelle": "Avulsion d'1 dent temporaire sur arcade",
+    "tarif": 25.0
+  },
+  "HBGD036": {
+    "code": "HBGD036",
+    "libelle": "Avulsion d'1 dent permanente sur arcade sans alvéolectomie",
+    "tarif": 39.0
+  },
+  "HBGD037": {
+    "code": "HBGD037",
+    "libelle": "Avulsion de 2 dents temporaires sur arcade",
+    "tarif": 37.0
+  },
+  "HBGD038": {
+    "code": "HBGD038",
+    "libelle": "Avulsion de 4 troisièmes molaires retenues ou à l'état de germe",
+    "tarif": 240.35
+  },
+  "HBGD039": {
+    "code": "HBGD039",
+    "libelle": "Avulsion d'1 dent ankylosée sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 43.0
+  },
+  "HBGD042": {
+    "code": "HBGD042",
+    "libelle": "Avulsion d’1 dent temporaire retenue, incluse ou réincluse",
+    "tarif": 83.6
+  },
+  "HBGD043": {
+    "code": "HBGD043",
+    "libelle": "Avulsion de 2 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 57.0
+  },
+  "HBGD044": {
+    "code": "HBGD044",
+    "libelle": "Avulsion d'1 dent à couronne sousmuqueuse ou en désinclusion muqueuse",
+    "tarif": 41.8
+  },
+  "HBGD047": {
+    "code": "HBGD047",
+    "libelle": "Avulsion d'1 première ou d'1 deuxième molaire permanente retenue ou à l'état de germe",
+    "tarif": 96.14
+  },
+  "HBGD054": {
+    "code": "HBGD054",
+    "libelle": "Avulsion de 12 dents temporaires sur arcade",
+    "tarif": 145.0
+  },
+  "HBGD057": {
+    "code": "HBGD057",
+    "libelle": "Avulsion de 15 dents temporaires sur arcade",
+    "tarif": 175.0
+  },
+  "HBGD060": {
+    "code": "HBGD060",
+    "libelle": "Avulsion de 5 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 100.32
+  },
+  "HBGD062": {
+    "code": "HBGD062",
+    "libelle": "Avulsion de 3 incisives permanentes retenues ou à l'état de germe",
+    "tarif": 167.2
+  },
+  "HBGD064": {
+    "code": "HBGD064",
+    "libelle": "Avulsion de 10 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 183.92
+  },
+  "HBGD065": {
+    "code": "HBGD065",
+    "libelle": "Avulsion de 5 dents temporaires sur arcade",
+    "tarif": 73.0
+  },
+  "HBGD067": {
+    "code": "HBGD067",
+    "libelle": "Avulsion de 14 dents à 16 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 267.52
+  },
+  "HBGD076": {
+    "code": "HBGD076",
+    "libelle": "Avulsion de 7 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 138.0
+  },
+  "HBGD078": {
+    "code": "HBGD078",
+    "libelle": "Avulsion de 4 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 83.6
+  },
+  "HBGD080": {
+    "code": "HBGD080",
+    "libelle": "Avulsion de 4 dents ectopiques",
+    "tarif": 418.0
+  },
+  "HBGD093": {
+    "code": "HBGD093",
+    "libelle": "Avulsion de 10 dents temporaires sur arcade",
+    "tarif": 125.0
+  },
+  "HBGD102": {
+    "code": "HBGD102",
+    "libelle": "Avulsion de 4 racines incluses",
+    "tarif": 209.0
+  },
+  "HBGD105": {
+    "code": "HBGD105",
+    "libelle": "Avulsion de 23 dents à 25 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 418.0
+  },
+  "HBGD106": {
+    "code": "HBGD106",
+    "libelle": "Avulsion de 6 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 123.0
+  },
+  "HBGD111": {
+    "code": "HBGD111",
+    "libelle": "Avulsion de 13 dents temporaires sur arcade",
+    "tarif": 155.0
+  },
+  "HBGD113": {
+    "code": "HBGD113",
+    "libelle": "Avulsion de 8 à 10 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 167.2
+  },
+  "HBGD117": {
+    "code": "HBGD117",
+    "libelle": "Avulsion de 4 premières ou deuxièmes molaires permanentes retenues ou à l'état de germe",
+    "tarif": 209.0
+  },
+  "HBGD122": {
+    "code": "HBGD122",
+    "libelle": "Avulsion de 14 à 16 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 267.52
+  },
+  "HBGD123": {
+    "code": "HBGD123",
+    "libelle": "Avulsion de 17 dents temporaires sur arcade",
+    "tarif": 190.0
+  },
+  "HBGD126": {
+    "code": "HBGD126",
+    "libelle": "Avulsion de 2 incisives permanentes retenues ou à l'état de germe",
+    "tarif": 125.4
+  },
+  "HBGD133": {
+    "code": "HBGD133",
+    "libelle": "Avulsion de 16 dents temporaires sur arcade",
+    "tarif": 185.0
+  },
+  "HBGD142": {
+    "code": "HBGD142",
+    "libelle": "Avulsion de 7 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 133.76
+  },
+  "HBGD145": {
+    "code": "HBGD145",
+    "libelle": "Avulsion de 3 canines permanentes retenues ou à l'état de germe",
+    "tarif": 209.0
+  },
+  "HBGD146": {
+    "code": "HBGD146",
+    "libelle": "Avulsion de 12 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 217.36
+  },
+  "HBGD148": {
+    "code": "HBGD148",
+    "libelle": "Avulsion de 7 à 8 incisives permanentes retenues ou à l'état de germe",
+    "tarif": 355.3
+  },
+  "HBGD159": {
+    "code": "HBGD159",
+    "libelle": "Avulsion de 5 racines incluses",
+    "tarif": 250.8
+  },
+  "HBGD160": {
+    "code": "HBGD160",
+    "libelle": "Avulsion de 3 dents à couronne sousmuqueuse ou en désinclusion muqueuse",
+    "tarif": 83.6
+  },
+  "HBGD169": {
+    "code": "HBGD169",
+    "libelle": "Avulsion de 4 dents permanentes sur arcade avec séparation des racines",
+    "tarif": 83.6
+  },
+  "HBGD171": {
+    "code": "HBGD171",
+    "libelle": "Avulsion de 4 odontoïdes inclus ou de 4 dents surnuméraires à l'état de germe",
+    "tarif": 209.0
+  },
+  "HBGD174": {
+    "code": "HBGD174",
+    "libelle": "Avulsion de 14 dents temporaires sur arcade",
+    "tarif": 165.0
+  },
+  "HBGD181": {
+    "code": "HBGD181",
+    "libelle": "Avulsion de 5 à 6 premières ou deuxièmes molaires permanentes retenues ou à l'état de germe",
+    "tarif": 271.7
+  },
+  "HBGD190": {
+    "code": "HBGD190",
+    "libelle": "Avulsion de 2 dents ectopiques",
+    "tarif": 250.8
+  },
+  "HBGD191": {
+    "code": "HBGD191",
+    "libelle": "Avulsion de 26 dents à 28 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 468.16
+  },
+  "HBGD193": {
+    "code": "HBGD193",
+    "libelle": "Avulsion de 28 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 484.88
+  },
+  "HBGD197": {
+    "code": "HBGD197",
+    "libelle": "Avulsion de 15 dents permanente sur arcade sans alvéolectomie",
+    "tarif": 267.52
+  },
+  "HBGD199": {
+    "code": "HBGD199",
+    "libelle": "Avulsion de 4 prémolaires retenues ou à l'état de germe",
+    "tarif": 209.0
+  },
+  "HBGD201": {
+    "code": "HBGD201",
+    "libelle": "Avulsion de 20 dents temporaires sur arcade",
+    "tarif": 205.0
+  },
+  "HBGD206": {
+    "code": "HBGD206",
+    "libelle": "Avulsion de 6 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 117.04
+  },
+  "HBGD210": {
+    "code": "HBGD210",
+    "libelle": "Avulsion de 7 à 8 premières ou deuxièmes molaires permanentes retenues ou à l'état de germe",
+    "tarif": 355.3
+  },
+  "HBGD218": {
+    "code": "HBGD218",
+    "libelle": "Avulsion de 4 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 83.6
+  },
+  "HBGD231": {
+    "code": "HBGD231",
+    "libelle": "Avulsion de 8 dents à 10 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 167.2
+  },
+  "HBGD233": {
+    "code": "HBGD233",
+    "libelle": "Désobturation endodontique d’une première prémolaire maxillaire",
+    "tarif": null
+  },
+  "HBGD235": {
+    "code": "HBGD235",
+    "libelle": "Avulsion de 23 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 401.28
+  },
+  "HBGD245": {
+    "code": "HBGD245",
+    "libelle": "Avulsion de 31 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 535.04
+  },
+  "HBGD247": {
+    "code": "HBGD247",
+    "libelle": "Avulsion de 14 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 250.8
+  },
+  "HBGD258": {
+    "code": "HBGD258",
+    "libelle": "Avulsion de 21 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 367.84
+  },
+  "HBGD261": {
+    "code": "HBGD261",
+    "libelle": "Avulsion de 17 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 300.96
+  },
+  "HBGD262": {
+    "code": "HBGD262",
+    "libelle": "Avulsion de 29 dents à 32 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 526.68
+  },
+  "HBGD263": {
+    "code": "HBGD263",
+    "libelle": "Avulsion de 8 dents temporaires sur arcade",
+    "tarif": 105.0
+  },
+  "HBGD278": {
+    "code": "HBGD278",
+    "libelle": "Avulsion de 20 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 351.12
+  },
+  "HBGD279": {
+    "code": "HBGD279",
+    "libelle": "Avulsion de 3 prémolaires retenues ou à l'état de germe",
+    "tarif": 167.2
+  },
+  "HBGD280": {
+    "code": "HBGD280",
+    "libelle": "Avulsion de 9 dents temporaires sur arcade",
+    "tarif": 115.0
+  },
+  "HBGD281": {
+    "code": "HBGD281",
+    "libelle": "Avulsion de 3 odontoïdes inclus ou de 3 dents surnuméraires à l'état de germe",
+    "tarif": 167.2
+  },
+  "HBGD282": {
+    "code": "HBGD282",
+    "libelle": "Avulsion de19 dents temporaires sur arcade",
+    "tarif": 200.0
+  },
+  "HBGD283": {
+    "code": "HBGD283",
+    "libelle": "Avulsion de 32 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 551.76
+  },
+  "HBGD284": {
+    "code": "HBGD284",
+    "libelle": "Avulsion de 4 dents temporaires sur arcade",
+    "tarif": 61.0
+  },
+  "HBGD285": {
+    "code": "HBGD285",
+    "libelle": "Avulsion de 26 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 451.44
+  },
+  "HBGD287": {
+    "code": "HBGD287",
+    "libelle": "Avulsion de 3 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 79.0
+  },
+  "HBGD299": {
+    "code": "HBGD299",
+    "libelle": "Avulsion de 3 racines incluses",
+    "tarif": 167.2
+  },
+  "HBGD300": {
+    "code": "HBGD300",
+    "libelle": "Avulsion d'une dent en désinclusion avec couronne sous muqueuse en position palatine ou linguale",
+    "tarif": 104.5
+  },
+  "HBGD309": {
+    "code": "HBGD309",
+    "libelle": "Avulsion de 3 dents temporaires sur arcade",
+    "tarif": 49.0
+  },
+  "HBGD311": {
+    "code": "HBGD311",
+    "libelle": "Avulsion de 22 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 384.56
+  },
+  "HBGD312": {
+    "code": "HBGD312",
+    "libelle": "Avulsion de 6 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 117.04
+  },
+  "HBGD316": {
+    "code": "HBGD316",
+    "libelle": "Avulsion de 3 premières ou deuxièmes molaires permanentes retenues ou à l'état de germe",
+    "tarif": 167.2
+  },
+  "HBGD319": {
+    "code": "HBGD319",
+    "libelle": "Avulsion de 3 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 75.0
+  },
+  "HBGD322": {
+    "code": "HBGD322",
+    "libelle": "Avulsion de 2 dents à couronne sousmuqueuse ou en désinclusion muqueuse",
+    "tarif": 62.7
+  },
+  "HBGD333": {
+    "code": "HBGD333",
+    "libelle": "Avulsion de 16 dents permanente sur arcade sans alvéolectomie",
+    "tarif": 284.24
+  },
+  "HBGD338": {
+    "code": "HBGD338",
+    "libelle": "Avulsion de 27 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 468.16
+  },
+  "HBGD345": {
+    "code": "HBGD345",
+    "libelle": "Avulsion de 29 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 501.6
+  },
+  "HBGD349": {
+    "code": "HBGD349",
+    "libelle": "Avulsion de 11 dents à 13 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 217.36
+  },
+  "HBGD356": {
+    "code": "HBGD356",
+    "libelle": "Avulsion de 11 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 200.64
+  },
+  "HBGD358": {
+    "code": "HBGD358",
+    "libelle": "Avulsion de 2 dents en désinclusion avec couronnes sous muqueuses  en position palatine et/ou linguale",
+    "tarif": 156.75
+  },
+  "HBGD359": {
+    "code": "HBGD359",
+    "libelle": "Avulsion de 7 à 8 prémolaires retenues ou à l'état de germe",
+    "tarif": 355.3
+  },
+  "HBGD362": {
+    "code": "HBGD362",
+    "libelle": "Avulsion de 11 dents temporaires sur arcade",
+    "tarif": 135.0
+  },
+  "HBGD372": {
+    "code": "HBGD372",
+    "libelle": "Avulsion de 5 à 6 incisives permanentes retenues ou à l'état de germe",
+    "tarif": 271.7
+  },
+  "HBGD374": {
+    "code": "HBGD374",
+    "libelle": "Avulsion de 24 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 418.0
+  },
+  "HBGD382": {
+    "code": "HBGD382",
+    "libelle": "Avulsion de 13 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 234.08
+  },
+  "HBGD385": {
+    "code": "HBGD385",
+    "libelle": "Avulsion de 5 à 6 prémolaires retenues ou à l'état de germe",
+    "tarif": 271.7
+  },
+  "HBGD386": {
+    "code": "HBGD386",
+    "libelle": "Avulsion de 2 prémolaires retenues ou à l'état de germe",
+    "tarif": 125.4
+  },
+  "HBGD396": {
+    "code": "HBGD396",
+    "libelle": "Avulsion de 7 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 133.76
+  },
+  "HBGD397": {
+    "code": "HBGD397",
+    "libelle": "Avulsion de 3 dents ectopiques",
+    "tarif": 334.4
+  },
+  "HBGD402": {
+    "code": "HBGD402",
+    "libelle": "Avulsion de 2 odontoïdes inclus ou de 2 dents surnuméraires à l'état de germe",
+    "tarif": 125.4
+  },
+  "HBGD403": {
+    "code": "HBGD403",
+    "libelle": "Avulsion de 4 dents à couronne sousmuqueuse ou en désinclusion muqueuse",
+    "tarif": 104.5
+  },
+  "HBGD414": {
+    "code": "HBGD414",
+    "libelle": "Avulsion de 30 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 518.32
+  },
+  "HBGD415": {
+    "code": "HBGD415",
+    "libelle": "Avulsion de 3 dents permanentes sur arcade avec séparation des racines",
+    "tarif": 66.88
+  },
+  "HBGD416": {
+    "code": "HBGD416",
+    "libelle": "Avulsion de 4 canines permanentes  retenues ou à l'état de germe",
+    "tarif": 261.25
+  },
+  "HBGD418": {
+    "code": "HBGD418",
+    "libelle": "Avulsion de 17 dents à 19 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 317.68
+  },
+  "HBGD420": {
+    "code": "HBGD420",
+    "libelle": "Avulsion de 9 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 168.0
+  },
+  "HBGD422": {
+    "code": "HBGD422",
+    "libelle": "Avulsion de 8 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 153.0
+  },
+  "HBGD430": {
+    "code": "HBGD430",
+    "libelle": "Avulsion de 4 incisives permanentes retenues ou à l'état de germe",
+    "tarif": 209.0
+  },
+  "HBGD438": {
+    "code": "HBGD438",
+    "libelle": "Avulsion de 11 à 13 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 217.36
+  },
+  "HBGD441": {
+    "code": "HBGD441",
+    "libelle": "Avulsion de 20 dents à 22 dents permanentes sur arcade avec alvéolectomie",
+    "tarif": 367.84
+  },
+  "HBGD453": {
+    "code": "HBGD453",
+    "libelle": "Avulsion de 3 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 66.88
+  },
+  "HBGD459": {
+    "code": "HBGD459",
+    "libelle": "Avulsion d'1 prémolaire retenue ou à l'état de germe",
+    "tarif": 83.6
+  },
+  "HBGD461": {
+    "code": "HBGD461",
+    "libelle": "Avulsion de 19 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 334.4
+  },
+  "HBGD462": {
+    "code": "HBGD462",
+    "libelle": "Avulsion de 6 dents temporaires sur arcade",
+    "tarif": 85.0
+  },
+  "HBGD464": {
+    "code": "HBGD464",
+    "libelle": "Avulsion de 7 dents temporaires sur arcade",
+    "tarif": 95.0
+  },
+  "HBGD465": {
+    "code": "HBGD465",
+    "libelle": "Avulsion de 6 racines incluses",
+    "tarif": 292.6
+  },
+  "HBGD466": {
+    "code": "HBGD466",
+    "libelle": "Avulsion de 2 racines incluses",
+    "tarif": 125.4
+  },
+  "HBGD468": {
+    "code": "HBGD468",
+    "libelle": "Avulsion de 18 dents temporaires sur arcade",
+    "tarif": 195.0
+  },
+  "HBGD475": {
+    "code": "HBGD475",
+    "libelle": "Avulsion de 25 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 434.72
+  },
+  "HBGD480": {
+    "code": "HBGD480",
+    "libelle": "Avulsion de 5 dents ankylosées sur arcade, avec section coronoradiculaire et séparation des racines",
+    "tarif": 100.32
+  },
+  "HBGD489": {
+    "code": "HBGD489",
+    "libelle": "Avulsion de 4 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 93.0
+  },
+  "HBGD492": {
+    "code": "HBGD492",
+    "libelle": "Avulsion de 2 premières ou deuxièmes molaires permanentes retenues ou à l'état de germe",
+    "tarif": 125.4
+  },
+  "HBGD497": {
+    "code": "HBGD497",
+    "libelle": "Avulsion de 5 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 108.0
+  },
+  "HBGD499": {
+    "code": "HBGD499",
+    "libelle": "Avulsion de 18 dents permanentes sur arcade sans alvéolectomie",
+    "tarif": 317.68
+  },
+  "HBJA003": {
+    "code": "HBJA003",
+    "libelle": "Assainissement parodontal [détartrage-surfaçage radiculaire] [DSR] sur 1 sextant",
+    "tarif": 80.0
+  },
+  "HBJA171": {
+    "code": "HBJA171",
+    "libelle": "Assainissement parodontal [détartrage-surfaçage radiculaire] [DSR] sur 2 sextants",
+    "tarif": 160.0
+  },
+  "HBJA247": {
+    "code": "HBJA247",
+    "libelle": "Assainissement parodontal par lambeau sur 1 sextant",
+    "tarif": null
+  },
+  "HBJA634": {
+    "code": "HBJA634",
+    "libelle": "Assainissement parodontal [détartrage-surfaçage radiculaire] [DSR] sur 3 sextants ou plus",
+    "tarif": 240.0
+  },
+  "HBJB001": {
+    "code": "HBJB001",
+    "libelle": "Évacuation d'abcès parodontal",
+    "tarif": 40.0
+  },
+  "HBJD001": {
+    "code": "HBJD001",
+    "libelle": "Détartrage et polissage des dents",
+    "tarif": 28.92
+  },
+  "HBKD005": {
+    "code": "HBKD005",
+    "libelle": "Changement de dispositif d'attachement d'une prothèse dentaire amovible supra implantaire",
+    "tarif": 32.25
+  },
+  "HBKD140": {
+    "code": "HBKD140",
+    "libelle": "Changement de 7 facettes d'une prothèse dentaire amovible",
+    "tarif": 120.4
+  },
+  "HBKD212": {
+    "code": "HBKD212",
+    "libelle": "Changement de 4 facettes d'une prothèse dentaire amovible",
+    "tarif": 68.8
+  },
+  "HBKD213": {
+    "code": "HBKD213",
+    "libelle": "Changement de 6 facettes d'une prothèse dentaire amovible",
+    "tarif": 103.2
+  },
+  "HBKD244": {
+    "code": "HBKD244",
+    "libelle": "Changement de 8 facettes d'une prothèse dentaire amovible",
+    "tarif": 137.6
+  },
+  "HBKD300": {
+    "code": "HBKD300",
+    "libelle": "Changement de 3 facettes d'une prothèse dentaire amovible",
+    "tarif": 51.6
+  },
+  "HBKD396": {
+    "code": "HBKD396",
+    "libelle": "Changement d'1 facette d'une prothèse dentaire amovible",
+    "tarif": 17.2
+  },
+  "HBKD431": {
+    "code": "HBKD431",
+    "libelle": "Changement de 2 facettes d'une prothèse dentaire amovible",
+    "tarif": 34.4
+  },
+  "HBKD462": {
+    "code": "HBKD462",
+    "libelle": "Changement de 5 facettes d'une prothèse dentaire amovible",
+    "tarif": 86.0
+  },
+  "HBLD001": {
+    "code": "HBLD001",
+    "libelle": "Pose d’un arc de maintien d’espace interdentaire sans dent prothétique",
+    "tarif": null
+  },
+  "HBLD002": {
+    "code": "HBLD002",
+    "libelle": "Pose d’un mainteneur d’espace interdentaire amovible passif",
+    "tarif": null
+  },
+  "HBLD003": {
+    "code": "HBLD003",
+    "libelle": "Pose d’un arc de maintien d’espace interdentaire avec dent prothétique",
+    "tarif": null
+  },
+  "HBLD004": {
+    "code": "HBLD004",
+    "libelle": "Application topique intrabuccale de fluorures",
+    "tarif": null
+  },
+  "HBLD005": {
+    "code": "HBLD005",
+    "libelle": "Pose d'infrastructure coronaire sur 5 implants ou plus",
+    "tarif": null
+  },
+  "HBLD006": {
+    "code": "HBLD006",
+    "libelle": "Pose d’un mainteneur d’espace interdentaire unitaire scellé",
+    "tarif": 30.0
+  },
+  "HBLD008": {
+    "code": "HBLD008",
+    "libelle": "Pose d'un attachement coronoradiculaire sur une dent",
+    "tarif": null
+  },
+  "HBLD009": {
+    "code": "HBLD009",
+    "libelle": "Application d’un topique pour hypersensibilité dentinaire",
+    "tarif": null
+  },
+  "HBLD012": {
+    "code": "HBLD012",
+    "libelle": "Pose d'une infrastructure coronaire sur 1 implant",
+    "tarif": null
+  },
+  "HBLD013": {
+    "code": "HBLD013",
+    "libelle": "Pose d'infrastructure coronaire sur 4 implants",
+    "tarif": null
+  },
+  "HBLD015": {
+    "code": "HBLD015",
+    "libelle": "Pose d'une coiffe de recouvrement d'une racine dentaire [Coping]",
+    "tarif": null
+  },
+  "HBLD017": {
+    "code": "HBLD017",
+    "libelle": "Pose d'infrastructure coronaire sur 2 implants",
+    "tarif": null
+  },
+  "HBLD018": {
+    "code": "HBLD018",
+    "libelle": "Pose d'un plan de libération occlusale",
+    "tarif": 172.8
+  },
+  "HBLD019": {
+    "code": "HBLD019",
+    "libelle": "Pose d'un plan de guidage des mouvements antéropostérieurs mandibulaires",
+    "tarif": null
+  },
+  "HBLD020": {
+    "code": "HBLD020",
+    "libelle": "Pose d'un appareil de posture mandibulaire [cale]",
+    "tarif": null
+  },
+  "HBLD021": {
+    "code": "HBLD021",
+    "libelle": "Pose d'infrastructure coronaire sur 3 implants",
+    "tarif": null
+  },
+  "HBLD030": {
+    "code": "HBLD030",
+    "libelle": "Pose d'une prothèse dentaire complète transvissée implantoportée",
+    "tarif": 182.75
+  },
+  "HBLD031": {
+    "code": "HBLD031",
+    "libelle": "Pose d'une prothèse amovible définitive complète unimaxillaire à plaque base résine",
+    "tarif": 182.75
+  },
+  "HBLD032": {
+    "code": "HBLD032",
+    "libelle": "Pose d'une prothèse amovible de transition complète unimaxillaire à plaque base résine",
+    "tarif": 182.75
+  },
+  "HBLD033": {
+    "code": "HBLD033",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 2 piliers d'ancrage métalliques et 1 élément intermédiaire métallique",
+    "tarif": 279.5
+  },
+  "HBLD034": {
+    "code": "HBLD034",
+    "libelle": "Pose d’une prothèse dentaire plurale transitoire [bridge transitoire]",
+    "tarif": null
+  },
+  "HBLD035": {
+    "code": "HBLD035",
+    "libelle": "Pose d'une prothèse amovible définitive complète bimaxillaire à plaque base résine",
+    "tarif": 365.5
+  },
+  "HBLD038": {
+    "code": "HBLD038",
+    "libelle": "Pose d'une couronne dentaire dentoportée en alliage non précieux",
+    "tarif": 120.0
+  },
+  "HBLD040": {
+    "code": "HBLD040",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 1 pilier d'ancrage métallique, 1 pilier d'ancrage céramométallique, et 1 élément intermédiaire métallique",
+    "tarif": 279.5
+  },
+  "HBLD043": {
+    "code": "HBLD043",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 1 pilier d'ancrage métallique, 1 pilier d'ancrage céramométallique, et 1 élément intermédiaire céramométallique",
+    "tarif": 279.5
+  },
+  "HBLD045": {
+    "code": "HBLD045",
+    "libelle": "Application de vernis fluoré sur les deux arcades dentaires",
+    "tarif": 25.0
+  },
+  "HBLD046": {
+    "code": "HBLD046",
+    "libelle": "Pose d'une prothèse amovible définitive complète bimaxillaire à châssis métallique",
+    "tarif": 623.5
+  },
+  "HBLD047": {
+    "code": "HBLD047",
+    "libelle": "Pose d'une prothèse amovible définitive complète unimaxillaire à châssis métallique",
+    "tarif": 311.75
+  },
+  "HBLD048": {
+    "code": "HBLD048",
+    "libelle": "Pose d'une prothèse amovible définitive complète unimaxillaire à plaque base résine et d'une prothèse amovible définitive complète unimaxillaire à châssis métallique",
+    "tarif": 494.5
+  },
+  "HBLD050": {
+    "code": "HBLD050",
+    "libelle": "Pose d’un dispositif unimaxillaire de contention extracoronaire par attelle composite collée, sur 7 dents ou plus",
+    "tarif": null
+  },
+  "HBLD051": {
+    "code": "HBLD051",
+    "libelle": "Pose d’un dispositif unimaxillaire de contention extracoronaire par attelle métallique coulée et collée, sur 7 dents ou plus",
+    "tarif": 96.4
+  },
+  "HBLD052": {
+    "code": "HBLD052",
+    "libelle": "Pose d’un dispositif unimaxillaire de contention extracoronaire par attelle composite collée, sur 1 à 6 dents",
+    "tarif": null
+  },
+  "HBLD053": {
+    "code": "HBLD053",
+    "libelle": "Pose d’un dispositif unimaxillaire de contention extracoronaire par attelle métallique coulée et collée, sur 1 à 6 dents",
+    "tarif": 96.4
+  },
+  "HBLD056": {
+    "code": "HBLD056",
+    "libelle": "Pose d'une plaque base résine pour guide chirurgical préimplantaire dentaire, pour 1 arcade",
+    "tarif": 94.08
+  },
+  "HBLD057": {
+    "code": "HBLD057",
+    "libelle": "Pose d'une plaque base résine pour guide radiologique préimplantaire dentaire, pour 1 arcade",
+    "tarif": 140.16
+  },
+  "HBLD073": {
+    "code": "HBLD073",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramique-monolithique zircone sur une molaire",
+    "tarif": 120.0
+  },
+  "HBLD075": {
+    "code": "HBLD075",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 7 dents",
+    "tarif": 236.5
+  },
+  "HBLD078": {
+    "code": "HBLD078",
+    "libelle": "Pose d'une plaque base résine pour guide radiologique préimplantaire dentaire pour 2 arcades",
+    "tarif": 264.96
+  },
+  "HBLD079": {
+    "code": "HBLD079",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 10 dents",
+    "tarif": 268.75
+  },
+  "HBLD083": {
+    "code": "HBLD083",
+    "libelle": "Pose d'une prothèse amovible définitive à plaque base résine, comportant 11 dents",
+    "tarif": 150.5
+  },
+  "HBLD084": {
+    "code": "HBLD084",
+    "libelle": "Pose d'une plaque base résine pour guide chirurgical préimplantaire dentaire pour 2 arcades",
+    "tarif": 174.72
+  },
+  "HBLD088": {
+    "code": "HBLD088",
+    "libelle": "Pose d’une prothèse plurale en extension comportant 1 pilier d’ancrage céramométallique ou en équivalents minéraux et 1 élément en extension céramométallique ou en équivalents minéraux [bridge cantilever 2 éléments], pour le remplacement d’une incisive permanente",
+    "tarif": 172.0
+  },
+  "HBLD090": {
+    "code": "HBLD090",
+    "libelle": "Pose d'une infrastructure coronoradiculaire [Inlay core] sous une couronne ou un pilier de bridge dentoportés sans reste à charge",
+    "tarif": 70.0
+  },
+  "HBLD093": {
+    "code": "HBLD093",
+    "libelle": "Pose d’une prothèse plurale en extension, collée comportant 1 ancrage coronaire partiel  et 1 élément en extension céramométallique ou en équivalents minéraux [bridge cantilever collé], pour le remplacement d’une incisive permanente",
+    "tarif": 83.78
+  },
+  "HBLD099": {
+    "code": "HBLD099",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 2 piliers d'ancrage céramiques monolithiques zircone et 1 élément intermédiaire céramique monolithique zircone",
+    "tarif": 279.5
+  },
+  "HBLD101": {
+    "code": "HBLD101",
+    "libelle": "Pose d'une prothèse amovible définitive à plaque base résine, comportant 9 dents",
+    "tarif": 129.0
+  },
+  "HBLD112": {
+    "code": "HBLD112",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 12 dents",
+    "tarif": 290.25
+  },
+  "HBLD118": {
+    "code": "HBLD118",
+    "libelle": "Pose d'une prothèse amovible supra-implantaire complète unimaxillaire à plaque base résine",
+    "tarif": 182.75
+  },
+  "HBLD123": {
+    "code": "HBLD123",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 7 dents",
+    "tarif": 107.5
+  },
+  "HBLD131": {
+    "code": "HBLD131",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 1 à 3 dents",
+    "tarif": 193.5
+  },
+  "HBLD132": {
+    "code": "HBLD132",
+    "libelle": "Pose d’une prothèse amovible supra-implantaire à plaque résine comportant moins de 9 dents",
+    "tarif": 102.13
+  },
+  "HBLD138": {
+    "code": "HBLD138",
+    "libelle": "Pose d'une prothèse amovible définitive à plaque base résine, comportant 10 dents",
+    "tarif": 139.75
+  },
+  "HBLD148": {
+    "code": "HBLD148",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 9 dents",
+    "tarif": 129.0
+  },
+  "HBLD158": {
+    "code": "HBLD158",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramique monolithique  autre que zircone sur une deuxième prémolaire ou une molaire",
+    "tarif": 120.0
+  },
+  "HBLD171": {
+    "code": "HBLD171",
+    "libelle": "Pose d’une prothèse amovible supra-implantaire complète bimaxillaire à chassis métallique",
+    "tarif": 623.5
+  },
+  "HBLD178": {
+    "code": "HBLD178",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 2 piliers d'ancrage en alliage précieux et 1 élément intermédiaire en alliage précieux",
+    "tarif": 279.5
+  },
+  "HBLD179": {
+    "code": "HBLD179",
+    "libelle": "Pose d’une prothèse plurale collée [bridge collé] comportant 2 ancrages coronaires partiels ou plus et 1 élément intermédiaire métallique, pour le remplacement d’une prémolaire ou d'une molaire permanente",
+    "tarif": 103.06
+  },
+  "HBLD199": {
+    "code": "HBLD199",
+    "libelle": "Pose d'une prothèse amovible supra-implantaire complète bimaxillaire à plaque base résine",
+    "tarif": 365.5
+  },
+  "HBLD203": {
+    "code": "HBLD203",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 11 dents",
+    "tarif": 279.5
+  },
+  "HBLD215": {
+    "code": "HBLD215",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 11 dents",
+    "tarif": 150.5
+  },
+  "HBLD217": {
+    "code": "HBLD217",
+    "libelle": "Pose d’une prothèse amovible supra-implantaire complète unimaxillaire à chassis métallique",
+    "tarif": 311.75
+  },
+  "HBLD224": {
+    "code": "HBLD224",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 5 dents",
+    "tarif": 86.0
+  },
+  "HBLD227": {
+    "code": "HBLD227",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 2 piliers d'ancrage céramométalliques et 1 élément intermédiaire céramométallique pour le remplacement d'une dent autre qu'une incisive",
+    "tarif": 279.5
+  },
+  "HBLD231": {
+    "code": "HBLD231",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 10 dents",
+    "tarif": 139.75
+  },
+  "HBLD232": {
+    "code": "HBLD232",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 13 dents",
+    "tarif": 172.0
+  },
+  "HBLD236": {
+    "code": "HBLD236",
+    "libelle": "Pose d’une prothèse amovible supra-implantaire à chassis métallique  comportant de 9 à 13 dents",
+    "tarif": 279.5
+  },
+  "HBLD240": {
+    "code": "HBLD240",
+    "libelle": "Pose d’une prothèse amovible supra-implantaire à chassis métallique  comportant moins de 9 dents",
+    "tarif": 236.5
+  },
+  "HBLD245": {
+    "code": "HBLD245",
+    "libelle": "Pose d'une infrastructure coronoradiculaire [Inlay core] sous une couronne ou un pilier de bridge dentoportés à tarif libre",
+    "tarif": 70.0
+  },
+  "HBLD259": {
+    "code": "HBLD259",
+    "libelle": "Pose d'une prothèse amovible de transition complète bimaxillaire à plaque base résine",
+    "tarif": 365.5
+  },
+  "HBLD262": {
+    "code": "HBLD262",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 12 dents",
+    "tarif": 161.25
+  },
+  "HBLD270": {
+    "code": "HBLD270",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 8 dents",
+    "tarif": 118.25
+  },
+  "HBLD308": {
+    "code": "HBLD308",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 13 dents",
+    "tarif": 301.0
+  },
+  "HBLD318": {
+    "code": "HBLD318",
+    "libelle": "Pose d'une couronne dentaire dentoportée en alliage précieux \nAvec ou sans recouvrement céramique",
+    "tarif": 120.0
+  },
+  "HBLD321": {
+    "code": "HBLD321",
+    "libelle": "Pose d’une prothèse plurale en extension comportant 1 pilier d’ancrage métallique, 1 pilier d'ancrage céramométallique  et 1 élément en extension  céramométallique [bridge cantilever 3 éléments], pour le remplacement d’une incisive permanente ou d’une prémolaire",
+    "tarif": 279.5
+  },
+  "HBLD332": {
+    "code": "HBLD332",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 4 dents",
+    "tarif": 204.25
+  },
+  "HBLD349": {
+    "code": "HBLD349",
+    "libelle": "Pose d'une prothèse amovible définitive à plaque base résine, comportant 13 dents",
+    "tarif": 172.0
+  },
+  "HBLD350": {
+    "code": "HBLD350",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramique-monolithique zircone sur une dent autre qu’une molaire",
+    "tarif": 120.0
+  },
+  "HBLD364": {
+    "code": "HBLD364",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 1 à 3 dents",
+    "tarif": 64.5
+  },
+  "HBLD370": {
+    "code": "HBLD370",
+    "libelle": "Pose d'une prothèse amovible définitive à plaque base résine, comportant 12 dents",
+    "tarif": 161.25
+  },
+  "HBLD371": {
+    "code": "HBLD371",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 6 dents",
+    "tarif": 96.75
+  },
+  "HBLD403": {
+    "code": "HBLD403",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramocéramique",
+    "tarif": 120.0
+  },
+  "HBLD411": {
+    "code": "HBLD411",
+    "libelle": "Pose d’une prothèse plurale en extension comportant 2 piliers d’ancrage métallique et 1 élément en extension métallique [bridge cantilever 3 éléments],  pour le remplacement d’une incisive permanente ou d’une prémolaire",
+    "tarif": 279.5
+  },
+  "HBLD414": {
+    "code": "HBLD414",
+    "libelle": "Pose d’une prothèse plurale collée [bridge collé] comportant 2 ancrages coronaires partiels ou plus et 1 élément intermédiaire céramométallique ou en équivalents minéraux,  pour le remplacement d’une prémolaire ou d'une molaire permanente",
+    "tarif": 103.06
+  },
+  "HBLD418": {
+    "code": "HBLD418",
+    "libelle": "Pose d'une couronne dentaire implantoportée",
+    "tarif": 107.5
+  },
+  "HBLD426": {
+    "code": "HBLD426",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 2 piliers d'ancrage céramocéramiques ou céramiques monolithiques (hors zircone) et 1 élément intermédiaire céramocéramique ou céramique monolithique hors zircone",
+    "tarif": 279.5
+  },
+  "HBLD435": {
+    "code": "HBLD435",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 9 dents",
+    "tarif": 258.0
+  },
+  "HBLD452": {
+    "code": "HBLD452",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 5 dents",
+    "tarif": 215.0
+  },
+  "HBLD453": {
+    "code": "HBLD453",
+    "libelle": "Pose d’une prothèse plurale collée [bridge collé]  comportant 2 ancrages coronaires partiels ou plus et 2 éléments intermédiaires céramométalliques ou en équivalents minéraux, pour le remplacement de 2 incisives mandibulaires permanentes",
+    "tarif": 103.06
+  },
+  "HBLD465": {
+    "code": "HBLD465",
+    "libelle": "Pose d’une prothèse plurale en extension comportant 2 piliers d’ancrage métalliques et 1 élément en extension céramométallique [bridge cantilever 3 éléments],  pour le remplacement d’une incisive permanente ou d’une prémolaire",
+    "tarif": 279.5
+  },
+  "HBLD466": {
+    "code": "HBLD466",
+    "libelle": "Pose d’une prothèse plurale collée [bridge collé]  comportant 2 ancrages coronaires partiels ou plus et 1 élément intermédiaire céramométallique ou en équivalents minéraux, pour le remplacement d’une incisive permanente",
+    "tarif": 103.06
+  },
+  "HBLD470": {
+    "code": "HBLD470",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 8 dents",
+    "tarif": 247.25
+  },
+  "HBLD474": {
+    "code": "HBLD474",
+    "libelle": "Pose d'une prothèse amovible définitive à châssis métallique, comportant 6 dents",
+    "tarif": 225.75
+  },
+  "HBLD476": {
+    "code": "HBLD476",
+    "libelle": "Pose d'une prothèse amovible de transition à plaque base résine, comportant 4 dents",
+    "tarif": 75.25
+  },
+  "HBLD486": {
+    "code": "HBLD486",
+    "libelle": "Pose d'une couronne dentaire transitoire pour une couronne dentoportée à tarif libre",
+    "tarif": 10.0
+  },
+  "HBLD490": {
+    "code": "HBLD490",
+    "libelle": "Pose d'une couronne dentaire transitoire pour couronne dentoportée sans reste à charge",
+    "tarif": 10.0
+  },
+  "HBLD491": {
+    "code": "HBLD491",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramométallique sur une deuxième prémolaire",
+    "tarif": 120.0
+  },
+  "HBLD492": {
+    "code": "HBLD492",
+    "libelle": "Pose d'une prothèse amovible supra-implantaire à plaque base résine, comportant de 9 à 13 dents",
+    "tarif": 150.5
+  },
+  "HBLD610": {
+    "code": "HBLD610",
+    "libelle": "Pose d'une couronne dentaire transitoire unitaire sur implant ou sur pilier de bridge dento-porté ou implantoporté",
+    "tarif": null
+  },
+  "HBLD634": {
+    "code": "HBLD634",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramométallique sur une incisive, une canine ou une première prémolaire",
+    "tarif": 120.0
+  },
+  "HBLD680": {
+    "code": "HBLD680",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramique monolithique autre que zircone sur une incisive, une canine ou une première prémolaire",
+    "tarif": 120.0
+  },
+  "HBLD724": {
+    "code": "HBLD724",
+    "libelle": "Pose d'une couronne dentaire transitoire pour une couronne dentoportée à entente directe limitée",
+    "tarif": 10.0
+  },
+  "HBLD734": {
+    "code": "HBLD734",
+    "libelle": "Pose d'une couronne dentaire dentoportée céramométallique sur une molaire",
+    "tarif": 120.0
+  },
+  "HBLD745": {
+    "code": "HBLD745",
+    "libelle": "Pose d'une infrastructure coronoradiculaire [Inlay core] sous une couronne ou un pilier de bridge dentoportés à entente directe limitée",
+    "tarif": 70.0
+  },
+  "HBLD750": {
+    "code": "HBLD750",
+    "libelle": "Pose d’une prothèse plurale en extension comportant 2 piliers d’ancrage céramométalliques ou en équivalents minéraux et 1 élément en extension céramométallique ou en équivalents minéraux  [bridge cantilever 3 éléments], pour le remplacement d’une incisive permanente ou d’une prémolaire",
+    "tarif": 279.5
+  },
+  "HBLD785": {
+    "code": "HBLD785",
+    "libelle": "Pose d'une prothèse plurale [bridge] comportant 2 piliers d'ancrage céramométalliques et 1 élément intermédiaire céramométallique pour le remplacement d'une incisive",
+    "tarif": 279.5
+  },
+  "HBMA001": {
+    "code": "HBMA001",
+    "libelle": "Plastie mucogingivale par lambeau déplacé latéralement, coronairement ou apicalement",
+    "tarif": 75.24
+  },
+  "HBMA003": {
+    "code": "HBMA003",
+    "libelle": "Ostéoplastie d'une alvéole dentaire avec comblement par autogreffe osseuse",
+    "tarif": null
+  },
+  "HBMA004": {
+    "code": "HBMA004",
+    "libelle": "Régénération parodontale",
+    "tarif": null
+  },
+  "HBMA006": {
+    "code": "HBMA006",
+    "libelle": "Ostéoplastie d'une alvéole dentaire avec comblement par biomatériau",
+    "tarif": null
+  },
+  "HBMD001": {
+    "code": "HBMD001",
+    "libelle": "Eclaircissement de dent dépulpée",
+    "tarif": null
+  },
+  "HBMD002": {
+    "code": "HBMD002",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage d'1 élément",
+    "tarif": 38.7
+  },
+  "HBMD003": {
+    "code": "HBMD003",
+    "libelle": "Séance de renouvellement de l'obturation radiculaire d'une dent permanente immature à l'hydroxyde de calcium",
+    "tarif": null
+  },
+  "HBMD004": {
+    "code": "HBMD004",
+    "libelle": "Réfection de la base d'une prothèse dentaire amovible complète",
+    "tarif": null
+  },
+  "HBMD005": {
+    "code": "HBMD005",
+    "libelle": "Eclaircissement des dents pulpées",
+    "tarif": null
+  },
+  "HBMD006": {
+    "code": "HBMD006",
+    "libelle": "Reconstitution coronaire provisoire pour acte endodontique sur dent délabrée",
+    "tarif": null
+  },
+  "HBMD007": {
+    "code": "HBMD007",
+    "libelle": "Réfection des bords et/ou de l'intrados d'une prothèse dentaire amovible partielle",
+    "tarif": null
+  },
+  "HBMD008": {
+    "code": "HBMD008",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, sans démontage d'éléments",
+    "tarif": 32.25
+  },
+  "HBMD009": {
+    "code": "HBMD009",
+    "libelle": "Rescellement et/ou recollage de 3 couronnes ou plus ou de 3 ancrages ou plus d'une prothèse dentaire fixée",
+    "tarif": null
+  },
+  "HBMD014": {
+    "code": "HBMD014",
+    "libelle": "Modélisation occlusale par la technique de la cire ajoutée sur une dent",
+    "tarif": null
+  },
+  "HBMD016": {
+    "code": "HBMD016",
+    "libelle": "Rescellement et/ou recollage d’une ou deux couronnes ou d'un ou deux ancrages d'une prothèse dentaire fixée",
+    "tarif": null
+  },
+  "HBMD017": {
+    "code": "HBMD017",
+    "libelle": "Adjonction ou changement d'1 élément d'une prothèse dentaire amovible",
+    "tarif": 21.5
+  },
+  "HBMD018": {
+    "code": "HBMD018",
+    "libelle": "Séance de préparation [mise en condition] tissulaire des surfaces d'appui muqueux d'une prothèse dentaire, sur une arcade",
+    "tarif": null
+  },
+  "HBMD019": {
+    "code": "HBMD019",
+    "libelle": "Révision des piliers implantoportés d'une prothèse dentaire",
+    "tarif": 18.81
+  },
+  "HBMD020": {
+    "code": "HBMD020",
+    "libelle": "Réparation d'une prothèse dentaire amovible en résine sans renfort métallique, fêlée ou fracturée",
+    "tarif": 21.5
+  },
+  "HBMD038": {
+    "code": "HBMD038",
+    "libelle": "Restauration d’une dent d’un secteur prémolomolaire sur 3 faces ou plus par matériau inséré en phase plastique sans ancrage radiculaire",
+    "tarif": 68.12
+  },
+  "HBMD042": {
+    "code": "HBMD042",
+    "libelle": "Restauration d'une dent par matériau inséré en phase plastique avec ancrage radiculaire",
+    "tarif": 104.0
+  },
+  "HBMD044": {
+    "code": "HBMD044",
+    "libelle": "Restauration d'une dent d’un secteur incisivocanin sur 1 angle par matériau inséré en phase plastique, sans ancrage radiculaire",
+    "tarif": 68.12
+  },
+  "HBMD047": {
+    "code": "HBMD047",
+    "libelle": "Restauration d'une dent d’un secteur incisivocanin sur 2 angles par matériau inséré en phase plastique, sans ancrage radiculaire",
+    "tarif": 98.384
+  },
+  "HBMD048": {
+    "code": "HBMD048",
+    "libelle": "Pose d'une facette céramique, en équivalents minéraux ou composite sur une dent d’un secteur incisivocanin ou prémolaire",
+    "tarif": null
+  },
+  "HBMD049": {
+    "code": "HBMD049",
+    "libelle": "Restauration d’une dent d’un secteur prémolomolaire sur 2 faces par matériau inséré en phase plastique sans ancrage radiculaire",
+    "tarif": 52.0
+  },
+  "HBMD050": {
+    "code": "HBMD050",
+    "libelle": "Restauration d’une dent d’un secteur incisivocanin sur 2 faces par matériau inséré en phase plastique sans ancrage radiculaire",
+    "tarif": 52.0
+  },
+  "HBMD053": {
+    "code": "HBMD053",
+    "libelle": "Restauration d’une dent d’un secteur prémolomolaire sur 1 face par matériau inséré en phase plastique, sans ancrage radiculaire",
+    "tarif": 30.472
+  },
+  "HBMD054": {
+    "code": "HBMD054",
+    "libelle": "Restauration d’une dent d’un secteur incisivocanin sur 3 faces ou plus par matériau inséré en phase plastique sans ancrage radiculaire",
+    "tarif": 68.12
+  },
+  "HBMD058": {
+    "code": "HBMD058",
+    "libelle": "Restauration d’une dent d’un secteur incisivocanin sur 1 face par matériau inséré en phase plastique, sans ancrage radiculaire",
+    "tarif": 30.472
+  },
+  "HBMD061": {
+    "code": "HBMD061",
+    "libelle": "Séance d'ajustement occlusal par coronoplastie",
+    "tarif": null
+  },
+  "HBMD072": {
+    "code": "HBMD072",
+    "libelle": "Adjonction à une prothèse dentaire plurale fixée d'un élément intermédiaire céramométallique ou en équivalents minéraux supplémentaire, au-delà du 3e",
+    "tarif": 10.75
+  },
+  "HBMD076": {
+    "code": "HBMD076",
+    "libelle": "Réparation de l'artifice cosmétique d'une dent prothétique par technique directe",
+    "tarif": null
+  },
+  "HBMD079": {
+    "code": "HBMD079",
+    "libelle": "Réparation de l'artifice cosmétique d'une dent prothétique par technique indirecte",
+    "tarif": null
+  },
+  "HBMD081": {
+    "code": "HBMD081",
+    "libelle": "Adjonction d'un pilier d'ancrage métallique à une prothèse dentaire plurale fixée [pilier de bridge]",
+    "tarif": 107.5
+  },
+  "HBMD082": {
+    "code": "HBMD082",
+    "libelle": "Adjonction à une prothèse dentaire plurale fixée d'un élément intermédiaire métallique supplémentaire, au-delà du 3e",
+    "tarif": 10.75
+  },
+  "HBMD087": {
+    "code": "HBMD087",
+    "libelle": "Adjonction d'un pilier d'ancrage céramométallique ou en équivalents minéraux  à une prothèse dentaire plurale fixée [pilier de bridge]",
+    "tarif": 107.5
+  },
+  "HBMD110": {
+    "code": "HBMD110",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 4 éléments",
+    "tarif": 58.05
+  },
+  "HBMD114": {
+    "code": "HBMD114",
+    "libelle": "Adjonction ou changement de 2 éléments d'une prothèse dentaire amovible",
+    "tarif": 32.25
+  },
+  "HBMD134": {
+    "code": "HBMD134",
+    "libelle": "Adjonction ou changement de 13 éléments d'une prothèse dentaire amovible",
+    "tarif": 150.5
+  },
+  "HBMD174": {
+    "code": "HBMD174",
+    "libelle": "Adjonction ou changement de 14 éléments d'une prothèse dentaire amovible",
+    "tarif": 161.25
+  },
+  "HBMD188": {
+    "code": "HBMD188",
+    "libelle": "Adjonction ou changement de 3 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 129.0
+  },
+  "HBMD198": {
+    "code": "HBMD198",
+    "libelle": "Adjonction ou changement de 6 éléments d'une prothèse dentaire amovible",
+    "tarif": 75.25
+  },
+  "HBMD200": {
+    "code": "HBMD200",
+    "libelle": "Adjonction ou changement de 13 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 559.0
+  },
+  "HBMD226": {
+    "code": "HBMD226",
+    "libelle": "Adjonction ou changement de 11 éléments d'une prothèse dentaire amovible",
+    "tarif": 129.0
+  },
+  "HBMD228": {
+    "code": "HBMD228",
+    "libelle": "Adjonction ou changement de 8 éléments d'une prothèse dentaire amovible",
+    "tarif": 96.75
+  },
+  "HBMD245": {
+    "code": "HBMD245",
+    "libelle": "Adjonction ou changement de 5 éléments d'une prothèse dentaire amovible",
+    "tarif": 64.5
+  },
+  "HBMD249": {
+    "code": "HBMD249",
+    "libelle": "Adjonction ou changement d'1 élément soudé sur une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 43.0
+  },
+  "HBMD281": {
+    "code": "HBMD281",
+    "libelle": "Adjonction ou changement de 12 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 516.0
+  },
+  "HBMD283": {
+    "code": "HBMD283",
+    "libelle": "Adjonction ou changement de 5 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 215.0
+  },
+  "HBMD286": {
+    "code": "HBMD286",
+    "libelle": "Adjonction ou changement de 9 éléments d'une prothèse dentaire amovible",
+    "tarif": 107.5
+  },
+  "HBMD289": {
+    "code": "HBMD289",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 13 éléments",
+    "tarif": 116.1
+  },
+  "HBMD292": {
+    "code": "HBMD292",
+    "libelle": "Adjonction ou changement de 2 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 86.0
+  },
+  "HBMD298": {
+    "code": "HBMD298",
+    "libelle": "Adjonction ou changement de 14 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 602.0
+  },
+  "HBMD312": {
+    "code": "HBMD312",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 12 éléments",
+    "tarif": 109.65
+  },
+  "HBMD322": {
+    "code": "HBMD322",
+    "libelle": "Adjonction ou changement de 3 éléments d'une prothèse dentaire amovible",
+    "tarif": 43.0
+  },
+  "HBMD329": {
+    "code": "HBMD329",
+    "libelle": "Adjonction ou changement de 10 éléments d'une prothèse dentaire amovible",
+    "tarif": 118.25
+  },
+  "HBMD339": {
+    "code": "HBMD339",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 7 éléments",
+    "tarif": 77.4
+  },
+  "HBMD342": {
+    "code": "HBMD342",
+    "libelle": "Adjonction d'un 2e élément intermédiaire métallique à une prothèse dentaire plurale  [3e élément métallique  intermédiaire de bridge]",
+    "tarif": 0.1
+  },
+  "HBMD349": {
+    "code": "HBMD349",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 5 éléments",
+    "tarif": 64.5
+  },
+  "HBMD351": {
+    "code": "HBMD351",
+    "libelle": "Restauration d’une dent sur 2 faces ou plus par matériau incrusté [inlay-onlay] composite ou en alliage non précieux",
+    "tarif": 100.0
+  },
+  "HBMD356": {
+    "code": "HBMD356",
+    "libelle": "Réparation d'une prothèse dentaire amovible en résine avec renfort métallique, fêlée ou fracturée",
+    "tarif": 21.5
+  },
+  "HBMD373": {
+    "code": "HBMD373",
+    "libelle": "Adjonction ou changement de 7 éléments d'une prothèse dentaire amovible",
+    "tarif": 86.0
+  },
+  "HBMD386": {
+    "code": "HBMD386",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 6 éléments",
+    "tarif": 70.95
+  },
+  "HBMD387": {
+    "code": "HBMD387",
+    "libelle": "Adjonction ou changement de 12 éléments d'une prothèse dentaire amovible",
+    "tarif": 139.75
+  },
+  "HBMD400": {
+    "code": "HBMD400",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 14 éléments",
+    "tarif": 122.55
+  },
+  "HBMD404": {
+    "code": "HBMD404",
+    "libelle": "Adjonction ou changement de 4 éléments d'une prothèse dentaire amovible",
+    "tarif": 53.75
+  },
+  "HBMD410": {
+    "code": "HBMD410",
+    "libelle": "Adjonction ou changement de 10 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 430.0
+  },
+  "HBMD425": {
+    "code": "HBMD425",
+    "libelle": "Adjonction ou changement de 7 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 301.0
+  },
+  "HBMD429": {
+    "code": "HBMD429",
+    "libelle": "Adjonction ou changement de 11 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 473.0
+  },
+  "HBMD432": {
+    "code": "HBMD432",
+    "libelle": "Adjonction ou changement de 4 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 172.0
+  },
+  "HBMD433": {
+    "code": "HBMD433",
+    "libelle": "Adjonction d'un 2e élément intermédiaire céramométallique ou en équivalents minéraux à une prothèse dentaire plurale fixée [3e élément  céramométallique ou en équivalents minéraux intermédiaire de bridge]",
+    "tarif": 0.1
+  },
+  "HBMD438": {
+    "code": "HBMD438",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 9 éléments",
+    "tarif": 90.3
+  },
+  "HBMD439": {
+    "code": "HBMD439",
+    "libelle": "Adjonction ou changement de 6 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 258.0
+  },
+  "HBMD444": {
+    "code": "HBMD444",
+    "libelle": "Adjonction ou changement de 8 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 344.0
+  },
+  "HBMD449": {
+    "code": "HBMD449",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 11 éléments",
+    "tarif": 103.2
+  },
+  "HBMD459": {
+    "code": "HBMD459",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 8 éléments",
+    "tarif": 83.85
+  },
+  "HBMD460": {
+    "code": "HBMD460",
+    "libelle": "Restauration d’une dent sur 2 faces ou plus par matériau incrusté [inlay-onlay] céramique ou en alliage précieux",
+    "tarif": 100.0
+  },
+  "HBMD469": {
+    "code": "HBMD469",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 3 éléments",
+    "tarif": 51.6
+  },
+  "HBMD479": {
+    "code": "HBMD479",
+    "libelle": "Adjonction d'un 1er élément intermédiaire céramométallique ou en équivalents minéraux à une prothèse dentaire plurale fixée [2e élément céramométallique ou en équivalents minéraux intermédiaire de bridge]",
+    "tarif": 0.1
+  },
+  "HBMD481": {
+    "code": "HBMD481",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 10 éléments",
+    "tarif": 96.75
+  },
+  "HBMD485": {
+    "code": "HBMD485",
+    "libelle": "Adjonction ou changement de 9 éléments soudés d'une prothèse dentaire amovible sur châssis métallique",
+    "tarif": 387.0
+  },
+  "HBMD488": {
+    "code": "HBMD488",
+    "libelle": "Réparation d'une fracture de châssis métallique de prothèse dentaire amovible, avec remontage de 2 éléments",
+    "tarif": 45.15
+  },
+  "HBMD490": {
+    "code": "HBMD490",
+    "libelle": "Adjonction d'un 1er élément intermédiaire métallique à une prothèse dentaire plurale fixée [2e élément métallique intermédiaire de bridge]",
+    "tarif": 0.1
+  },
+  "HBMD689": {
+    "code": "HBMD689",
+    "libelle": "Adjonction d'1 élément en extension céramométallique ou en équivalents minéraux, autre qu'une canine, à une prothèse plurale fixée  [bridge] comportant au moins 2 piliers d'ancrage et un élément intermédiaire",
+    "tarif": 10.75
+  },
+  "HBMD776": {
+    "code": "HBMD776",
+    "libelle": "Adjonction d'un élément en extension métallique, autre qu'une canine, à une prothèse plurale fixée [bridge] comportant au moins 2 piliers d'ancrage et 1 élément intermédiaire",
+    "tarif": 10.75
+  },
+  "HBMP001": {
+    "code": "HBMP001",
+    "libelle": "Transformation d'un guide radiologique préimplantaire en guide chirurgical",
+    "tarif": 30.72
+  },
+  "HBPA001": {
+    "code": "HBPA001",
+    "libelle": "Dégagement d'une dent retenue ou incluse, avec pose d'un dispositif de traction orthodontique et aménagement parodontal par greffe ou lambeau",
+    "tarif": 146.3
+  },
+  "HBPD001": {
+    "code": "HBPD001",
+    "libelle": "Dégagement de plusieurs dents retenues ou incluses avec pose de dispositif de traction orthodontique",
+    "tarif": 156.75
+  },
+  "HBPD002": {
+    "code": "HBPD002",
+    "libelle": "Dégagement d'une dent retenue ou incluse avec pose d'un dispositif de traction orthodontique sans aménagement parodontal",
+    "tarif": 104.5
+  },
+  "HBQD001": {
+    "code": "HBQD001",
+    "libelle": "Bilan parodontal",
+    "tarif": 50.0
+  },
+  "HBQK001": {
+    "code": "HBQK001",
+    "libelle": "Radiographie pelvibuccale [occlusale]",
+    "tarif": 7.98
+  },
+  "HBQK002": {
+    "code": "HBQK002",
+    "libelle": "Radiographie panoramique dentomaxillaire",
+    "tarif": 20.0
+  },
+  "HBQK040": {
+    "code": "HBQK040",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires sur un secteur de 1 à 3 dents contigües préinterventionnelle ou perinterventionnelle avec radiographie finale pour acte thérapeutique endodontique",
+    "tarif": 11.97
+  },
+  "HBQK041": {
+    "code": "HBQK041",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 14 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 111.72
+  },
+  "HBQK046": {
+    "code": "HBQK046",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 9 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 71.82
+  },
+  "HBQK061": {
+    "code": "HBQK061",
+    "libelle": "Radiographie intrabuccale rétroalvéolaire et/ou rétrocoronaire d'un secteur de 1 à 3 dents contigües, finale pour acte thérapeutique endodontique ou perinterventionnelle et/ou finale, en dehors  d'un acte thérapeutique endodontique",
+    "tarif": 3.99
+  },
+  "HBQK065": {
+    "code": "HBQK065",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 10 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 79.8
+  },
+  "HBQK093": {
+    "code": "HBQK093",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 13 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 103.74
+  },
+  "HBQK142": {
+    "code": "HBQK142",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 8 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 63.84
+  },
+  "HBQK191": {
+    "code": "HBQK191",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 2 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 15.96
+  },
+  "HBQK303": {
+    "code": "HBQK303",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires sur un secteur de 1 à 3 dents contigües préinterventionnelle, perinterventionnelle et finale pour acte thérapeutique endodontique",
+    "tarif": 15.96
+  },
+  "HBQK331": {
+    "code": "HBQK331",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 3 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 23.94
+  },
+  "HBQK389": {
+    "code": "HBQK389",
+    "libelle": "Radiographie intrabuccale rétroalvéolaire et/ou rétrocoronaire d'un secteur de 1 à 3 dents contigües",
+    "tarif": 7.98
+  },
+  "HBQK424": {
+    "code": "HBQK424",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 11 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 87.78
+  },
+  "HBQK428": {
+    "code": "HBQK428",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 5 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 39.9
+  },
+  "HBQK430": {
+    "code": "HBQK430",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 7 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 55.86
+  },
+  "HBQK443": {
+    "code": "HBQK443",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 4 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 31.92
+  },
+  "HBQK476": {
+    "code": "HBQK476",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 12 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 95.76
+  },
+  "HBQK480": {
+    "code": "HBQK480",
+    "libelle": "Radiographies intrabuccales rétroalvéolaires et/ou rétrocoronaires de 6 secteurs distincts de 1 à 3 dents contigües",
+    "tarif": 47.88
+  },
+  "HBSD001": {
+    "code": "HBSD001",
+    "libelle": "Hémostase gingivoalvéolaire secondaire à une avulsion dentaire",
+    "tarif": 25.13
+  },
+  "LABA001": {
+    "code": "LABA001",
+    "libelle": "Apposition modelante de l'étage supérieur de la face, par abord coronal",
+    "tarif": 268.26
+  },
+  "LABA002": {
+    "code": "LABA002",
+    "libelle": "Désépaississement des tissus de recouvrement d'un site implantaire",
+    "tarif": 41.800000000000004
+  },
+  "LABA003": {
+    "code": "LABA003",
+    "libelle": "Apposition modelante de l'étage supérieur de la face, par abord facial",
+    "tarif": 174.4
+  },
+  "LABA004": {
+    "code": "LABA004",
+    "libelle": "Apposition modelante de l'étage moyen de la face, par abord direct",
+    "tarif": 210.62
+  },
+  "LACA001": {
+    "code": "LACA001",
+    "libelle": "Ostéosynthèse de fracture du bord infraorbitaire, à foyer ouvert",
+    "tarif": 209.0
+  },
+  "LACA002": {
+    "code": "LACA002",
+    "libelle": "Ostéosynthèse de fracture de l'os zygomatique [malaire], à foyer ouvert",
+    "tarif": 239.49
+  },
+  "LACA003": {
+    "code": "LACA003",
+    "libelle": "Ostéosynthèse de fracture de l'os zygomatique [malaire] avec réfection du plancher de l'orbite, par abord direct",
+    "tarif": 343.99
+  },
+  "LACA004": {
+    "code": "LACA004",
+    "libelle": "Ostéosynthèse de fracture unilatérale de la paroi antérieure du sinus frontal à foyer ouvert, par abord coronal",
+    "tarif": 297.82
+  },
+  "LACA005": {
+    "code": "LACA005",
+    "libelle": "Ostéosynthèse de fracture naso-ethmoïdo-maxillo-fronto-orbitaire, par abord coronal",
+    "tarif": 623.72
+  },
+  "LACA006": {
+    "code": "LACA006",
+    "libelle": "Ostéosynthèse de fracture frontonasale à foyer ouvert, par abord coronal",
+    "tarif": 250.67
+  },
+  "LACA007": {
+    "code": "LACA007",
+    "libelle": "Ostéosynthèse de fractures latérofaciales multiples à foyer ouvert, par abord facial",
+    "tarif": 269.0
+  },
+  "LACA008": {
+    "code": "LACA008",
+    "libelle": "Ostéosynthèse de fractures latérofaciales multiples à foyer ouvert, par abord coronal",
+    "tarif": 348.07
+  },
+  "LACA009": {
+    "code": "LACA009",
+    "libelle": "Ostéosynthèse de fracture fronto-naso-maxillaire à foyer ouvert par abord facial, avec canthopexie",
+    "tarif": 342.76
+  },
+  "LACA010": {
+    "code": "LACA010",
+    "libelle": "Ostéosynthèse de fracture frontonasale à foyer ouvert, par abord facial",
+    "tarif": 244.61
+  },
+  "LACA011": {
+    "code": "LACA011",
+    "libelle": "Ostéosynthèse de fracture fronto-naso-maxillaire à foyer ouvert, par abord coronal",
+    "tarif": 322.18
+  },
+  "LACA012": {
+    "code": "LACA012",
+    "libelle": "Ostéosynthèse d'une embarrure de la voûte du crâne",
+    "tarif": 313.5
+  },
+  "LACA013": {
+    "code": "LACA013",
+    "libelle": "Ostéosynthèse de fracture fronto-naso-maxillaire à foyer ouvert, par abord facial",
+    "tarif": 271.18
+  },
+  "LACA014": {
+    "code": "LACA014",
+    "libelle": "Ostéosynthèse de fracture bilatérale de la paroi antérieure du sinus frontal à foyer ouvert, par abord coronal",
+    "tarif": 334.77
+  },
+  "LACA015": {
+    "code": "LACA015",
+    "libelle": "Ostéosynthèse de fracture bilatérale de la paroi antérieure du sinus frontal à foyer ouvert, par abord facial",
+    "tarif": 238.24
+  },
+  "LACA016": {
+    "code": "LACA016",
+    "libelle": "Ostéosynthèse de fracture cranioorbitaire",
+    "tarif": 409.41
+  },
+  "LACA017": {
+    "code": "LACA017",
+    "libelle": "Ostéosynthèse de fracture cranioorbitaire avec fermeture de brèche ostéodurale",
+    "tarif": 563.84
+  },
+  "LACA018": {
+    "code": "LACA018",
+    "libelle": "Ostéosynthèse de fracture fronto-naso-maxillaire à foyer ouvert par abord coronal, avec canthopexie",
+    "tarif": 403.19
+  },
+  "LACA019": {
+    "code": "LACA019",
+    "libelle": "Ostéosynthèse de fracture unilatérale de la paroi antérieure du sinus frontal à foyer ouvert, par abord facial",
+    "tarif": 249.78
+  },
+  "LACA020": {
+    "code": "LACA020",
+    "libelle": "Ostéosynthèse de fracture craniofaciale",
+    "tarif": 283.68
+  },
+  "LACB001": {
+    "code": "LACB001",
+    "libelle": "Ostéosynthèse de fracture maxillonasale, à foyer fermé",
+    "tarif": 167.20000000000002
+  },
+  "LACB002": {
+    "code": "LACB002",
+    "libelle": "Ostéosynthèse de fracture de l'os zygomatique [malaire] ou de l'arcade zygomatique, à foyer fermé",
+    "tarif": 239.49
+  },
+  "LACB003": {
+    "code": "LACB003",
+    "libelle": "Ostéosynthèse de fracture panfaciale instable par appareillage à ancrage péricrânien, à foyer fermé",
+    "tarif": 309.79
+  },
+  "LAEA001": {
+    "code": "LAEA001",
+    "libelle": "Réduction de fracture du bord supraorbitaire sans interposition, par abord sourcilier",
+    "tarif": 209.0
+  },
+  "LAEA002": {
+    "code": "LAEA002",
+    "libelle": "Avancement frontoorbitaire symétrique ou asymétrique sans remodelage frontal, par craniotomie",
+    "tarif": 500.02
+  },
+  "LAEA003": {
+    "code": "LAEA003",
+    "libelle": "Réduction de fracture du bord supraorbitaire avec interposition de matériau inerte et/ou autogreffe, par abord sourcilier",
+    "tarif": 209.0
+  },
+  "LAEA004": {
+    "code": "LAEA004",
+    "libelle": "Avancement combiné du front et de la face [Monobloc frontofacial], sans pose de distracteur",
+    "tarif": null
+  },
+  "LAEA006": {
+    "code": "LAEA006",
+    "libelle": "Avancement frontoorbitaire symétrique ou asymétrique avec remodelage frontal, par craniotomie",
+    "tarif": 991.74
+  },
+  "LAEA007": {
+    "code": "LAEA007",
+    "libelle": "Réduction de fracture de l'os nasal, par abord direct",
+    "tarif": 60.8
+  },
+  "LAEA008": {
+    "code": "LAEA008",
+    "libelle": "Réduction de fracture de la partie tympanique de l'os temporal [os tympanal]",
+    "tarif": 52.0
+  },
+  "LAEA009": {
+    "code": "LAEA009",
+    "libelle": "Avancement combiné du front et de la face [Monobloc frontofacial], avec pose de distracteur",
+    "tarif": null
+  },
+  "LAEB001": {
+    "code": "LAEB001",
+    "libelle": "Réduction de fracture du plancher de l'orbite à foyer fermé, par ballonnet intrasinusien introduit par abord intrabuccal",
+    "tarif": 167.2
+  },
+  "LAEP001": {
+    "code": "LAEP001",
+    "libelle": "Réduction orthopédique de fracture de l'os zygomatique [malaire] ou de l'arcade zygomatique",
+    "tarif": 104.5
+  },
+  "LAEP002": {
+    "code": "LAEP002",
+    "libelle": "Réduction orthopédique de fracture de l'os nasal [des os propres du nez]",
+    "tarif": 66.4
+  },
+  "LAEP003": {
+    "code": "LAEP003",
+    "libelle": "Réduction orthopédique de traumatisme nasal obstétrical",
+    "tarif": 61.6
+  },
+  "LAFA001": {
+    "code": "LAFA001",
+    "libelle": "Résection fronto-ethmoïdo-sphénoïdo-maxillaire, par abord paralatéronasal",
+    "tarif": 756.0
+  },
+  "LAFA003": {
+    "code": "LAFA003",
+    "libelle": "Résection fronto-ethmoïdo-sphénoïdo-maxillaire, par abord paralatéronasal et par abord infrafrontal",
+    "tarif": null
+  },
+  "LAFA004": {
+    "code": "LAFA004",
+    "libelle": "Exérèse de tumeur de la voûte du crâne avec cranioplastie",
+    "tarif": 355.3
+  },
+  "LAFA005": {
+    "code": "LAFA005",
+    "libelle": "Pétrectomie totale",
+    "tarif": 1293.6
+  },
+  "LAFA006": {
+    "code": "LAFA006",
+    "libelle": "Résection fronto-ethmoïdo-sphénoïdo-maxillaire avec exérèse de la lame criblée et de méninge, par abord paralatéronasal",
+    "tarif": 984.8
+  },
+  "LAFA008": {
+    "code": "LAFA008",
+    "libelle": "Prélèvement d'autogreffe osseuse par dédoublement de la voûte du crâne",
+    "tarif": null
+  },
+  "LAFA011": {
+    "code": "LAFA011",
+    "libelle": "Exérèse de tumeur de la voûte du crâne sans cranioplastie",
+    "tarif": 250.8
+  },
+  "LAFA012": {
+    "code": "LAFA012",
+    "libelle": "Résection modelante de l'étage moyen de la face, par abord intrabuccal",
+    "tarif": 206.18
+  },
+  "LAFA013": {
+    "code": "LAFA013",
+    "libelle": "Exérèse partielle d'un os de la face sans interruption de la continuité, par abord direct",
+    "tarif": 167.20000000000002
+  },
+  "LAFA014": {
+    "code": "LAFA014",
+    "libelle": "Mastoïdectomie ou atticomastoïdectomie totale",
+    "tarif": 281.29
+  },
+  "LAFA015": {
+    "code": "LAFA015",
+    "libelle": "Ethmoïdectomie totale unilatérale avec septoplastie nasale et sphénoïdotomie, par endoscopie",
+    "tarif": 523.2
+  },
+  "LAFA016": {
+    "code": "LAFA016",
+    "libelle": "Ethmoïdectomie totale unilatérale avec septoplastie nasale, par endoscopie",
+    "tarif": 409.6
+  },
+  "LAFA017": {
+    "code": "LAFA017",
+    "libelle": "Ethmoïdectomie totale unilatérale avec sphénoïdotomie, par endoscopie",
+    "tarif": 491.2
+  },
+  "LAFA018": {
+    "code": "LAFA018",
+    "libelle": "Ethmoïdectomie totale bilatérale avec sphénoïdotomie, par endoscopie",
+    "tarif": 667.2
+  },
+  "LAFA019": {
+    "code": "LAFA019",
+    "libelle": "Ethmoïdectomie totale bilatérale avec septoplastie nasale et sphénoïdotomie, par endoscopie",
+    "tarif": 807.2
+  },
+  "LAFA020": {
+    "code": "LAFA020",
+    "libelle": "Ethmoïdectomie totale bilatérale avec septoplastie nasale, par endoscopie",
+    "tarif": 612.8
+  },
+  "LAFA021": {
+    "code": "LAFA021",
+    "libelle": "Ethmoïdectomie antérieure, par endoscopie",
+    "tarif": 232.0
+  },
+  "LAFA022": {
+    "code": "LAFA022",
+    "libelle": "Ethmoïdectomie totale bilatérale, par endoscopie",
+    "tarif": 582.4
+  },
+  "LAFA023": {
+    "code": "LAFA023",
+    "libelle": "Ethmoïdectomie antérieure unilatérale avec septoplastie nasale, par endoscopie",
+    "tarif": 337.6
+  },
+  "LAFA024": {
+    "code": "LAFA024",
+    "libelle": "Ethmoïdectomie totale unilatérale, par endoscopie",
+    "tarif": 390.4
+  },
+  "LAFA900": {
+    "code": "LAFA900",
+    "libelle": "Craniectomie décompressive",
+    "tarif": null
+  },
+  "LAGA001": {
+    "code": "LAGA001",
+    "libelle": "Ablation de plusieurs implants intraosseux crâniens et/ou faciaux sans résection osseuse, par abord facial",
+    "tarif": 61.34
+  },
+  "LAGA002": {
+    "code": "LAGA002",
+    "libelle": "Ablation de matériel interne d'ostéosynthèse du massif facial sur 3 sites ou plus, par abord direct",
+    "tarif": 127.11
+  },
+  "LAGA003": {
+    "code": "LAGA003",
+    "libelle": "Ablation de matériel interne d'ostéosynthèse ou de distraction du massif facial sur un site, par abord direct",
+    "tarif": 84.99
+  },
+  "LAGA004": {
+    "code": "LAGA004",
+    "libelle": "Ablation de matériel externe d'ostéosynthèse ou de distraction du crâne et/ou du massif facial",
+    "tarif": 92.38
+  },
+  "LAGA005": {
+    "code": "LAGA005",
+    "libelle": "Ablation de matériel interne d'ostéosynthèse ou de distraction du massif facial sur 2 sites, par abord direct",
+    "tarif": 115.28
+  },
+  "LAGA006": {
+    "code": "LAGA006",
+    "libelle": "Ablation d'un implant intraosseux crânien ou facial sans résection osseuse, par abord direct",
+    "tarif": 46.56
+  },
+  "LAGA007": {
+    "code": "LAGA007",
+    "libelle": "Ablation de matériel de cranioplastie de la voûte",
+    "tarif": 167.20000000000002
+  },
+  "LAGA008": {
+    "code": "LAGA008",
+    "libelle": "Évidement pétromastoïdien",
+    "tarif": 541.6
+  },
+  "LAGA381": {
+    "code": "LAGA381",
+    "libelle": "Ablation d'un appareillage auditif à conduction osseuse implanté dans l'os temporal",
+    "tarif": 110.85
+  },
+  "LAHA001": {
+    "code": "LAHA001",
+    "libelle": "Biopsie de la voûte du crâne [calvaria], par abord direct",
+    "tarif": 104.5
+  },
+  "LAHA002": {
+    "code": "LAHA002",
+    "libelle": "Biopsie d'un os de la face, par abord direct",
+    "tarif": 104.5
+  },
+  "LAHH002": {
+    "code": "LAHH002",
+    "libelle": "Biopsie du crâne et/ou du massif facial, par voie transcutanée avec guidage radiologique",
+    "tarif": 110.45
+  },
+  "LAHH004": {
+    "code": "LAHH004",
+    "libelle": "Ponction ou cytoponction du crâne et/ou du massif facial, par voie transcutanée avec guidage radiologique",
+    "tarif": 110.45
+  },
+  "LAHH005": {
+    "code": "LAHH005",
+    "libelle": "Ponction ou cytoponction du crâne et/ou du massif facial, par voie transcutanée avec guidage scanographique",
+    "tarif": 104.5
+  },
+  "LAHH006": {
+    "code": "LAHH006",
+    "libelle": "Biopsie du crâne et/ou du massif facial, par voie transcutanée avec guidage scanographique",
+    "tarif": 76.8
+  },
+  "LAHJ003": {
+    "code": "LAHJ003",
+    "libelle": "Ponction ou cytoponction du crâne et/ou du massif facial, par voie transcutanée avec guidage remnographique [IRM]",
+    "tarif": 104.5
+  },
+  "LAHJ004": {
+    "code": "LAHJ004",
+    "libelle": "Biopsie du crâne et/ou du massif facial, par voie transcutanée avec guidage remnographique [IRM]",
+    "tarif": 76.8
+  },
+  "LALA001": {
+    "code": "LALA001",
+    "libelle": "Pose de plusieurs implants intraosseux crâniens et/ou faciaux pour fixation d'épithèse",
+    "tarif": 250.8
+  },
+  "LALA002": {
+    "code": "LALA002",
+    "libelle": "Pose d'un implant intraosseux crânien ou facial pour fixation d'épithèse ou d'appareillage auditif ostéo-intégré",
+    "tarif": 167.20000000000002
+  },
+  "LALA469": {
+    "code": "LALA469",
+    "libelle": "Pose d’un appareillage auditif à conduction osseuse dans l’os temporal",
+    "tarif": 262.35
+  },
+  "LALB001": {
+    "code": "LALB001",
+    "libelle": "Pose de moyen de liaison sur implants crâniens et/ou faciaux",
+    "tarif": 115.2
+  },
+  "LAMA001": {
+    "code": "LAMA001",
+    "libelle": "Reconstruction du tiers latéral du massif facial pour syndrome malformatif, par abord facial et par abord coronal",
+    "tarif": 529.12
+  },
+  "LAMA002": {
+    "code": "LAMA002",
+    "libelle": "Réparation d'une fente craniofaciale impliquant l’orbite avec abord de l’étage antérieur de la base du crâne",
+    "tarif": 1632.45
+  },
+  "LAMA003": {
+    "code": "LAMA003",
+    "libelle": "Réfection de la paroi médiale de l'orbite, par abord facial",
+    "tarif": 209.0
+  },
+  "LAMA004": {
+    "code": "LAMA004",
+    "libelle": "Remodelage du rebord de l'orbite sans autogreffe, par abord direct",
+    "tarif": 167.20000000000002
+  },
+  "LAMA005": {
+    "code": "LAMA005",
+    "libelle": "Réfection de la paroi médiale de l'orbite, par abord coronal",
+    "tarif": 235.66
+  },
+  "LAMA006": {
+    "code": "LAMA006",
+    "libelle": "Remodelage du pôle postérieur du crâne, par abord direct",
+    "tarif": 485.52
+  },
+  "LAMA007": {
+    "code": "LAMA007",
+    "libelle": "Réfection du plancher de l'orbite, par abord direct",
+    "tarif": 209.0
+  },
+  "LAMA008": {
+    "code": "LAMA008",
+    "libelle": "Réfection de paroi de l'orbite avec réparation d'un délabrement de la région orbitaire et de son contenu",
+    "tarif": 470.59
+  },
+  "LAMA009": {
+    "code": "LAMA009",
+    "libelle": "Cranioplastie de la voûte",
+    "tarif": 209.0
+  },
+  "LAMA010": {
+    "code": "LAMA010",
+    "libelle": "Remodelage du rebord de l'orbite avec autogreffe osseuse, par abord direct",
+    "tarif": 239.44
+  },
+  "LAMA011": {
+    "code": "LAMA011",
+    "libelle": "Réparation d'une fente craniofaciale impliquant l’orbite sans abord de l’étage antérieur de la base du crâne",
+    "tarif": 1237.09
+  },
+  "LAMA012": {
+    "code": "LAMA012",
+    "libelle": "Comblement d'une dépression de la région orbitofaciale, sans exentération de l'orbite, par matériau inerte ou autogreffe",
+    "tarif": 343.66
+  },
+  "LANC001": {
+    "code": "LANC001",
+    "libelle": "Meulage extracrânien de la voûte du crâne, par vidéochirurgie",
+    "tarif": null
+  },
+  "LAPA001": {
+    "code": "LAPA001",
+    "libelle": "Mise à plat de lésion infectieuse de la voûte du crâne [calvaria]",
+    "tarif": 209.0
+  },
+  "LAPA002": {
+    "code": "LAPA002",
+    "libelle": "Ostéotomie de l'os zygomatique [malaire], par abord facial",
+    "tarif": 287.47
+  },
+  "LAPA003": {
+    "code": "LAPA003",
+    "libelle": "Décompression de l'orbite par effondrement de trois parois, par abord direct",
+    "tarif": 335.14
+  },
+  "LAPA004": {
+    "code": "LAPA004",
+    "libelle": "Ostéotomie du complexe naso-ethmoïdo-maxillo-fronto-orbitaire pour cal vicieux, par abord facial et par abord coronal",
+    "tarif": null
+  },
+  "LAPA005": {
+    "code": "LAPA005",
+    "libelle": "Taille et transposition de volet crânien n’intéressant pas les orbites, sans remodelage du pôle postérieur du crâne",
+    "tarif": 471.48
+  },
+  "LAPA006": {
+    "code": "LAPA006",
+    "libelle": "Taille et transposition de volet crânien intéressant les orbites",
+    "tarif": 678.4
+  },
+  "LAPA007": {
+    "code": "LAPA007",
+    "libelle": "Ostéotomie du cadre de l'orbite pour dystopie posttraumatique, par abord facial et par abord coronal",
+    "tarif": null
+  },
+  "LAPA008": {
+    "code": "LAPA008",
+    "libelle": "Taille de volet crânien sans transposition",
+    "tarif": 418.0
+  },
+  "LAPA009": {
+    "code": "LAPA009",
+    "libelle": "Ostéotomie craniofaciale extracrânienne type Le Fort III, par abord intrabuccal et par abord coronal",
+    "tarif": 720.83
+  },
+  "LAPA010": {
+    "code": "LAPA010",
+    "libelle": "Ostéotomie du tiers latéral de la face, par abord coronal",
+    "tarif": 475.18
+  },
+  "LAPA011": {
+    "code": "LAPA011",
+    "libelle": "Ostéotomie d'agrandissement du cadre de l'orbite, par abord facial",
+    "tarif": 460.4
+  },
+  "LAPA012": {
+    "code": "LAPA012",
+    "libelle": "Décompression de l'orbite par effondrement de la paroi inférieure et/ou de la paroi médiale, par abord direct",
+    "tarif": 293.35
+  },
+  "LAPA013": {
+    "code": "LAPA013",
+    "libelle": "Ostéotomie d'agrandissement du cadre de l'orbite, par abord coronal",
+    "tarif": 383.1
+  },
+  "LAPA014": {
+    "code": "LAPA014",
+    "libelle": "Ostéotomie craniofaciale extracrânienne type Le Fort III avec bipartition faciale, par abord intrabuccal et par abord coronal",
+    "tarif": 1249.65
+  },
+  "LAPA015": {
+    "code": "LAPA015",
+    "libelle": "Mise à plat de lésion infectieuse postopératoire de la voûte du crâne [calvaria], par reprise de l'abord précédent",
+    "tarif": 209.0
+  },
+  "LAPA016": {
+    "code": "LAPA016",
+    "libelle": "Taille et transposition de volet crânien n’intéressant pas les orbites, avec remodelage du pôle postérieur du crâne",
+    "tarif": 517.3
+  },
+  "LAPB001": {
+    "code": "LAPB001",
+    "libelle": "Dégagement et activation de 4 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 288.42
+  },
+  "LAPB002": {
+    "code": "LAPB002",
+    "libelle": "Dégagement et activation d'1 implant intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 87.78
+  },
+  "LAPB003": {
+    "code": "LAPB003",
+    "libelle": "Dégagement et activation de 3 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 221.54
+  },
+  "LAPB004": {
+    "code": "LAPB004",
+    "libelle": "Dégagement et activation de 2 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 154.66
+  },
+  "LAPB005": {
+    "code": "LAPB005",
+    "libelle": "Dégagement et activation de 5 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 355.3
+  },
+  "LAPB006": {
+    "code": "LAPB006",
+    "libelle": "Dégagement et activation de 6 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 422.18
+  },
+  "LAPB007": {
+    "code": "LAPB007",
+    "libelle": "Dégagement et activation de 7 implants intraosseux intra buccaux, chez l'adulte",
+    "tarif": 489.06
+  },
+  "LAPB030": {
+    "code": "LAPB030",
+    "libelle": "Dégagement et activation de 9 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 622.82
+  },
+  "LAPB047": {
+    "code": "LAPB047",
+    "libelle": "Dégagement et activation de 8 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 555.94
+  },
+  "LAPB122": {
+    "code": "LAPB122",
+    "libelle": "Dégagement et activation de 10 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 689.7
+  },
+  "LAPB288": {
+    "code": "LAPB288",
+    "libelle": "Dégagement et activation de 11 implants intraosseux intrabuccaux ou plus",
+    "tarif": null
+  },
+  "LAPB311": {
+    "code": "LAPB311",
+    "libelle": "Dégagement et activation de 2 implants intraosseux intrabuccaux, chez l'enfant",
+    "tarif": 163.02
+  },
+  "LAPB408": {
+    "code": "LAPB408",
+    "libelle": "Dégagement et activation de 4 implants intraosseux intrabuccaux, chez l'enfant",
+    "tarif": 300.96
+  },
+  "LAPB451": {
+    "code": "LAPB451",
+    "libelle": "Dégagement et activation d'1 implant intraosseux intrabuccal, chez l'enfant",
+    "tarif": 94.05
+  },
+  "LAPB459": {
+    "code": "LAPB459",
+    "libelle": "Dégagement et activation de 3 implants intraosseux intrabuccaux, chez l'enfant",
+    "tarif": 231.99
+  },
+  "LAQJ001": {
+    "code": "LAQJ001",
+    "libelle": "Remnographie [IRM] de la face, avec injection intraveineuse de produit de contraste",
+    "tarif": 69.0
+  },
+  "LAQK001": {
+    "code": "LAQK001",
+    "libelle": "Téléradiographie du crâne et du massif facial selon 2 incidences",
+    "tarif": 26.6
+  },
+  "LAQK002": {
+    "code": "LAQK002",
+    "libelle": "Scanographie unilatérale ou bilatérale de la partie pétreuse de l'os temporal [rocher] et de l'oreille moyenne",
+    "tarif": 25.27
+  },
+  "LAQK003": {
+    "code": "LAQK003",
+    "libelle": "Radiographie du crâne et/ou du massif facial selon 1 ou 2 incidences",
+    "tarif": 23.94
+  },
+  "LAQK004": {
+    "code": "LAQK004",
+    "libelle": "Analyse céphalométrique craniofaciale bidimensionnelle",
+    "tarif": null
+  },
+  "LAQK005": {
+    "code": "LAQK005",
+    "libelle": "Radiographie du crâne selon 3 incidences ou plus",
+    "tarif": 23.94
+  },
+  "LAQK006": {
+    "code": "LAQK006",
+    "libelle": "Analyse céphalométrique architecturale craniofaciale",
+    "tarif": null
+  },
+  "LAQK007": {
+    "code": "LAQK007",
+    "libelle": "Analyse céphalométrique craniofaciale tridimensionnelle",
+    "tarif": null
+  },
+  "LAQK008": {
+    "code": "LAQK008",
+    "libelle": "Téléradiographie du crâne et du massif facial selon 3 incidences",
+    "tarif": 26.6
+  },
+  "LAQK009": {
+    "code": "LAQK009",
+    "libelle": "Scanographie de la face avec scanographie des tissus mous du cou",
+    "tarif": 25.27
+  },
+  "LAQK010": {
+    "code": "LAQK010",
+    "libelle": "Analyse céphalométrique craniofaciale bidimensionnelle avec simulation des objectifs thérapeutiques",
+    "tarif": null
+  },
+  "LAQK011": {
+    "code": "LAQK011",
+    "libelle": "Scanographie unilatérale ou bilatérale de l'angle pontocérébelleux et/ou du méat acoustique interne [conduit auditif interne]",
+    "tarif": 25.27
+  },
+  "LAQK012": {
+    "code": "LAQK012",
+    "libelle": "Téléradiographie du crâne et du massif facial selon 1 incidence",
+    "tarif": 19.95
+  },
+  "LAQK013": {
+    "code": "LAQK013",
+    "libelle": "Scanographie de la face",
+    "tarif": 25.27
+  },
+  "LAQK027": {
+    "code": "LAQK027",
+    "libelle": "Radiographie volumique par faisceau conique [cone beam computerized tomography, CBCT] du maxillaire, de la mandibule et/ou d’arcade dentaire",
+    "tarif": 69.0
+  },
+  "LAQN001": {
+    "code": "LAQN001",
+    "libelle": "Remnographie [IRM] de la face, sans injection intraveineuse de produit de contraste",
+    "tarif": 69.0
+  },
+  "LARA001": {
+    "code": "LARA001",
+    "libelle": "Mobilisation partielle des cadres de l'orbite horizontalement ou par bipartition faciale, par abord extracrânien",
+    "tarif": 865.64
+  },
+  "LARA002": {
+    "code": "LARA002",
+    "libelle": "Mobilisation partielle d'un cadre de l'orbite, par abord extracrânien",
+    "tarif": 713.87
+  },
+  "LARA003": {
+    "code": "LARA003",
+    "libelle": "Mobilisation totale des cadres de l'orbite horizontalement ou par bipartition faciale, par craniotomie",
+    "tarif": 900.84
+  },
+  "LARA004": {
+    "code": "LARA004",
+    "libelle": "Mobilisation totale d'un cadre de l'orbite, par craniotomie",
+    "tarif": 473.54
+  },
+  "LBAA001": {
+    "code": "LBAA001",
+    "libelle": "Allongement osseux progressif de l'os maxillaire ou de la mandibule par distracteur, par abord direct",
+    "tarif": 374.48
+  },
+  "LBBA003": {
+    "code": "LBBA003",
+    "libelle": "Apposition modelante de la mandibule, par abord intrabuccal ou facial",
+    "tarif": 194.36
+  },
+  "LBBA004": {
+    "code": "LBBA004",
+    "libelle": "Comblement de perte de substance mandibulaire interruptrice segmentaire latérale respectant la région articulaire, par abord intrabuccal ou facial",
+    "tarif": 339.2
+  },
+  "LBBA005": {
+    "code": "LBBA005",
+    "libelle": "Apposition modelante du menton, par abord intrabuccal",
+    "tarif": 167.20000000000002
+  },
+  "LBBA006": {
+    "code": "LBBA006",
+    "libelle": "Comblement de perte de substance mandibulaire interruptrice segmentaire antérieure limitée au corps, par abord intrabuccal ou facial",
+    "tarif": 313.5
+  },
+  "LBCA001": {
+    "code": "LBCA001",
+    "libelle": "Ostéosynthèse de fracture extracondylaire bifocale de la mandibule, à foyer ouvert",
+    "tarif": 239.49
+  },
+  "LBCA002": {
+    "code": "LBCA002",
+    "libelle": "Ostéosynthèse de fracture extracondylaire plurifocale de la mandibule, à foyer ouvert",
+    "tarif": 239.49
+  },
+  "LBCA003": {
+    "code": "LBCA003",
+    "libelle": "Ostéosynthèse et/ou suspension faciale pour fracture occlusofaciale de type Le Fort I, par abord direct",
+    "tarif": 233.52
+  },
+  "LBCA004": {
+    "code": "LBCA004",
+    "libelle": "Ostéosynthèse de fracture du condyle de la mandibule à foyer ouvert, sans dissection du nerf facial",
+    "tarif": 239.49
+  },
+  "LBCA005": {
+    "code": "LBCA005",
+    "libelle": "Ostéosynthèse et/ou suspension faciale pour fracture occlusofaciale de type Le Fort III, par abord direct",
+    "tarif": 243.39
+  },
+  "LBCA006": {
+    "code": "LBCA006",
+    "libelle": "Ostéosynthèse de fracture extracondylaire unifocale de la mandibule, à foyer ouvert",
+    "tarif": 239.49
+  },
+  "LBCA007": {
+    "code": "LBCA007",
+    "libelle": "Ostéosynthèse de fracture du condyle de la mandibule à foyer ouvert, avec dissection du nerf facial",
+    "tarif": 366.54
+  },
+  "LBCA008": {
+    "code": "LBCA008",
+    "libelle": "Ostéosynthèse de fracture comminutive de la mandibule avec parage d'un délabrement des tissus mous de la face",
+    "tarif": 270.84000000000003
+  },
+  "LBCA009": {
+    "code": "LBCA009",
+    "libelle": "Ostéosynthèse et/ou suspension faciale pour fracture occlusofaciale de type Le Fort II, par abord direct",
+    "tarif": 236.53
+  },
+  "LBCA010": {
+    "code": "LBCA010",
+    "libelle": "Ostéosynthèse de disjonction intermaxillaire ou de fracture du palais, par abord intrabuccal",
+    "tarif": 195.84
+  },
+  "LBCB001": {
+    "code": "LBCB001",
+    "libelle": "Ostéosynthèse de fracture extracondylaire plurifocale de la mandibule, à foyer fermé",
+    "tarif": 239.49
+  },
+  "LBCB002": {
+    "code": "LBCB002",
+    "libelle": "Ostéosynthèse de fracture extracondylaire unifocale de la mandibule, à foyer fermé",
+    "tarif": 239.49
+  },
+  "LBDA001": {
+    "code": "LBDA001",
+    "libelle": "Discopexie temporomandibulaire, par arthrotomie",
+    "tarif": 167.20000000000002
+  },
+  "LBDD001": {
+    "code": "LBDD001",
+    "libelle": "Blocage maxillomandibulaire avec ablation de matériel d'ostéosynthèse, pour traitement de pseudarthrose mandibulaire",
+    "tarif": 343.99
+  },
+  "LBEA001": {
+    "code": "LBEA001",
+    "libelle": "Réduction d'une luxation temporomandibulaire, par abord direct",
+    "tarif": 167.20000000000002
+  },
+  "LBED001": {
+    "code": "LBED001",
+    "libelle": "Réduction orthopédique de fracture occlusofaciale [fracture type Le Fort I, II ou III], avec contention par blocage maxillomandibulaire",
+    "tarif": 250.8
+  },
+  "LBED002": {
+    "code": "LBED002",
+    "libelle": "Réduction orthopédique de fracture unifocale du corps de la mandibule, avec contention mandibulaire",
+    "tarif": 209.0
+  },
+  "LBED003": {
+    "code": "LBED003",
+    "libelle": "Réduction orthopédique de fracture extracondylaire plurifocale de la mandibule, avec blocage maxillomandibulaire",
+    "tarif": 209.0
+  },
+  "LBED004": {
+    "code": "LBED004",
+    "libelle": "Réduction orthopédique de disjonction intermaxillaire ou de fracture du palais, avec contention par blocage maxillomandibulaire",
+    "tarif": 250.8
+  },
+  "LBED005": {
+    "code": "LBED005",
+    "libelle": "Réduction orthopédique de fracture plurifocale du corps de la mandibule, avec contention mandibulaire",
+    "tarif": 209.0
+  },
+  "LBED006": {
+    "code": "LBED006",
+    "libelle": "Réduction orthopédique de fracture extracondylaire unifocale de la mandibule, avec blocage maxillomandibulaire",
+    "tarif": 209.0
+  },
+  "LBEP001": {
+    "code": "LBEP001",
+    "libelle": "Réduction d'un décalage postéroantérieur des arcades dentaires par dispositif orthopédique et/ou dispositif fonctionnel",
+    "tarif": null
+  },
+  "LBEP002": {
+    "code": "LBEP002",
+    "libelle": "Réduction orthopédique de fracture du corps de la mandibule, avec contention par appareillage personnalisé",
+    "tarif": 125.4
+  },
+  "LBEP003": {
+    "code": "LBEP003",
+    "libelle": "Réduction d'une insuffisance transversale de l'os maxillaire par dispositif orthopédique et/ou dispositif fonctionnel",
+    "tarif": null
+  },
+  "LBEP004": {
+    "code": "LBEP004",
+    "libelle": "Réduction d'un décalage antéropostérieur des arcades dentaires par dispositif orthopédique et/ou dispositif fonctionnel",
+    "tarif": null
+  },
+  "LBEP005": {
+    "code": "LBEP005",
+    "libelle": "Réduction orthopédique d'une luxation temporomandibulaire unilatérale ou bilatérale",
+    "tarif": 19.95
+  },
+  "LBEP006": {
+    "code": "LBEP006",
+    "libelle": "Réduction d'une insuffisance transversale de la mandibule par dispositif orthopédique",
+    "tarif": null
+  },
+  "LBEP007": {
+    "code": "LBEP007",
+    "libelle": "Réduction d'un décalage vertical des arcades dentaires par dispositif orthopédique et/ou dispositif fonctionnel",
+    "tarif": null
+  },
+  "LBEP008": {
+    "code": "LBEP008",
+    "libelle": "Réduction d'un décalage transversal des arcades dentaires par dispositif orthopédique et/ou dispositif fonctionnel",
+    "tarif": null
+  },
+  "LBEP009": {
+    "code": "LBEP009",
+    "libelle": "Réduction orthopédique de disjonction intermaxillaire ou de fracture du palais, avec contention par appareillage personnalisé",
+    "tarif": 250.8
+  },
+  "LBFA001": {
+    "code": "LBFA001",
+    "libelle": "Exérèse de la totalité de la voûte palatine, par abord direct",
+    "tarif": 238.7
+  },
+  "LBFA002": {
+    "code": "LBFA002",
+    "libelle": "Exérèse de lésion de l'os maxillaire et/ou du corps de la mandibule de plus de 4 cm de grand axe, par abord intrabuccal",
+    "tarif": 127.11
+  },
+  "LBFA003": {
+    "code": "LBFA003",
+    "libelle": "Résection partielle de la tête du condyle de la mandibule, par abord facial",
+    "tarif": 178.1
+  },
+  "LBFA004": {
+    "code": "LBFA004",
+    "libelle": "Résection de la mandibule pour pseudarthrose avec comblement par autogreffe osseuse, par abord direct",
+    "tarif": 402.76
+  },
+  "LBFA005": {
+    "code": "LBFA005",
+    "libelle": "Maxillectomie totale sans reconstruction",
+    "tarif": 619.2
+  },
+  "LBFA006": {
+    "code": "LBFA006",
+    "libelle": "Maxillectomie supérieure sans reconstruction",
+    "tarif": 493.6
+  },
+  "LBFA007": {
+    "code": "LBFA007",
+    "libelle": "Maxillectomie totale, avec reconstruction du plancher de l'orbite par lambeau de septum nasal",
+    "tarif": 639.2
+  },
+  "LBFA008": {
+    "code": "LBFA008",
+    "libelle": "Résection non interruptrice extracondylaire de la mandibule, par abord direct",
+    "tarif": 148.54
+  },
+  "LBFA009": {
+    "code": "LBFA009",
+    "libelle": "Résection interruptrice segmentaire antérieure du corps de la mandibule avec comblement, par abord direct",
+    "tarif": 441.18
+  },
+  "LBFA010": {
+    "code": "LBFA010",
+    "libelle": "Résection modelante du menton, par abord intrabuccal",
+    "tarif": 167.20000000000002
+  },
+  "LBFA011": {
+    "code": "LBFA011",
+    "libelle": "Maxillectomie supérieure, avec reconstruction du plancher de l'orbite par lambeau de septum nasal",
+    "tarif": 541.6
+  },
+  "LBFA012": {
+    "code": "LBFA012",
+    "libelle": "Résection d'un bloc d'ankylose temporomandibulaire complète avec reconstruction du condyle de la mandibule par greffe ostéochondrale, par abord direct",
+    "tarif": 668.8
+  },
+  "LBFA013": {
+    "code": "LBFA013",
+    "libelle": "Discectomie temporomandibulaire, par arthrotomie",
+    "tarif": 167.20000000000002
+  },
+  "LBFA014": {
+    "code": "LBFA014",
+    "libelle": "Exérèse d'une hémivoûte palatine, par abord direct",
+    "tarif": 185.49
+  },
+  "LBFA015": {
+    "code": "LBFA015",
+    "libelle": "Exérèse de lésion du ramus de la mandibule, par abord intrabuccal",
+    "tarif": 167.20000000000002
+  },
+  "LBFA016": {
+    "code": "LBFA016",
+    "libelle": "Résection d'un bloc d'ankylose temporomandibulaire complète avec reconstruction de l'articulation par prothèse, par abord direct",
+    "tarif": 465.57
+  },
+  "LBFA017": {
+    "code": "LBFA017",
+    "libelle": "Résection interruptrice extracondylaire segmentaire latérale de la mandibule avec comblement, par abord direct",
+    "tarif": 447.1
+  },
+  "LBFA018": {
+    "code": "LBFA018",
+    "libelle": "Résection modelante de la mandibule, par abord intrabuccal",
+    "tarif": 184.01
+  },
+  "LBFA019": {
+    "code": "LBFA019",
+    "libelle": "Résection de bloc d'ankylose temporomandibulaire latérale, par abord direct",
+    "tarif": 219.48
+  },
+  "LBFA020": {
+    "code": "LBFA020",
+    "libelle": "Résection interruptrice segmentaire antérieure du corps de la mandibule par abord direct, avec pose de dispositif intrafocal de contention, sans comblement",
+    "tarif": 302.25
+  },
+  "LBFA022": {
+    "code": "LBFA022",
+    "libelle": "Résection interruptrice du processus condylaire de la mandibule par abord direct, avec pose de dispositif terminal, sans comblement",
+    "tarif": 322.2
+  },
+  "LBFA023": {
+    "code": "LBFA023",
+    "libelle": "Exérèse de lésion de l'os maxillaire et/ou du corps de la mandibule de moins de 2 cm de grand axe, par abord intrabuccal",
+    "tarif": 60.6
+  },
+  "LBFA024": {
+    "code": "LBFA024",
+    "libelle": "Maxillectomie inférieure",
+    "tarif": 373.6
+  },
+  "LBFA025": {
+    "code": "LBFA025",
+    "libelle": "Coronoïdectomie mandibulaire, par abord intrabuccal",
+    "tarif": 167.20000000000002
+  },
+  "LBFA026": {
+    "code": "LBFA026",
+    "libelle": "Résection interruptrice du processus condylaire de la mandibule par abord direct, sans pose de dispositif terminal ni comblement",
+    "tarif": 250.8
+  },
+  "LBFA027": {
+    "code": "LBFA027",
+    "libelle": "Résection interruptrice extracondylaire segmentaire latérale de la mandibule par abord direct, avec pose de dispositif intrafocal de contention, sans comblement",
+    "tarif": 297.08
+  },
+  "LBFA028": {
+    "code": "LBFA028",
+    "libelle": "Exérèse d'un quadrant de la voûte palatine, par abord direct",
+    "tarif": 167.20000000000002
+  },
+  "LBFA029": {
+    "code": "LBFA029",
+    "libelle": "Résection interruptrice segmentaire antérieure du corps de la mandibule par abord direct, sans pose de dispositif intrafocal de contention ni comblement",
+    "tarif": 250.8
+  },
+  "LBFA030": {
+    "code": "LBFA030",
+    "libelle": "Exérèse de lésion de l'os maxillaire et/ou du corps de la mandibule de 2 cm à 4 cm de grand axe, par abord intrabuccal",
+    "tarif": 84.25
+  },
+  "LBFA031": {
+    "code": "LBFA031",
+    "libelle": "Résection d'hypertrophie osseuse intrabuccale",
+    "tarif": 38.43
+  },
+  "LBFA032": {
+    "code": "LBFA032",
+    "libelle": "Éminencectomie [Condyloplastie temporale] ou création de butée temporomandibulaire",
+    "tarif": 167.20000000000002
+  },
+  "LBFA033": {
+    "code": "LBFA033",
+    "libelle": "Maxillectomie moyenne",
+    "tarif": 493.6
+  },
+  "LBFA034": {
+    "code": "LBFA034",
+    "libelle": "Résection interruptrice latéroterminale de la mandibule par abord direct, sans pose de dispositif latéroterminal ni comblement",
+    "tarif": 250.8
+  },
+  "LBFA035": {
+    "code": "LBFA035",
+    "libelle": "Résection d'un bloc d'ankylose temporomandibulaire complète, par abord direct",
+    "tarif": 313.5
+  },
+  "LBFA036": {
+    "code": "LBFA036",
+    "libelle": "Résection interruptrice extracondylaire segmentaire latérale de la mandibule par abord direct, sans pose de dispositif intrafocal de contention ni comblement",
+    "tarif": 250.8
+  },
+  "LBFA037": {
+    "code": "LBFA037",
+    "libelle": "Résection interruptrice latéroterminale de la mandibule par abord direct, avec pose de dispositif latéroterminal de contention, sans comblement",
+    "tarif": 360.79
+  },
+  "LBFA038": {
+    "code": "LBFA038",
+    "libelle": "Résection interruptrice du processus condylaire de la mandibule par abord direct, avec comblement par autogreffe chondrocostale",
+    "tarif": 334.40000000000003
+  },
+  "LBFA039": {
+    "code": "LBFA039",
+    "libelle": "Résection interruptrice latéroterminale de la mandibule par abord direct, avec comblement par autogreffe chondrocostale",
+    "tarif": 334.4
+  },
+  "LBGA001": {
+    "code": "LBGA001",
+    "libelle": "Ablation de corps étranger de l'articulation temporomandibulaire, par arthrotomie",
+    "tarif": 149.28
+  },
+  "LBGA002": {
+    "code": "LBGA002",
+    "libelle": "Ablation de 3 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 100.32
+  },
+  "LBGA003": {
+    "code": "LBGA003",
+    "libelle": "Ablation de 2 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 85.69
+  },
+  "LBGA004": {
+    "code": "LBGA004",
+    "libelle": "Ablation d'1 implant intraosseux intrabuccal avec résection osseuse, chez l'adulte",
+    "tarif": 71.06
+  },
+  "LBGA005": {
+    "code": "LBGA005",
+    "libelle": "Évidement de la mandibule, par abord intrabuccal",
+    "tarif": 104.5
+  },
+  "LBGA006": {
+    "code": "LBGA006",
+    "libelle": "Ablation de 4 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 114.95
+  },
+  "LBGA007": {
+    "code": "LBGA007",
+    "libelle": "Ablation de 5 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 129.58
+  },
+  "LBGA008": {
+    "code": "LBGA008",
+    "libelle": "Ablation de 6 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 144.21
+  },
+  "LBGA009": {
+    "code": "LBGA009",
+    "libelle": "Ablation de 7 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 158.84
+  },
+  "LBGA049": {
+    "code": "LBGA049",
+    "libelle": "Ablation de 4 implants intraosseux intrabuccaux avec résection osseuse, chez l'enfant",
+    "tarif": 144.21
+  },
+  "LBGA052": {
+    "code": "LBGA052",
+    "libelle": "Ablation de 9 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 188.1
+  },
+  "LBGA113": {
+    "code": "LBGA113",
+    "libelle": "Ablation de 11 implants intraosseux intrabuccaux ou plus, avec résection osseuse",
+    "tarif": null
+  },
+  "LBGA139": {
+    "code": "LBGA139",
+    "libelle": "Ablation de 8 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 173.47
+  },
+  "LBGA168": {
+    "code": "LBGA168",
+    "libelle": "Ablation de 10 implants intraosseux intrabuccaux avec résection osseuse, chez l'adulte",
+    "tarif": 202.73
+  },
+  "LBGA280": {
+    "code": "LBGA280",
+    "libelle": "Ablation d'1 implant intraosseux intrabuccal avec résection osseuse, chez l'enfant",
+    "tarif": 87.78
+  },
+  "LBGA354": {
+    "code": "LBGA354",
+    "libelle": "Ablation de 3 implants intraosseux intrabuccaux avec résection osseuse, chez l'enfant",
+    "tarif": 125.4
+  },
+  "LBGA441": {
+    "code": "LBGA441",
+    "libelle": "Ablation de 2 implants intraosseux intrabuccaux  avec résection osseuse, chez l'enfant",
+    "tarif": 106.59
+  },
+  "LBGD001": {
+    "code": "LBGD001",
+    "libelle": "Ablation de moyen de contention maxillaire et/ou mandibulaire intrabuccal",
+    "tarif": 41.8
+  },
+  "LBLA001": {
+    "code": "LBLA001",
+    "libelle": "Pose d'une prothèse obturatrice à étage ou d'une balle obturatrice souple après résection de l'os maxillaire",
+    "tarif": 288.0
+  },
+  "LBLB001": {
+    "code": "LBLB001",
+    "libelle": "Infiltration et/ou lavage de l'articulation temporomandibulaire, par voie transcutanée",
+    "tarif": 33.99
+  },
+  "LBLB002": {
+    "code": "LBLB002",
+    "libelle": "Infiltration périarticulaire temporomandibulaire, par voie transcutanée",
+    "tarif": 17.74
+  },
+  "LBLD001": {
+    "code": "LBLD001",
+    "libelle": "Pose d'un châssis métallique support de prothèse maxillofaciale [prothèse obturatrice]",
+    "tarif": 129.0
+  },
+  "LBLD002": {
+    "code": "LBLD002",
+    "libelle": "Pose d'un appareillage de mobilisation en latéralité et/ou en propulsion pour fracture unicondylaire ou bicondylaire de la mandibule",
+    "tarif": 153.6
+  },
+  "LBLD003": {
+    "code": "LBLD003",
+    "libelle": "Pose d'une gouttière maxillaire ou mandibulaire pour hémostase ou portetopique",
+    "tarif": 86.4
+  },
+  "LBLD004": {
+    "code": "LBLD004",
+    "libelle": "Pose de 4 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 1513.16
+  },
+  "LBLD005": {
+    "code": "LBLD005",
+    "libelle": "Pose d'un appareillage de mobilisation mandibulaire en rotation et en propulsion",
+    "tarif": 153.6
+  },
+  "LBLD006": {
+    "code": "LBLD006",
+    "libelle": "Pose de gouttières maxillaire et mandibulaire pour hémostase ou portetopique",
+    "tarif": 172.8
+  },
+  "LBLD007": {
+    "code": "LBLD007",
+    "libelle": "Pose d'un appareillage de protection dentomaxillaire",
+    "tarif": null
+  },
+  "LBLD008": {
+    "code": "LBLD008",
+    "libelle": "Pose d'un appareillage de mobilisation mandibulaire en rotation pure",
+    "tarif": 153.6
+  },
+  "LBLD009": {
+    "code": "LBLD009",
+    "libelle": "Pose d'un appareillage par guide mandibulaire, vestibulaire ou lingual, sur 2 arcades",
+    "tarif": 153.6
+  },
+  "LBLD010": {
+    "code": "LBLD010",
+    "libelle": "Pose de 2 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 785.84
+  },
+  "LBLD011": {
+    "code": "LBLD011",
+    "libelle": "Pose d'un appareillage par guide mandibulaire, vestibulaire ou lingual, sur 1 arcade",
+    "tarif": 93.85
+  },
+  "LBLD012": {
+    "code": "LBLD012",
+    "libelle": "Pose de dispositif intrabuccal d'expansion tissulaire pour rehaussement de crête alvéolaire",
+    "tarif": null
+  },
+  "LBLD013": {
+    "code": "LBLD013",
+    "libelle": "Pose de 3 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 1149.5
+  },
+  "LBLD014": {
+    "code": "LBLD014",
+    "libelle": "Pose d'une orthèse métallique recouvrant totalement ou partiellement une arcade dentaire",
+    "tarif": 172.8
+  },
+  "LBLD015": {
+    "code": "LBLD015",
+    "libelle": "Pose d'1 implant intraosseux intrabuccal, chez l'adulte",
+    "tarif": 422.18
+  },
+  "LBLD016": {
+    "code": "LBLD016",
+    "libelle": "Pose d'un appareillage obturateur pour perte de substance maxillaire, chez un patient denté",
+    "tarif": 158.15
+  },
+  "LBLD017": {
+    "code": "LBLD017",
+    "libelle": "Pose d'un appareillage en propulsion mandibulaire",
+    "tarif": 150.0
+  },
+  "LBLD018": {
+    "code": "LBLD018",
+    "libelle": "Pose d'un appareillage par guide mandibulaire sagittal",
+    "tarif": 153.6
+  },
+  "LBLD019": {
+    "code": "LBLD019",
+    "libelle": "Pose de moyen de liaison sur 1 implant préprothétique intraosseux intrabuccal",
+    "tarif": 160.93
+  },
+  "LBLD020": {
+    "code": "LBLD020",
+    "libelle": "Pose de 5 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 1876.82
+  },
+  "LBLD021": {
+    "code": "LBLD021",
+    "libelle": "Pose d'un appareillage actif pur de rééducation de la cinétique mandibulaire",
+    "tarif": 153.6
+  },
+  "LBLD022": {
+    "code": "LBLD022",
+    "libelle": "Pose de gouttière plombée de protection dentoosseuse",
+    "tarif": 153.6
+  },
+  "LBLD023": {
+    "code": "LBLD023",
+    "libelle": "Pose d'un appareillage obturateur pour perte de substance maxillaire, chez un patient édenté total",
+    "tarif": 190.45
+  },
+  "LBLD024": {
+    "code": "LBLD024",
+    "libelle": "Pose d'une attelle portegreffon ou d'une endoprothèse, après résection mandibulaire interruptrice",
+    "tarif": 271.7
+  },
+  "LBLD025": {
+    "code": "LBLD025",
+    "libelle": "Pose de 6 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 2240.48
+  },
+  "LBLD026": {
+    "code": "LBLD026",
+    "libelle": "Pose de 7 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 2604.14
+  },
+  "LBLD034": {
+    "code": "LBLD034",
+    "libelle": "Pose de barre de conjonction entre 2 implants intrabuccaux",
+    "tarif": 96.14
+  },
+  "LBLD038": {
+    "code": "LBLD038",
+    "libelle": "Pose de 8 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 2967.8
+  },
+  "LBLD057": {
+    "code": "LBLD057",
+    "libelle": "Pose de barre de conjonction entre 3 implants intrabuccaux ou plus",
+    "tarif": 144.21
+  },
+  "LBLD066": {
+    "code": "LBLD066",
+    "libelle": "Pose de 2 implants intraosseux intrabuccaux chez l'enfant",
+    "tarif": 806.74
+  },
+  "LBLD073": {
+    "code": "LBLD073",
+    "libelle": "Pose de moyen de liaison sur 2 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 309.32
+  },
+  "LBLD075": {
+    "code": "LBLD075",
+    "libelle": "Pose d'1 implant intraosseux intrabuccal, chez l'enfant",
+    "tarif": 438.9
+  },
+  "LBLD086": {
+    "code": "LBLD086",
+    "libelle": "Pose de moyen de liaison sur 3 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 457.71
+  },
+  "LBLD117": {
+    "code": "LBLD117",
+    "libelle": "Pose de 4 implants intraosseux intrabuccaux chez l'enfant",
+    "tarif": 1542.42
+  },
+  "LBLD143": {
+    "code": "LBLD143",
+    "libelle": "Pose de moyen de liaison sur 7 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 1051.27
+  },
+  "LBLD193": {
+    "code": "LBLD193",
+    "libelle": "Pose de moyen de liaison sur 4 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 606.1
+  },
+  "LBLD200": {
+    "code": "LBLD200",
+    "libelle": "Pose de 9 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 3331.46
+  },
+  "LBLD214": {
+    "code": "LBLD214",
+    "libelle": "Pose de moyen de liaison sur 10 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 1496.44
+  },
+  "LBLD235": {
+    "code": "LBLD235",
+    "libelle": "Pose de moyen de liaison sur 8 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 1199.66
+  },
+  "LBLD261": {
+    "code": "LBLD261",
+    "libelle": "Pose de 11 implants intraosseux intrabuccaux ou plus",
+    "tarif": null
+  },
+  "LBLD270": {
+    "code": "LBLD270",
+    "libelle": "Pose de moyen de liaison sur 6 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 902.88
+  },
+  "LBLD281": {
+    "code": "LBLD281",
+    "libelle": "Pose de 3 implants intraosseux intrabuccaux chez l'enfant",
+    "tarif": 1174.58
+  },
+  "LBLD294": {
+    "code": "LBLD294",
+    "libelle": "Pose de 10 implants intraosseux intrabuccaux, chez l'adulte",
+    "tarif": 3695.12
+  },
+  "LBLD311": {
+    "code": "LBLD311",
+    "libelle": "Pose de moyen de liaison sur 9 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 1348.05
+  },
+  "LBLD420": {
+    "code": "LBLD420",
+    "libelle": "Pose de moyen de liaison sur 11 implants préprothétiques intraosseux intrabuccaux ou plus",
+    "tarif": null
+  },
+  "LBLD447": {
+    "code": "LBLD447",
+    "libelle": "Pose de moyen de liaison sur 5 implants préprothétiques intraosseux intrabuccaux",
+    "tarif": 754.49
+  },
+  "LBLP001": {
+    "code": "LBLP001",
+    "libelle": "Pose d'un guide positionnel, au cours d'une ostéotomie de la mâchoire",
+    "tarif": null
+  },
+  "LBMA001": {
+    "code": "LBMA001",
+    "libelle": "Reconstruction de l'articulation temporomandibulaire par prothèse",
+    "tarif": 376.2
+  },
+  "LBMA002": {
+    "code": "LBMA002",
+    "libelle": "Reconstruction du ramus de la mandibule par autogreffe ostéochondrale pour syndrome malformatif, par abord direct",
+    "tarif": 403.42
+  },
+  "LBMA003": {
+    "code": "LBMA003",
+    "libelle": "Reconstruction discale temporomandibulaire, par arthrotomie",
+    "tarif": 209.0
+  },
+  "LBMA004": {
+    "code": "LBMA004",
+    "libelle": "Reconstruction du condyle de la mandibule par greffe ostéochondrale",
+    "tarif": 389.92
+  },
+  "LBMA006": {
+    "code": "LBMA006",
+    "libelle": "Condyloplastie mandibulaire, par arthrotomie",
+    "tarif": 209.0
+  },
+  "LBMP001": {
+    "code": "LBMP001",
+    "libelle": "Simulation des objectifs thérapeutiques sur moulages des arcades dentaires et/ou sur logiciel",
+    "tarif": 97.92
+  },
+  "LBMP002": {
+    "code": "LBMP002",
+    "libelle": "Montage directeur sur moulage d'étude des arcades dentaires",
+    "tarif": null
+  },
+  "LBMP003": {
+    "code": "LBMP003",
+    "libelle": "Réalisation de moulage d'étude des arcades dentaires",
+    "tarif": null
+  },
+  "LBPA001": {
+    "code": "LBPA001",
+    "libelle": "Ostéotomie d'antépositionnement des épines mentonnières [apophyses geni] de la mandibule, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA002": {
+    "code": "LBPA002",
+    "libelle": "Ostéotomie sagittale du corps de la mandibule, par abord intrabuccal",
+    "tarif": 283.78
+  },
+  "LBPA003": {
+    "code": "LBPA003",
+    "libelle": "Décortication de la mandibule, par abord intrabuccal",
+    "tarif": 154.45
+  },
+  "LBPA004": {
+    "code": "LBPA004",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie maxillaire d'avancée type Le Fort I non segmentée, par abord intrabuccal",
+    "tarif": 724.96
+  },
+  "LBPA005": {
+    "code": "LBPA005",
+    "libelle": "Ostéotomie interruptrice du corps de la mandibule, en avant du trou mentonnier, par abord intrabuccal",
+    "tarif": 233.52
+  },
+  "LBPA006": {
+    "code": "LBPA006",
+    "libelle": "Ostéotomie maxillaire type Le Fort I segmentée en 3 fragments ou plus, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA007": {
+    "code": "LBPA007",
+    "libelle": "Ostéotomie verticale rétrolingulaire [rétrospigienne] du ramus de la mandibule, par abord facial",
+    "tarif": 260.87
+  },
+  "LBPA008": {
+    "code": "LBPA008",
+    "libelle": "Ostéotomie maxillaire segmentaire postérieure bilatérale, par abord intrabuccal",
+    "tarif": 531.23
+  },
+  "LBPA009": {
+    "code": "LBPA009",
+    "libelle": "Ostéotomie maxillaire segmentaire postérieure unilatérale, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA010": {
+    "code": "LBPA010",
+    "libelle": "Ostéotomie maxillozygomatique sans mobilisation de la pyramide nasale, par abord direct",
+    "tarif": 478.98
+  },
+  "LBPA011": {
+    "code": "LBPA011",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie maxillaire type Le Fort I segmentée en 2 fragments et transposition du menton osseux, par abord intrabuccal",
+    "tarif": 920.06
+  },
+  "LBPA012": {
+    "code": "LBPA012",
+    "libelle": "Ostéotomie maxillaire interalvéolaire [Corticotomie alvéolodentaire] unique ou multiple, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA013": {
+    "code": "LBPA013",
+    "libelle": "Ostéotomie de transposition du menton osseux, par abord intrabuccal",
+    "tarif": 178.1
+  },
+  "LBPA014": {
+    "code": "LBPA014",
+    "libelle": "Ostéotomie interruptrice du corps de la mandibule, en arrière du trou mentonnier, par abord intrabuccal",
+    "tarif": 277.86
+  },
+  "LBPA015": {
+    "code": "LBPA015",
+    "libelle": "Ostéotomie maxillaire type Le Fort I non segmentée avec recul ou déplacement vertical, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA016": {
+    "code": "LBPA016",
+    "libelle": "Ostéotomie segmentaire alvéolaire de la mandibule en arrière du trou mentonnier, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA017": {
+    "code": "LBPA017",
+    "libelle": "Ostéotomie maxillaire d'élévation sans mobilisation du palais, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA018": {
+    "code": "LBPA018",
+    "libelle": "Ostéotomie sousalvéolaire totale de la mandibule, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA019": {
+    "code": "LBPA019",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie segmentaire alvéolaire de la mandibule en avant des trous mentonniers, par abord intrabuccal",
+    "tarif": 635.73
+  },
+  "LBPA020": {
+    "code": "LBPA020",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie maxillaire type Le Fort I segmentée en 3 fragments ou plus, par abord intrabuccal",
+    "tarif": 872.02
+  },
+  "LBPA021": {
+    "code": "LBPA021",
+    "libelle": "Ostéotomie sagittale unilatérale du ramus de la mandibule [supralingulaire et préangulaire], par abord intrabuccal",
+    "tarif": 269.74
+  },
+  "LBPA022": {
+    "code": "LBPA022",
+    "libelle": "Ostéotomie maxillaire type hémi-Le Fort I, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA023": {
+    "code": "LBPA023",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie maxillaire type Le Fort I segmentée en 2 fragments, par abord intrabuccal",
+    "tarif": 749.35
+  },
+  "LBPA024": {
+    "code": "LBPA024",
+    "libelle": "Ostéotomie d'un segment du maxillaire pour correction d'une malposition fragmentaire séquellaire d'une fente orofaciale, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA025": {
+    "code": "LBPA025",
+    "libelle": "Ostéotomie de la mandibule pour cal vicieux, par abord direct",
+    "tarif": 314.81
+  },
+  "LBPA026": {
+    "code": "LBPA026",
+    "libelle": "Ostéotomie segmentaire alvéolaire de la mandibule en avant des trous mentonniers, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA027": {
+    "code": "LBPA027",
+    "libelle": "Ostéotomie maxillaire totale basse préimplantaire ou préprothétique avec interposition, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA028": {
+    "code": "LBPA028",
+    "libelle": "Ostéotomie maxillaire de type Le Fort I pour séquelle d'une fente orofaciale, par abord intrabuccal",
+    "tarif": 495.87
+  },
+  "LBPA029": {
+    "code": "LBPA029",
+    "libelle": "Ostéotomie maxillaire type Le Fort I non segmentée avec avancée, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA030": {
+    "code": "LBPA030",
+    "libelle": "Ostéotomie verticale rétrolingulaire [rétrospigienne] du ramus de la mandibule, par abord intrabuccal",
+    "tarif": 260.87
+  },
+  "LBPA031": {
+    "code": "LBPA031",
+    "libelle": "Ostéotomie maxillaire segmentaire antérieure, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA032": {
+    "code": "LBPA032",
+    "libelle": "Ostéotomie sagittale intermaxillaire sans pose d'un disjoncteur fixe, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA033": {
+    "code": "LBPA033",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie maxillaire type Le Fort I segmentée en 3 fragments ou plus et transposition du menton osseux, par abord intrabuccal",
+    "tarif": 996.91
+  },
+  "LBPA034": {
+    "code": "LBPA034",
+    "libelle": "Ostéotomie segmentaire antérieure préimplantaire ou préprothétique de la mandibule avec interposition, par abord intrabuccal",
+    "tarif": 374.48
+  },
+  "LBPA035": {
+    "code": "LBPA035",
+    "libelle": "Ostéotomie maxillaire type Le Fort I segmentée en 2 fragments, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA036": {
+    "code": "LBPA036",
+    "libelle": "Ostéotomie segmentaire alvéolaire de la mandibule en avant des trous mentonniers, avec ostéotomie maxillaire segmentaire antérieure, par abord intrabuccal",
+    "tarif": 531.23
+  },
+  "LBPA037": {
+    "code": "LBPA037",
+    "libelle": "Ostéotomie interruptrice de la symphyse mandibulaire, par abord intrabuccal",
+    "tarif": 209.0
+  },
+  "LBPA038": {
+    "code": "LBPA038",
+    "libelle": "Ostéotomie maxillonasale type Le Fort II, par abord direct",
+    "tarif": 653.28
+  },
+  "LBPA039": {
+    "code": "LBPA039",
+    "libelle": "Ostéotomie segmentaire alvéolaire de la mandibule en avant des trous mentonniers, avec ostéotomie de transposition du menton osseux, par abord intrabuccal",
+    "tarif": 426.73
+  },
+  "LBPA040": {
+    "code": "LBPA040",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], avec ostéotomie maxillaire d'avancée type Le Fort I non segmentée et ostéotomie de transposition du menton osseux, par abord intrabuccal",
+    "tarif": 843.2
+  },
+  "LBPA041": {
+    "code": "LBPA041",
+    "libelle": "Ostéotomie angulaire ou préangulaire de la mandibule, par abord facial",
+    "tarif": 224.96
+  },
+  "LBPA042": {
+    "code": "LBPA042",
+    "libelle": "Ostéotomie sagittale bilatérale du ramus de la mandibule [supralingulaire et préangulaire], par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBPA043": {
+    "code": "LBPA043",
+    "libelle": "Ostéotomie sagittale intermaxillaire avec pose d'un disjoncteur fixe, par abord intrabuccal",
+    "tarif": 478.98
+  },
+  "LBQH001": {
+    "code": "LBQH001",
+    "libelle": "Arthrographie unilatérale de l'articulation temporomandibulaire",
+    "tarif": 57.19
+  },
+  "LBQH002": {
+    "code": "LBQH002",
+    "libelle": "Arthroscanographie unilatérale ou bilatérale de l'articulation temporomandibulaire",
+    "tarif": 57.19
+  },
+  "LBQH003": {
+    "code": "LBQH003",
+    "libelle": "Arthrographie bilatérale de l'articulation temporomandibulaire",
+    "tarif": 114.38
+  },
+  "LBQK001": {
+    "code": "LBQK001",
+    "libelle": "Tomographie unilatérale ou bilatérale de l'articulation temporomandibulaire",
+    "tarif": 46.550000000000004
+  },
+  "LBQK002": {
+    "code": "LBQK002",
+    "libelle": "Bilan de dysmorphose dento-maxillo-faciale avec tracé et analyse céphalométrique de profil",
+    "tarif": null
+  },
+  "LBQK003": {
+    "code": "LBQK003",
+    "libelle": "Bilan de dysmorphose dento-maxillo-faciale avec tracé et analyse céphalométrique tridimensionnelle ou analyse architecturale craniofaciale, et simulation des objectifs de traitement sur moulage et/ou sur tracé céphalométrique",
+    "tarif": null
+  },
+  "LBQK004": {
+    "code": "LBQK004",
+    "libelle": "Bilan de dysmorphose dento-maxillo-faciale avec tracé et analyse céphalométrique tridimensionnelle, ou tracé et analyse architecturale craniofaciale",
+    "tarif": null
+  },
+  "LBQK005": {
+    "code": "LBQK005",
+    "libelle": "Radiographie unilatérale ou bilatérale de l'articulation temporomandibulaire",
+    "tarif": 25.27
+  },
+  "LBQP001": {
+    "code": "LBQP001",
+    "libelle": "Enregistrement des rapports maxillomandibulaires en vue de la programmation d'un articulateur",
+    "tarif": 32.64
+  },
+  "LBQP002": {
+    "code": "LBQP002",
+    "libelle": "Enregistrement électronique des mouvements de la mandibule",
+    "tarif": null
+  }
+}

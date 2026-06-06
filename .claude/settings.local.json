@@ -51,7 +51,12 @@
       "Bash(git -C 'C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep' commit -m ' *)",
       "Bash(git -C \"C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep\" add \"src/app/\\(app\\)/library/page.tsx\" src/lib/fiches.ts)",
       "Bash(git -C \"C:\\\\Users\\\\quent\\\\OneDrive - Université Clermont Auvergne\\\\Bureau\\\\dentalprep\" push)",
-      "Bash(py patch_ccam_v2.py)"
+      "Bash(py patch_ccam_v2.py)",
+      "Bash(py -m pip install --quiet pandas openpyxl xlrd)",
+      "Bash(py extract_ccam_official.py)",
+      "Bash(py find_correct_ccam.py)",
+      "Bash(py rebuild_ccam_pool.py)",
+      "Bash(py smart_patch_exos.py)"
     ]
   }
 }
