@@ -14,6 +14,7 @@
  */
 
 import type { ModuleId } from '@/types/database'
+import { canStartMock } from '@/lib/mock-exam'
 
 export type StudyPhase = 'construction' | 'consolidation' | 'sprint'
 
@@ -43,6 +44,8 @@ type Input = {
   totalQuestionsCount: number
   ccamCodesCount: number
   ccamMasteredCount: number
+  lastMockCompletedAt: string | null
+  totalAttempts: number   // pour évaluer si l'élève a assez progressé pour passer une mock
 }
 
 const MODULE_ACCENT: Record<string, string> = {
@@ -191,6 +194,32 @@ function ccamDrill(i: Input, phase: StudyPhase): StudyPlanItem | null {
   }
 }
 
+function mockExam(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  // Pré-requis : au moins 100 attempts pour que ça ait du sens
+  if (i.totalAttempts < 100) return null
+  // Cooldown : 1 mock / 7 jours
+  if (!canStartMock(i.lastMockCompletedAt)) return null
+
+  // Urgence : essentielle en sprint, importante en consolidation, faible en construction
+  const base = phase === 'sprint' ? 92 : phase === 'consolidation' ? 75 : 50
+  const sub = phase === 'sprint'
+    ? '50 Q · 60 min · conditions réelles'
+    : phase === 'consolidation'
+      ? 'Mesure ton niveau · 50 Q chrono'
+      : 'Essaie une épreuve blanche · 50 Q'
+
+  return {
+    id: 'mock-exam',
+    icon: 'target',
+    title: 'Épreuve blanche',
+    detail: sub,
+    estimatedMin: 60,
+    href: '/mock-exam',
+    accent: '#7C3AED',
+    urgency: base,
+  }
+}
+
 function discoverModule(i: Input, phase: StudyPhase): StudyPlanItem | null {
   // Module avec peu de questions tentées (couverture < 30%) — utile en construction
   if (phase === 'sprint') return null
@@ -224,6 +253,7 @@ export function buildStudyPlan(i: Input): StudyPlanItem[] {
     weakModule(i, phase),
     practice(i, phase),
     ccamDrill(i, phase),
+    mockExam(i, phase),
     discoverModule(i, phase),
   ]
 

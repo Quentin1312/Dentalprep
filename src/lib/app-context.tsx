@@ -26,6 +26,7 @@ interface AppData {
   practiceTodoCount: number             // cas pratiques pas validés à 100%
   ccamCodesCount: number                // total de codes CCAM importés
   ccamMasteredCount: number             // codes CCAM ayant au moins 1 bonne réponse au drill
+  lastMockCompletedAt: string | null    // dernière épreuve blanche complétée (ISO)
 }
 
 interface AppContextValue {
@@ -69,7 +70,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const today = new Date().toISOString().split('T')[0]
     const supaAny = supabase as any
-    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes, dueQuizRes, ccamCodesRes, ccamAttemptsRes] = await Promise.all([
+    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes, dueQuizRes, ccamCodesRes, ccamAttemptsRes, lastMockRes] = await Promise.all([
       supaAny.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type,equipped_accessories').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       // Ordre chronologique requis par computeXP (XP dégressif + combo)
@@ -94,6 +95,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supaAny.from('ccam_drill_attempts')
         .select('code,is_correct')
         .eq('user_id', user.id),
+      supaAny.from('mock_exam_sessions')
+        .select('completed_at')
+        .eq('user_id', user.id)
+        .eq('is_completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ])
 
     // last-wrong : pour chaque question, on garde la dernière tentative
@@ -139,6 +147,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       quizDueCount: (dueQuizRes as any).count ?? 0,
       ccamCodesCount,
       ccamMasteredCount,
+      lastMockCompletedAt: (lastMockRes as any).data?.completed_at ?? null,
       recentWrongQuestionCount,
       practiceTodoCount,
     }

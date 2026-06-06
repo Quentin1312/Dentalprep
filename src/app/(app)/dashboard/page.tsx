@@ -241,6 +241,8 @@ export default function DashboardPage() {
           totalQuestionsCount: data.questions.length,
           ccamCodesCount: data.ccamCodesCount,
           ccamMasteredCount: data.ccamMasteredCount,
+          lastMockCompletedAt: data.lastMockCompletedAt,
+          totalAttempts: attempts.length,
         })
         if (plan.length === 0) return null
         return (
