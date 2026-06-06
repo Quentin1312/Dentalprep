@@ -18,6 +18,14 @@ function Skel({ h }: { h: number }) {
   return <div style={{ height: h, borderRadius: 14, background: 'linear-gradient(90deg,#E9ECF2 25%,#F4F6F8 50%,#E9ECF2 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
 }
 
+type Sm2Row = {
+  question_id: string
+  next_review_at: string | null
+  is_leech: boolean
+  is_suspended: boolean
+  reps: number
+}
+
 function smartSort(q: Question, stats: Map<string, { ok: number; total: number }>): number {
   const s = stats.get(q.id)
   if (!s || s.total === 0) return 1 // jamais vu → 2ème priorité
@@ -25,6 +33,26 @@ function smartSort(q: Question, stats: Map<string, { ok: number; total: number }
   if (acc < 0.5) return 0  // en difficulté → 1ère priorité
   if (acc < 0.8) return 2  // en progression → 3ème
   return 3                  // maîtrisée → dernière
+}
+
+/**
+ * Tri "smart v2" basé sur SM-2.
+ * Buckets, du plus prioritaire au moins prioritaire :
+ *   0 — overdue (next_review_at < now)
+ *   1 — jamais vu (pas d'entrée SM-2)
+ *   2 — due dans les 24h
+ *   3 — bien apprise (pas due avant 24h)
+ * Les leeches et suspendues sont exclues.
+ * À l'intérieur d'un bucket, tri par overdue desc.
+ */
+function smartBucket(q: Question, sm2: Map<string, Sm2Row>, now: number): number {
+  const row = sm2.get(q.id)
+  if (!row) return 1
+  if (!row.next_review_at) return 1
+  const due = new Date(row.next_review_at).getTime()
+  if (due <= now) return 0
+  if (due - now <= 86_400_000) return 2
+  return 3
 }
 
 function QuizInner() {
@@ -62,10 +90,18 @@ function QuizInner() {
       let q = supabase.from('quiz_questions').select('*').eq('user_id', user.id).eq('module_id', moduleId as ModuleId)
       if (courseId) q = q.eq('course_id', courseId)
 
+      const supaAny = supabase as any
       Promise.all([
         q.order('created_at'),
         supabase.from('quiz_attempts').select('question_id,is_correct,created_at').eq('user_id', user.id).eq('module_id', moduleId as ModuleId).order('created_at', { ascending: true }),
-      ]).then(([{ data: qs }, { data: atts }]) => {
+        supaAny.from('quiz_question_progress')
+          .select('question_id,next_review_at,is_leech,is_suspended,reps')
+          .eq('user_id', user.id),
+      ]).then(([{ data: qs }, { data: atts }, sm2Res]) => {
+        const sm2Map = new Map<string, Sm2Row>()
+        for (const row of ((sm2Res as any).data ?? []) as Sm2Row[]) {
+          sm2Map.set(row.question_id, row)
+        }
         // Normalise each row: parse choices if it came back as a string,
         // and ensure `type` is uppercase so the renderers match.
         const raw = (qs ?? []).map((row: Question) => ({
@@ -96,17 +132,29 @@ function QuizInner() {
           sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
           setQuestions(sorted.slice(0, 50))
         } else if (mode === 'smart') {
-          sorted = [...raw].sort((a, b) => smartSort(a, stats) - smartSort(b, stats))
-          const toReview = sorted.filter(q => smartSort(q, stats) === 0)
-          const unseen = sorted.filter(q => smartSort(q, stats) === 1)
-          const improving = sorted.filter(q => smartSort(q, stats) === 2)
-          const mastered = sorted.filter(q => smartSort(q, stats) === 3)
+          // Smart v2 : priorise les questions dues (SM-2), puis jamais vues, puis proches.
+          // Exclut leeches/suspendues (elles vont dans /mes-erreurs).
+          const now = Date.now()
+          const eligible = raw.filter(q => {
+            const row = sm2Map.get(q.id)
+            return !row || (!row.is_leech && !row.is_suspended)
+          })
+          const overdue = eligible
+            .filter(q => smartBucket(q, sm2Map, now) === 0)
+            .sort((a, b) => {
+              const da = new Date(sm2Map.get(a.id)!.next_review_at!).getTime()
+              const db = new Date(sm2Map.get(b.id)!.next_review_at!).getTime()
+              return da - db   // le plus en retard d'abord
+            })
+          const unseen = eligible.filter(q => smartBucket(q, sm2Map, now) === 1)
+          const dueSoon = eligible.filter(q => smartBucket(q, sm2Map, now) === 2)
+          const mastered = eligible.filter(q => smartBucket(q, sm2Map, now) === 3)
           sorted = [
-            ...toReview,
-            ...unseen.slice(0, Math.max(5, 20 - toReview.length)),
-            ...improving.slice(0, 5),
+            ...overdue,
+            ...unseen.slice(0, Math.max(5, 20 - overdue.length)),
+            ...dueSoon.slice(0, 5),
             ...mastered.slice(0, 2),
-          ].slice(0, 30)
+          ].slice(0, 20)
           setQuestions(sorted)
         } else {
           const total = Math.ceil(sorted.length / LESSON_SIZE)

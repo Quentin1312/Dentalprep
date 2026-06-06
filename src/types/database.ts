@@ -203,6 +203,43 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_question_progress: {
+        Row: {
+          user_id: string
+          question_id: string
+          ease_factor: number
+          interval_days: number
+          reps: number
+          lapses: number
+          next_review_at: string | null
+          is_leech: boolean
+          is_suspended: boolean
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          question_id: string
+          ease_factor?: number
+          interval_days?: number
+          reps?: number
+          lapses?: number
+          next_review_at?: string | null
+          is_leech?: boolean
+          is_suspended?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ease_factor?: number
+          interval_days?: number
+          reps?: number
+          lapses?: number
+          next_review_at?: string | null
+          is_leech?: boolean
+          is_suspended?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

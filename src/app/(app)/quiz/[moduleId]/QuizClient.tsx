@@ -12,6 +12,7 @@ import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType, PetState } from '@/components/pet/PetCompanion'
 import ExplainSheet from '@/components/ExplainSheet'
 import { computeXP } from '@/lib/xp'
+import { reviewKnown, reviewHard, reviewLapse, DEFAULT_SM2, type Sm2State } from '@/lib/sm2'
 import QuizSummary from './QuizSummary'
 
 type QType = 'QCM' | 'VF' | 'ORDRE' | 'ASSOCIATION'
@@ -103,6 +104,8 @@ export default function QuizClient({
   // Monotonic counter — increments every time we move to the next question,
   // even if it's the same question coming back. Used to reset interaction state.
   const [questionKey, setQuestionKey] = useState(0)
+  // "Difficile" pour la question en cours — appliqué dans next() pour ajuster SM-2.
+  const [hardChosen, setHardChosen] = useState(false)
 
   const originalTotal = questions.length
 
@@ -159,8 +162,39 @@ export default function QuizClient({
     }).then(() => refresh())
   }
 
+  // Persiste l'état SM-2 (appelé depuis next() avec la difficulté retenue).
+  async function persistSm2(questionId: string, isCorrect: boolean, hard: boolean) {
+    const supabase = createClient()
+    const supaAny = supabase as any
+    const { data: prevRow } = await supaAny
+      .from('quiz_question_progress')
+      .select('ease_factor,interval_days,reps,lapses')
+      .eq('user_id', userId).eq('question_id', questionId).maybeSingle()
+    const prev: Sm2State = prevRow ?? DEFAULT_SM2
+    const result = !isCorrect
+      ? reviewLapse(prev)
+      : hard
+        ? reviewHard(prev)
+        : reviewKnown(prev)
+    const is_leech = 'is_leech' in result ? result.is_leech : false
+    await supaAny.from('quiz_question_progress').upsert({
+      user_id: userId,
+      question_id: questionId,
+      ease_factor: result.ease_factor,
+      interval_days: result.interval_days,
+      reps: result.reps,
+      lapses: result.lapses,
+      next_review_at: result.next_review_at,
+      is_leech,
+      updated_at: new Date().toISOString(),
+    })
+    void refresh()
+  }
+
   async function next() {
     const isCorrect = picked === q.correct_index
+    // Persiste l'état SM-2 (utilise hardChosen si l'utilisateur a marqué "Difficile")
+    void persistSm2(q.id, isCorrect, hardChosen)
     if (isCorrect) {
       const newQueue = queue.slice(1)
       if (newQueue.length === 0) {
@@ -176,6 +210,7 @@ export default function QuizClient({
     }
     setPicked(null)
     setShowResult(false)
+    setHardChosen(false)
     setQuestionKey(k => k + 1)
   }
 
@@ -421,20 +456,44 @@ export default function QuizClient({
         background: 'linear-gradient(180deg, rgba(244,246,248,0) 0%, rgba(244,246,248,1) 30%)',
       }}>
         {showResult ? (
-          <button onClick={next} style={{
-            width: '100%', height: 56, borderRadius: 16, border: 'none',
-            background: picked === q?.correct_index ? A.primary : A.red,
-            color: '#fff', fontSize: 16, fontWeight: 700,
-            letterSpacing: -0.1, fontFamily: FONT, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            boxShadow: picked === q?.correct_index
-              ? '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)'
-              : '0 10px 24px -6px rgba(220,38,38,0.55), 0 2px 6px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
-            transition: 'transform .12s ease, box-shadow .12s ease',
-          }}>
-            {picked === q?.correct_index ? 'Continuer' : 'Ça reviendra !'}
-            <Icon name="arrowR" size={16} color="#fff" strokeWidth={2.4} />
-          </button>
+          (() => {
+            const isOk = picked === q?.correct_index
+            // "Difficile" : seulement sur bonne réponse à une question déjà vue
+            // (stat.total >= 1). Permet à l'élève de raccourcir l'intervalle SM-2.
+            const showHard = isOk && !!stat && stat.total >= 1
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {showHard && (
+                  <button
+                    onClick={() => { setHardChosen(true); void next() }}
+                    style={{
+                      width: '100%', height: 44, borderRadius: 14, border: `1px solid ${A.amber}`,
+                      background: A.amberSoft, color: A.amber,
+                      fontSize: 14, fontWeight: 700, letterSpacing: -0.1, fontFamily: FONT,
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    }}>
+                    <Icon name="refresh" size={14} color={A.amber} strokeWidth={2.4} />
+                    C'était difficile — revoir vite
+                  </button>
+                )}
+                <button onClick={next} style={{
+                  width: '100%', height: 56, borderRadius: 16, border: 'none',
+                  background: isOk ? A.primary : A.red,
+                  color: '#fff', fontSize: 16, fontWeight: 700,
+                  letterSpacing: -0.1, fontFamily: FONT, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  boxShadow: isOk
+                    ? '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)'
+                    : '0 10px 24px -6px rgba(220,38,38,0.55), 0 2px 6px rgba(220,38,38,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+                  transition: 'transform .12s ease, box-shadow .12s ease',
+                }}>
+                  {isOk ? 'Continuer' : 'Ça reviendra !'}
+                  <Icon name="arrowR" size={16} color="#fff" strokeWidth={2.4} />
+                </button>
+              </div>
+            )
+          })()
         ) : (
           <button onClick={submit} disabled={picked === null} style={{
             width: '100%', height: 56, borderRadius: 16, border: 'none',

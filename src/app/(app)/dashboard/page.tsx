@@ -226,6 +226,7 @@ export default function DashboardPage() {
           daysUntilExam: days,
           dailyGoalMinutes: goalMin,
           flashcardsDueCount: data.flashcardsDueCount,
+          quizDueCount: data.quizDueCount,
           attempts,
           moduleStats: moduleStats.map(m => ({
             id: m.id as ModuleId,
@@ -238,50 +239,52 @@ export default function DashboardPage() {
           recentWrongQuestionCount: data.recentWrongQuestionCount,
           totalQuestionsCount: data.questions.length,
         })
-        const top = plan[0]
-        if (!top) return null
+        if (plan.length === 0) return null
         return (
-          <div style={{ padding: `${sp(4)}px ${sp(5)}px 0` }}>
-            <Link href={top.href} style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{
-                background: PALETTE.surface,
-                borderRadius: RADIUS.lg,
-                border: `1px solid ${PALETTE.rule}`,
-                padding: sp(4),
-                boxShadow: SHADOW.md,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: sp(1) }}>
-                  <div style={{
-                    ...monoStyle('xs', 'med', PALETTE.accent),
-                    textTransform: 'uppercase', letterSpacing: 1.4,
-                  }}>
-                    Reprendre
-                  </div>
-                  <div style={{
-                    ...monoStyle('xs', 'med', PALETTE.inkDim),
-                    background: PALETTE.surfaceAlt, padding: '2px 8px', borderRadius: RADIUS.sm,
-                  }}>
-                    ≈ {top.estimatedMin} min
-                  </div>
-                </div>
-                <div style={displayStyle('xl', 'bold')}>{top.title}</div>
-                <div style={{ ...typeStyle('sm', 'body', PALETTE.inkMute), marginTop: 2 }}>
-                  {top.detail}
-                </div>
+          <div style={{ padding: `${sp(4)}px ${sp(5)}px 0`, display: 'flex', flexDirection: 'column', gap: sp(2) }}>
+            {plan.map((item, idx) => (
+              <Link key={item.id} href={item.href} style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{
-                  marginTop: sp(3),
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: `${sp(2)}px ${sp(4)}px`,
-                  background: PALETTE.brand, color: '#fff',
-                  borderRadius: RADIUS.pill,
-                  ...monoStyle('xs', 'med', '#fff'),
-                  letterSpacing: 0.4,
+                  background: PALETTE.surface,
+                  borderRadius: RADIUS.lg,
+                  border: `1px solid ${PALETTE.rule}`,
+                  padding: sp(4),
+                  boxShadow: idx === 0 ? SHADOW.md : SHADOW.sm,
                 }}>
-                  Continuer
-                  <Icon name="chevronR" size={12} color="#fff" strokeWidth={2.4} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: sp(1) }}>
+                    <div style={{
+                      ...monoStyle('xs', 'med', idx === 0 ? PALETTE.accent : item.accent),
+                      textTransform: 'uppercase', letterSpacing: 1.4,
+                    }}>
+                      {idx === 0 ? 'Reprendre' : 'Ensuite'}
+                    </div>
+                    <div style={{
+                      ...monoStyle('xs', 'med', PALETTE.inkDim),
+                      background: PALETTE.surfaceAlt, padding: '2px 8px', borderRadius: RADIUS.sm,
+                    }}>
+                      ≈ {item.estimatedMin} min
+                    </div>
+                  </div>
+                  <div style={displayStyle('xl', 'bold')}>{item.title}</div>
+                  <div style={{ ...typeStyle('sm', 'body', PALETTE.inkMute), marginTop: 2 }}>
+                    {item.detail}
+                  </div>
+                  <div style={{
+                    marginTop: sp(3),
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: `${sp(2)}px ${sp(4)}px`,
+                    background: idx === 0 ? PALETTE.brand : PALETTE.surfaceAlt,
+                    color: idx === 0 ? '#fff' : PALETTE.ink,
+                    borderRadius: RADIUS.pill,
+                    ...monoStyle('xs', 'med', idx === 0 ? '#fff' : PALETTE.ink),
+                    letterSpacing: 0.4,
+                  }}>
+                    Continuer
+                    <Icon name="chevronR" size={12} color={idx === 0 ? '#fff' : PALETTE.ink} strokeWidth={2.4} />
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </div>
         )
       })()}

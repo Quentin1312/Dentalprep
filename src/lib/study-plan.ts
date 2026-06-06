@@ -26,10 +26,11 @@ type Input = {
   daysUntilExam: number | null
   dailyGoalMinutes: number
   flashcardsDueCount: number
+  quizDueCount: number          // SM-2 : questions de quiz dues
   attempts: Attempt[]
   moduleStats: ModuleStat[]
   practiceTodoCount: number     // nb de cas pratiques non validés à 100%
-  recentWrongQuestionCount: number  // dernière tentative = fausse
+  recentWrongQuestionCount: number  // dernière tentative = fausse (fallback si SM-2 vide)
   totalQuestionsCount: number
 }
 
@@ -63,8 +64,24 @@ export function buildStudyPlan(i: Input): StudyPlanItem[] {
     })
   }
 
-  // 2. Quiz ratés à reprendre — capé à 10
-  if (i.recentWrongQuestionCount >= 3) {                  // n'apparaît qu'à partir de 3 erreurs
+  // 2. Questions de quiz dues (SM-2) — priorité haute, capé à 20
+  const QUIZ_PER_SESSION = 20
+  if (i.quizDueCount > 0) {
+    const shown = Math.min(i.quizDueCount, QUIZ_PER_SESSION)
+    items.push({
+      id: 'due-quiz',
+      icon: 'refresh',
+      title: `Réviser ${shown} question${shown > 1 ? 's' : ''}`,
+      detail: i.quizDueCount > QUIZ_PER_SESSION
+        ? `${i.quizDueCount} à revoir · on commence par les + urgentes`
+        : 'Questions à revoir aujourd\'hui',
+      estimatedMin: Math.max(5, Math.ceil(shown * 0.8)),
+      href: '/quiz/due',
+      accent: '#E11D48',
+      priority: 1,
+    })
+  } else if (i.recentWrongQuestionCount >= 3) {
+    // Fallback tant que SM-2 n'est pas encore alimenté (utilisateur avant backfill)
     const shown = Math.min(i.recentWrongQuestionCount, WRONG_PER_SESSION)
     items.push({
       id: 'wrong-quiz',

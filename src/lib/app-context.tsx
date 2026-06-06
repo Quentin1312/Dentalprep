@@ -21,6 +21,7 @@ interface AppData {
   todayMinutes: number
   flashXpBonus: number
   flashcardsDueCount: number
+  quizDueCount: number                  // questions de quiz dont next_review_at <= now (SM-2)
   recentWrongQuestionCount: number     // questions dont la dernière tentative = fausse
   practiceTodoCount: number             // cas pratiques pas validés à 100%
 }
@@ -66,7 +67,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const today = new Date().toISOString().split('T')[0]
     const supaAny = supabase as any
-    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes] = await Promise.all([
+    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes, dueQuizRes] = await Promise.all([
       supaAny.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type,equipped_accessories').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id),
@@ -79,6 +80,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supaAny.from('practical_exercises').select('id').eq('user_id', user.id),
       supaAny.from('practical_attempts').select('exercise_id,score,created_at').eq('user_id', user.id),
       supabase.from('quiz_attempts').select('question_id,is_correct,created_at').eq('user_id', user.id).order('created_at', { ascending: true }),
+      supaAny.from('quiz_question_progress')
+        .select('question_id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_suspended', false)
+        .lte('next_review_at', new Date().toISOString()),
     ])
 
     // last-wrong : pour chaque question, on garde la dernière tentative
@@ -113,6 +119,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       todayMinutes: todayRes.data?.minutes_studied ?? 0,
       flashXpBonus: readFlashXP(),
       flashcardsDueCount: (dueCardsRes as any).count ?? 0,
+      quizDueCount: (dueQuizRes as any).count ?? 0,
       recentWrongQuestionCount,
       practiceTodoCount,
     }

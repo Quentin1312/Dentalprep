@@ -1,9 +1,10 @@
 /**
  * Algorithme SM-2 (SuperMemo 2 — celui utilisé par Anki, en version simplifiée).
  *
- * On garde 2 actions utilisateur (vs les 4 de SM-2 classique) :
- *  - "Je sais"  : qualité ~5 (parfait)
- *  - "À revoir" : qualité ~2 (erreur)
+ * Trois actions utilisateur :
+ *  - "Je sais"   : qualité ~5 (parfait)         → reviewKnown
+ *  - "Difficile" : qualité ~3 (su avec effort)  → reviewHard
+ *  - "À revoir"  : qualité ~2 (erreur)          → reviewLapse
  *
  * À partir de l'état précédent (ease_factor, interval_days, reps) on calcule
  * le prochain intervalle et la date de prochaine révision.
@@ -15,6 +16,8 @@ export type Sm2State = {
   reps: number             // nombre de réussites consécutives
   lapses: number           // nombre total d'oublis
 }
+
+export const LEECH_THRESHOLD = 6
 
 export const DEFAULT_SM2: Sm2State = {
   ease_factor: 2.5,
@@ -46,18 +49,40 @@ export function reviewKnown(prev: Sm2State): Sm2State & { next_review_at: string
   }
 }
 
-export function reviewLapse(prev: Sm2State): Sm2State & { next_review_at: string } {
+export function reviewHard(prev: Sm2State): Sm2State & { next_review_at: string } {
+  // qualité ≈ 3 (su mais avec effort) — EF baisse légèrement, intervalle ×1.2
+  const ease_factor = Math.max(MIN_EF, prev.ease_factor - 0.15)
+  let interval_days: number
+  if (prev.reps === 0)      interval_days = 1
+  else if (prev.reps === 1) interval_days = 3
+  else                      interval_days = Math.max(1, Math.round(prev.interval_days * 1.2))
+  const reps = prev.reps + 1
+  const next = new Date()
+  next.setDate(next.getDate() + interval_days)
+  next.setHours(0, 0, 0, 0)
+  return {
+    ease_factor,
+    interval_days,
+    reps,
+    lapses: prev.lapses,
+    next_review_at: next.toISOString(),
+  }
+}
+
+export function reviewLapse(prev: Sm2State): Sm2State & { next_review_at: string; is_leech: boolean } {
   // qualité ≈ 2 (erreur) — on reset reps + intervalle 1j
   const ease_factor = Math.max(MIN_EF, prev.ease_factor - 0.2)
   const next = new Date()
   next.setDate(next.getDate() + 1)
   next.setHours(0, 0, 0, 0)
+  const lapses = prev.lapses + 1
   return {
     ease_factor,
     interval_days: 1,
     reps: 0,
-    lapses: prev.lapses + 1,
+    lapses,
     next_review_at: next.toISOString(),
+    is_leech: lapses >= LEECH_THRESHOLD,
   }
 }
 
