@@ -8,14 +8,10 @@ import type { ModuleId } from '@/types/database'
 import { useThemeBg, themeBgStyle, THEMES } from '@/lib/theme-bg'
 import { PathSystemStyles, SectionLabel, shade } from '@/components/ui/PathSystem'
 import { quizCompletionCount, quizCompletionPct } from '@/lib/quiz-progress'
-import { computeReadiness, type ReadinessResult } from '@/lib/readiness'
-import { projectDueLoad, type ForecastDay } from '@/lib/forecast'
 
 type Attempt = { module_id: string; is_correct: boolean; created_at: string; question_id: string }
 type Question = { id: string; module_id: string; course_id: string }
 type Session = { date: string; minutes_studied: number }
-type QuizProgressRow = { question_id: string; interval_days: number; next_review_at: string | null; is_suspended: boolean }
-type FlashProgressRow = { flashcard_id: string; next_review_at: string | null }
 
 const MODULE_ACCENT: Record<ModuleId, string> = {
   M1: '#0A66E0', M2: '#0D9488', M3: '#7C3AED',
@@ -31,56 +27,25 @@ export default function StatsPage() {
   const [attempts, setAttempts] = useState<Attempt[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
-  const [quizProgress, setQuizProgress] = useState<QuizProgressRow[]>([])
-  const [flashProgress, setFlashProgress] = useState<FlashProgressRow[]>([])
-  const [practiceTotal, setPracticeTotal] = useState(0)
-  const [practiceCompleted, setPracticeCompleted] = useState(0)
-  const [ccamTotal, setCcamTotal] = useState(0)
-  const [ccamMastered, setCcamMastered] = useState(0)
   const [today] = useState(() => new Date())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    const supaAny = supabase as any
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       Promise.all([
         supabase.from('profiles').select('streak,exam_date').eq('id', user.id).single(),
         supabase.from('quiz_attempts').select('module_id,is_correct,created_at,question_id').eq('user_id', user.id),
-        // Heatmap : on étend à 120 jours pour avoir ~17 semaines de recul
+        // Heatmap : 120 jours pour ~17 semaines de recul
         supabase.from('daily_sessions').select('date,minutes_studied').eq('user_id', user.id).order('date', { ascending: false }).limit(120),
         supabase.from('quiz_questions').select('id,module_id,course_id').eq('user_id', user.id),
-        supaAny.from('quiz_question_progress').select('question_id,interval_days,next_review_at,is_suspended').eq('user_id', user.id),
-        supaAny.from('flashcard_progress').select('flashcard_id,next_review_at').eq('user_id', user.id),
-        supaAny.from('practical_exercises').select('id').eq('user_id', user.id),
-        supaAny.from('practical_attempts').select('exercise_id,score').eq('user_id', user.id),
-        supaAny.from('ccam_codes').select('code').eq('user_id', user.id),
-        supaAny.from('ccam_drill_attempts').select('code,is_correct').eq('user_id', user.id),
-      ]).then(([p, a, s, q, qp, fp, exos, exoAtts, codes, codeAtts]) => {
+      ]).then(([p, a, s, q]) => {
         setStreak(p.data?.streak ?? 0)
         setExamDate(p.data?.exam_date ?? null)
         setAttempts((a.data ?? []) as Attempt[])
         setSessions((s.data ?? []) as Session[])
         setQuestions((q.data ?? []) as Question[])
-        setQuizProgress(((qp as any).data ?? []) as QuizProgressRow[])
-        setFlashProgress(((fp as any).data ?? []) as FlashProgressRow[])
-
-        const exoIds: string[] = (((exos as any).data ?? []) as { id: string }[]).map(e => e.id)
-        const best = new Map<string, number>()
-        for (const at of (((exoAtts as any).data ?? []) as { exercise_id: string; score: number }[])) {
-          best.set(at.exercise_id, Math.max(best.get(at.exercise_id) ?? 0, at.score))
-        }
-        setPracticeTotal(exoIds.length)
-        setPracticeCompleted(exoIds.filter(id => (best.get(id) ?? 0) >= 1).length)
-
-        setCcamTotal(((codes as any).data ?? []).length)
-        const masteredSet = new Set<string>()
-        for (const at of (((codeAtts as any).data ?? []) as { code: string; is_correct: boolean }[])) {
-          if (at.is_correct) masteredSet.add(at.code)
-        }
-        setCcamMastered(masteredSet.size)
-
         setLoading(false)
       })
     })
@@ -121,21 +86,6 @@ export default function StatsPage() {
     return { d, min: sessionByDate.get(key) ?? 0, today: key === localDateKey(today) }
   })
   const weekTotal = week.reduce((s, w) => s + w.min, 0)
-
-  // Readiness score
-  const readiness: ReadinessResult = computeReadiness({
-    totalQuestions: questions.length,
-    attemptedQuestionIds: uniqueAttempted,
-    correctQuestionIds: uniqueCorrect,
-    quizProgress,
-    practiceTotal,
-    practiceCompleted,
-    ccamCodesTotal: ccamTotal,
-    ccamMastered,
-  })
-
-  // Forecast 7 prochains jours
-  const forecast: ForecastDay[] = projectDueLoad(flashProgress, quizProgress, 7, today)
 
   // Days until exam
   const daysToExam = (() => {
@@ -184,22 +134,12 @@ export default function StatsPage() {
         <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.6, color: theme.text, marginTop: 1 }}>Statistiques</div>
       </div>
 
-      {/* Score de préparation — en haut, c'est LA métrique qui répond à "suis-je prêt ?" */}
-      {(questions.length > 0 || practiceTotal > 0) && (
-        <ReadinessCard readiness={readiness} />
-      )}
-
       {/* Streak card */}
       <StreakCard streak={streak} weekMinutes={weekTotal} />
 
       {/* Exam countdown */}
       {daysToExam !== null && examDate && (
         <ExamCountdown days={daysToExam} examDate={examDate} />
-      )}
-
-      {/* Charge à venir — 7 prochains jours */}
-      {(quizProgress.length > 0 || flashProgress.length > 0) && (
-        <NextDaysForecast days={forecast} />
       )}
 
       {/* Weekly chart */}
@@ -515,196 +455,18 @@ function ModuleMastery({ modules }: { modules: Array<Module & { pct: number; don
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ReadinessCard — score 0-100 "suis-je prêt ?" + breakdown
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ReadinessCard({ readiness }: { readiness: ReadinessResult }) {
-  const { score, label, color, breakdown } = readiness
-  const r = 48
-  const circ = 2 * Math.PI * r
-  const dash = (score / 100) * circ
-
-  const dims: { key: keyof typeof breakdown; label: string; weight: number }[] = [
-    { key: 'coverage', label: 'Couverture', weight: 25 },
-    { key: 'accuracy', label: 'Précision',  weight: 25 },
-    { key: 'mastery',  label: 'Maîtrise',   weight: 30 },
-    { key: 'practice', label: 'Pratique',   weight: 10 },
-    { key: 'ccam',     label: 'CCAM',       weight: 10 },
-  ]
-
-  return (
-    <div style={{ padding: '8px 16px 0' }}>
-      <SectionLabel>Préparation examen</SectionLabel>
-      <div style={{
-        background: '#fff', border: `1px solid #E4E8EE`, borderRadius: 18,
-        padding: '16px 16px 14px',
-        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          {/* Big ring */}
-          <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
-            <svg width="110" height="110" viewBox="0 0 110 110" style={{ transform: 'rotate(-90deg)' }}>
-              <circle cx="55" cy="55" r={r} fill="none" stroke="#EEF1F5" strokeWidth="10" />
-              <circle cx="55" cy="55" r={r} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={`${dash} ${circ}`}
-                style={{ transition: 'stroke-dasharray 0.8s ease' }} />
-            </svg>
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 0,
-            }}>
-              <div style={{
-                fontSize: 30, fontWeight: 900, color, letterSpacing: -1.5,
-                fontVariantNumeric: 'tabular-nums', lineHeight: 1,
-              }}>{score}</div>
-              <div style={{ fontSize: 9.5, color: '#5A6675', fontWeight: 700, marginTop: 1 }}>/100</div>
-            </div>
-          </div>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 15, fontWeight: 900, color: '#0F1B2D', letterSpacing: -0.3,
-            }}>{label}</div>
-            <div style={{ fontSize: 11.5, color: '#5A6675', fontWeight: 600, marginTop: 2 }}>
-              {score < 30   ? 'Continue à explorer tes cours.'
-             : score < 50   ? 'Tu commences à ancrer des bases solides.'
-             : score < 70   ? 'Bonne dynamique — entretiens la régularité.'
-             : score < 85   ? 'Tu es presque au niveau examen, finalise les modules faibles.'
-             :                'Excellent — entretiens, ne te repose pas trop.'}
-            </div>
-          </div>
-        </div>
-
-        {/* Breakdown bars */}
-        <div style={{
-          marginTop: 14, paddingTop: 12, borderTop: '1px solid #EEF1F5',
-          display: 'flex', flexDirection: 'column', gap: 8,
-        }}>
-          {dims.map(d => {
-            const val = breakdown[d.key]
-            const dimColor = val >= 70 ? '#16A34A' : val >= 40 ? '#0A66E0' : val >= 15 ? '#D97706' : '#DC2626'
-            return (
-              <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, color: '#5A6675',
-                  width: 88, flexShrink: 0,
-                }}>
-                  {d.label}
-                  <span style={{ fontSize: 9.5, opacity: 0.55, marginLeft: 4 }}>·{d.weight}%</span>
-                </div>
-                <div style={{
-                  flex: 1, height: 6, background: '#EEF1F5',
-                  borderRadius: 999, overflow: 'hidden',
-                }}>
-                  <div style={{
-                    width: `${val}%`, height: '100%', background: dimColor,
-                    borderRadius: 999, transition: 'width 0.6s ease',
-                  }} />
-                </div>
-                <div style={{
-                  fontSize: 11.5, fontWeight: 800, color: '#0F1B2D',
-                  fontVariantNumeric: 'tabular-nums',
-                  width: 32, textAlign: 'right',
-                }}>{val}%</div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// NextDaysForecast — projection des révisions dues sur 7 jours (courbe d'oubli)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function NextDaysForecast({ days }: { days: ForecastDay[] }) {
-  const max = Math.max(...days.map(d => d.total), 1)
-  const totalWeek = days.reduce((s, d) => s + d.total, 0)
-  return (
-    <div style={{ padding: '14px 16px 0' }}>
-      <SectionLabel right={`${totalWeek} à revoir`}>Charge à venir · 7 j</SectionLabel>
-      <div style={{
-        background: '#fff', border: `1px solid #E4E8EE`, borderRadius: 18,
-        padding: '14px 14px 12px',
-        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-          height: 110, gap: 8,
-        }}>
-          {days.map((d, i) => {
-            const h = Math.max(6, (d.total / max) * 90)
-            const isToday = d.isToday
-            return (
-              <div key={i} style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-              }}>
-                {d.total > 0 && (
-                  <div style={{
-                    fontSize: 10, fontWeight: 800, color: isToday ? '#DC2626' : '#5A6675',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}>{d.total}</div>
-                )}
-                <div style={{
-                  width: '100%', display: 'flex', flexDirection: 'column-reverse',
-                  height: h, borderRadius: 6, overflow: 'hidden',
-                  background: d.total === 0 ? '#EEF1F5' : 'transparent',
-                  border: d.total === 0 ? '1px dashed #D1D7E0' : 'none',
-                }}>
-                  {d.flashcards > 0 && (
-                    <div style={{
-                      height: `${(d.flashcards / Math.max(d.total, 1)) * 100}%`,
-                      background: isToday ? '#0A66E0' : '#94B6E8',
-                    }} />
-                  )}
-                  {d.quiz > 0 && (
-                    <div style={{
-                      height: `${(d.quiz / Math.max(d.total, 1)) * 100}%`,
-                      background: isToday ? '#DC2626' : '#F5A29A',
-                    }} />
-                  )}
-                </div>
-                <div style={{
-                  fontSize: 11, fontWeight: isToday ? 800 : 600,
-                  color: isToday ? '#0F1B2D' : '#5A6675',
-                }}>{d.dayLabel}</div>
-              </div>
-            )
-          })}
-        </div>
-        {/* Légende */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 10, paddingTop: 8, borderTop: '1px solid #EEF1F5' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5, color: '#5A6675', fontWeight: 700 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 3, background: '#0A66E0' }} /> Flashcards
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5, color: '#5A6675', fontWeight: 700 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 3, background: '#DC2626' }} /> Quiz
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // ActivityHeatmap — 90 jours style GitHub
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ActivityHeatmap({ sessions, today }: { sessions: Session[]; today: Date }) {
   const minutesByDate = new Map(sessions.map(s => [s.date, s.minutes_studied]))
-  // 90 jours en arrière → arrondis à la semaine commençant un lundi
   const DAYS = 90
   const cells: { date: string; min: number; weekday: number; isToday: boolean }[] = []
   const start = new Date(today)
   start.setDate(today.getDate() - DAYS + 1)
   start.setHours(12, 0, 0, 0)
 
-  // On veut un quadrillage par semaine (colonne) × jour (ligne L-D).
-  // Aligne le start sur le lundi précédent.
-  const dayIdxStart = (start.getDay() + 6) % 7   // 0=L, 6=D
+  const dayIdxStart = (start.getDay() + 6) % 7
   start.setDate(start.getDate() - dayIdxStart)
 
   const todayKey = (() => {
@@ -712,18 +474,17 @@ function ActivityHeatmap({ sessions, today }: { sessions: Session[]; today: Date
     return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`
   })()
 
-  const totalCells = DAYS + dayIdxStart + 7    // padding fin pour finir la semaine
+  const totalCells = DAYS + dayIdxStart + 7
   for (let i = 0; i < totalCells; i++) {
     const d = new Date(start)
     d.setDate(start.getDate() + i)
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     const min = minutesByDate.get(key) ?? 0
-    const weekday = (d.getDay() + 6) % 7   // 0=L
+    const weekday = (d.getDay() + 6) % 7
     if (d.getTime() > today.getTime() + 86400000) break
     cells.push({ date: key, min, weekday, isToday: key === todayKey })
   }
 
-  // Regroupe en colonnes de 7 jours
   const columns: typeof cells[] = []
   for (let i = 0; i < cells.length; i += 7) {
     columns.push(cells.slice(i, i + 7))
@@ -774,7 +535,6 @@ function ActivityHeatmap({ sessions, today }: { sessions: Session[]; today: Date
             </div>
           ))}
         </div>
-        {/* Footer légende */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           marginTop: 10, paddingTop: 8, borderTop: '1px solid #EEF1F5',
@@ -794,3 +554,4 @@ function ActivityHeatmap({ sessions, today }: { sessions: Session[]; today: Date
     </div>
   )
 }
+
