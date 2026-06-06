@@ -19,6 +19,9 @@ import {
   ACCESSORIES, SLOT_LABELS, SLOT_ORDER, isUnlocked, unlockRuleLabel,
   type AccessorySlot, type EquippedAccessories, type UnlockStats,
 } from '@/lib/accessories'
+import {
+  checkSupport, getCurrentSubscription, subscribePush, unsubscribePush, sendTestNotification,
+} from '@/lib/push'
 
 type Profile = { full_name: string | null; exam_date: string | null; daily_goal_minutes: number; streak: number | null; pet_type: string | null; equipped_accessories: EquippedAccessories | null }
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
@@ -221,6 +224,9 @@ export default function ProfilePage() {
             examDate={examDate} setExamDate={setExamDate}
             goal={goal} setGoal={setGoal}
           />
+
+          {/* Rappels push */}
+          <RemindersSection />
 
           {/* CTAs */}
           <div style={{ padding: '14px 16px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -611,6 +617,219 @@ function SettingsCard({
             style={{ width: '100%', accentColor: '#0A66E0' }}
           />
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RemindersSection — push notifications quotidiennes
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RemindersSection() {
+  const [supportInfo, setSupportInfo] = useState<{ supported: boolean; reason?: string } | null>(null)
+  const [permission, setPermission] = useState<NotificationPermission | 'unknown'>('unknown')
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [time, setTime] = useState('19:00')
+  const [enabled, setEnabled] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null)
+  const [loaded, setLoaded] = useState(false)
+
+  // Boot : check support, permission, subscription, et préférences serveur
+  useEffect(() => {
+    const s = checkSupport()
+    setSupportInfo({ supported: s.supported, reason: s.reason })
+    if (typeof Notification !== 'undefined') {
+      setPermission(Notification.permission)
+    }
+    void (async () => {
+      const sub = await getCurrentSubscription()
+      setIsSubscribed(!!sub)
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const supaAny = supabase as any
+        const { data: prof } = await supaAny.from('profiles')
+          .select('reminders_enabled,reminder_time')
+          .eq('id', user.id).single()
+        if (prof) {
+          setEnabled(!!prof.reminders_enabled)
+          if (prof.reminder_time) setTime(prof.reminder_time)
+        }
+      }
+      setLoaded(true)
+    })()
+  }, [])
+
+  async function persistPrefs(nextEnabled: boolean, nextTime: string) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const supaAny = supabase as any
+    await supaAny.from('profiles').update({
+      reminders_enabled: nextEnabled,
+      reminder_time: nextTime,
+      reminder_tz: tz,
+      updated_at: new Date().toISOString(),
+    }).eq('id', user.id)
+  }
+
+  async function handleToggle(next: boolean) {
+    if (busy) return
+    setBusy(true)
+    setFeedback(null)
+    try {
+      if (next) {
+        const res = await subscribePush()
+        if (!res.ok) {
+          setFeedback({ kind: 'err', msg: res.error })
+          setBusy(false)
+          return
+        }
+        setIsSubscribed(true)
+        setPermission(Notification.permission)
+        setEnabled(true)
+        await persistPrefs(true, time)
+        setFeedback({ kind: 'ok', msg: 'Rappels activés.' })
+      } else {
+        await unsubscribePush()
+        setIsSubscribed(false)
+        setEnabled(false)
+        await persistPrefs(false, time)
+        setFeedback({ kind: 'ok', msg: 'Rappels désactivés.' })
+      }
+    } catch (e: any) {
+      setFeedback({ kind: 'err', msg: e?.message ?? 'Erreur' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleTimeChange(v: string) {
+    setTime(v)
+    if (enabled) await persistPrefs(true, v)
+  }
+
+  async function handleTest() {
+    if (busy) return
+    setBusy(true)
+    setFeedback(null)
+    try {
+      const ok = await sendTestNotification()
+      setFeedback(ok
+        ? { kind: 'ok', msg: 'Notification de test envoyée — vérifie ton écran.' }
+        : { kind: 'err', msg: 'Échec d\'envoi (vérifie les VAPID keys côté serveur).' })
+    } finally { setBusy(false) }
+  }
+
+  if (!loaded) return null
+
+  return (
+    <div style={{ padding: '12px 16px 0' }}>
+      <SectionLabel>Rappels</SectionLabel>
+      <div style={{
+        background: '#fff', borderRadius: 18, overflow: 'hidden',
+        border: `1px solid #E4E8EE`,
+        boxShadow: '0 1px 2px rgba(15,27,45,0.04), 0 6px 16px -10px rgba(15,27,45,0.15)',
+      }}>
+        {!supportInfo?.supported ? (
+          <div style={{ padding: '16px', fontSize: 13, color: '#5A6675', lineHeight: 1.5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <Icon name="warn" size={18} color="#D97706" strokeWidth={2.2} />
+              <div style={{ fontWeight: 800, color: '#0F1B2D' }}>Indisponible</div>
+            </div>
+            {supportInfo?.reason}
+          </div>
+        ) : (
+          <>
+            {/* Toggle */}
+            <div style={{
+              padding: '14px 16px', borderBottom: `1px solid #E4E8EE`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 14, fontWeight: 800, color: '#0F1B2D', marginBottom: 2,
+                }}>Rappels quotidiens</div>
+                <div style={{ fontSize: 11.5, color: '#5A6675', lineHeight: 1.4 }}>
+                  Un push par jour à l'heure choisie — saute le rappel si rien à réviser.
+                </div>
+              </div>
+              <button
+                onClick={() => handleToggle(!enabled)}
+                disabled={busy}
+                style={{
+                  width: 48, height: 28, borderRadius: 999, border: 'none',
+                  background: enabled ? '#0A66E0' : '#D1D7E0',
+                  position: 'relative', cursor: busy ? 'wait' : 'pointer',
+                  transition: 'background .2s ease',
+                  flexShrink: 0,
+                }}>
+                <div style={{
+                  position: 'absolute', top: 3,
+                  left: enabled ? 23 : 3,
+                  width: 22, height: 22, borderRadius: 999,
+                  background: '#fff', transition: 'left .2s ease',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.18)',
+                }} />
+              </button>
+            </div>
+
+            {/* Time picker */}
+            <div style={{ padding: '14px 16px', borderBottom: `1px solid #E4E8EE`, opacity: enabled ? 1 : 0.5 }}>
+              <div style={{
+                fontSize: 10.5, fontWeight: 700, color: '#5A6675',
+                letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8,
+              }}>Heure du rappel</div>
+              <input
+                type="time" value={time} onChange={e => handleTimeChange(e.target.value)}
+                disabled={!enabled}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '12px 14px', borderRadius: 12,
+                  background: '#F9FAFC', border: `1px solid #E4E8EE`,
+                  fontSize: 15, fontWeight: 600, color: '#0F1B2D',
+                  fontFamily: 'inherit', outline: 'none',
+                }}
+              />
+              <div style={{ fontSize: 11, color: '#5A6675', marginTop: 6 }}>
+                Fuseau détecté : {Intl.DateTimeFormat().resolvedOptions().timeZone}
+              </div>
+            </div>
+
+            {/* Test button */}
+            <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                onClick={handleTest}
+                disabled={!isSubscribed || busy}
+                style={{
+                  flex: 1, height: 44, borderRadius: 12,
+                  border: `1px solid ${isSubscribed ? '#0A66E0' : '#E4E8EE'}`,
+                  background: isSubscribed ? '#E6EFFC' : '#F4F6FA',
+                  color: isSubscribed ? '#0A66E0' : '#8A95A5',
+                  fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
+                  cursor: isSubscribed && !busy ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                <Icon name="bell" size={14} color={isSubscribed ? '#0A66E0' : '#8A95A5'} strokeWidth={2.2} />
+                Envoyer un test
+              </button>
+            </div>
+
+            {feedback && (
+              <div style={{
+                padding: '10px 16px 14px', fontSize: 12, fontWeight: 700,
+                color: feedback.kind === 'ok' ? '#16A34A' : '#DC2626',
+                background: feedback.kind === 'ok' ? '#DCFCE7' : '#FEF2F2',
+                borderTop: `1px solid #E4E8EE`,
+              }}>
+                {feedback.msg}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )
