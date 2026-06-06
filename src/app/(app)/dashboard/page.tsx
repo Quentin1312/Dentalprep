@@ -273,14 +273,14 @@ export default function DashboardPage() {
                     marginTop: sp(3),
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                     padding: `${sp(2)}px ${sp(4)}px`,
-                    background: idx === 0 ? PALETTE.brand : PALETTE.surfaceAlt,
-                    color: idx === 0 ? '#fff' : PALETTE.ink,
+                    background: idx === 0 ? PALETTE.brand : item.accent,
+                    color: '#fff',
                     borderRadius: RADIUS.pill,
-                    ...monoStyle('xs', 'med', idx === 0 ? '#fff' : PALETTE.ink),
+                    ...monoStyle('xs', 'med', '#fff'),
                     letterSpacing: 0.4,
                   }}>
                     Continuer
-                    <Icon name="chevronR" size={12} color={idx === 0 ? '#fff' : PALETTE.ink} strokeWidth={2.4} />
+                    <Icon name="chevronR" size={12} color="#fff" strokeWidth={2.4} />
                   </div>
                 </div>
               </Link>

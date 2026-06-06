@@ -58,7 +58,7 @@ export function buildStudyPlan(i: Input): StudyPlanItem[] {
         ? `${i.flashcardsDueCount} en attente · on commence par les + urgentes`
         : 'Répétition espacée — quelques minutes',
       estimatedMin: Math.max(5, Math.ceil(shown * 0.5)),
-      href: '/library',
+      href: '/flashcards/due',
       accent: '#0A66E0',
       priority: 0,
     })
