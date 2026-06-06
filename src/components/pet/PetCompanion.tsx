@@ -260,6 +260,42 @@ function BunnySVG({ state }: { state: PetState }) {
 }
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────
+// ─── MoodGlyph : indicateurs d'humeur en SVG (pas d'emoji) ─────────────────
+function MoodGlyph({ mood, size }: { mood: PetMood; size: number }) {
+  const filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))'
+  if (mood === 'excited') {
+    // Trois éclats dorés
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" style={{ filter }}>
+        <path d="M12 4l1.2 3.4L17 8.6l-3.4 1.2L12 13l-1.2-3.2L7 8.6l3.4-1.2z" fill="#FFD84A" />
+        <path d="M18 3l.6 1.5L20 5l-1.4.5L18 7l-.5-1.5L16 5l1.5-.5z" fill="#FFE680" />
+        <path d="M5 15l.6 1.5L7 17l-1.4.5L5 19l-.5-1.5L3 17l1.5-.5z" fill="#FFE680" />
+      </svg>
+    )
+  }
+  if (mood === 'sleepy') {
+    // Lettres "Zz" stylisées
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" style={{ filter }}>
+        <path d="M9 6h7l-6 8h6" stroke="#B8C5DA" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 14h4l-3.5 5H20" stroke="#7B89A1" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+  if (mood === 'sad') {
+    // Petit nuage gris
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" style={{ filter }}>
+        <path d="M7 16h12a3 3 0 000-6 4.5 4.5 0 00-8.4-1.2A3.5 3.5 0 007 16z"
+          fill="#8A95A5" stroke="#5A6675" strokeWidth="0.8" />
+        <circle cx="10" cy="20" r="0.9" fill="#94B6E8" />
+        <circle cx="14" cy="20.5" r="0.7" fill="#94B6E8" opacity="0.7" />
+      </svg>
+    )
+  }
+  return null
+}
+
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
@@ -315,13 +351,9 @@ export default function PetCompanion({
   const glowColor = LEVEL_GLOW[Math.min(level, 5)] ?? 'transparent'
   const activeEquipped: EquippedAccessories = hideAccessories ? {} : (equipped ?? {})
 
-  // Overlay d'humeur : seulement en idle (sinon correct/wrong/thinking prennent le dessus)
-  const showMoodOverlay = mood && state === 'idle' && mood !== 'normal'
-  const moodEmoji = mood === 'excited' ? '✨'
-                  : mood === 'happy'   ? '😊'
-                  : mood === 'sad'     ? '☁️'
-                  : mood === 'sleepy'  ? '💤'
-                  : ''
+  // Overlay d'humeur : seulement en idle, et seulement pour sad/sleepy/excited
+  // (happy/normal = rien — un pet content n'a pas besoin de te le rappeler)
+  const showMoodOverlay = mood && state === 'idle' && (mood === 'sad' || mood === 'sleepy' || mood === 'excited')
 
   return (
     <>
@@ -353,21 +385,20 @@ export default function PetCompanion({
 
       <div style={{ position: 'relative', display: 'inline-block', width: size, height: hideName ? size : size + 16 }}>
 
-        {/* Mood overlay — petit emoji flottant au-dessus du pet */}
+        {/* Mood overlay — SVG sobres, pas d'emoji */}
         {showMoodOverlay && (
           <div
             className={`mood-${mood}`}
             style={{
               position: 'absolute',
-              top: -Math.round(size * 0.18),
-              right: -Math.round(size * 0.08),
-              fontSize: Math.round(size * 0.28),
-              lineHeight: 1,
+              top: -Math.round(size * 0.22),
+              right: -Math.round(size * 0.10),
+              width: Math.round(size * 0.34),
+              height: Math.round(size * 0.34),
               zIndex: 5,
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))',
               pointerEvents: 'none',
             }}>
-            {moodEmoji}
+            <MoodGlyph mood={mood} size={Math.round(size * 0.34)} />
           </div>
         )}
 

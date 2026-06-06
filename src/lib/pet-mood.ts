@@ -15,7 +15,7 @@ export type PetMood = 'excited' | 'happy' | 'normal' | 'sad' | 'sleepy'
 
 export type MoodInfo = {
   mood: PetMood
-  emoji: string                  // overlay au-dessus du pet
+  icon: string                   // nom d'icône (cf src/components/ui/Icon.tsx)
   label: string                  // ex. "Trop content"
   message: string | null         // message à afficher (null si normal/happy)
   color: string
@@ -49,30 +49,21 @@ export function computeMood(
 
   switch (mood) {
     case 'excited':
-      return {
-        mood, emoji: '✨', label: 'En feu !', message: null,
-        color: '#FFD84A',
-      }
+      return { mood, icon: 'sparkle', label: 'En feu', message: null, color: '#FFD84A' }
     case 'happy':
-      return {
-        mood, emoji: '😊', label: 'Content', message: null,
-        color: '#16A34A',
-      }
+      return { mood, icon: 'heart', label: 'Content', message: null, color: '#16A34A' }
     case 'normal':
-      return {
-        mood, emoji: '', label: 'Tranquille', message: null,
-        color: '#5A6675',
-      }
+      return { mood, icon: 'user', label: 'Tranquille', message: null, color: '#5A6675' }
     case 'sad':
       return {
-        mood, emoji: '☁️', label: 'Triste',
+        mood, icon: 'refresh', label: 'En pause',
         message: 'Ta série est cassée — on reprend ?',
         color: '#0A66E0',
       }
     case 'sleepy':
       return {
-        mood, emoji: '💤', label: 'Endormi',
-        message: 'Ton compagnon s\'est endormi en t\'attendant…',
+        mood, icon: 'clock', label: 'En attente',
+        message: 'Ton compagnon attend ton retour.',
         color: '#7C3AED',
       }
   }

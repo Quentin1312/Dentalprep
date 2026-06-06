@@ -316,7 +316,14 @@ export default function DashboardPage() {
             border: `1px solid ${PALETTE.rule}`,
             borderLeft: `3px solid ${moodInfo.color}`,
           }}>
-            <div style={{ fontSize: 22 }}>{moodInfo.emoji}</div>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: `${moodInfo.color}15`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Icon name={moodInfo.icon} size={16} color={moodInfo.color} strokeWidth={2} />
+            </div>
             <div style={{ ...typeStyle('sm', 'med'), flex: 1 }}>{moodInfo.message}</div>
           </div>
         </div>
@@ -549,9 +556,11 @@ function ChallengesCard({ challenges }: { challenges: Challenge[] }) {
                   width: 32, height: 32, borderRadius: 10,
                   background: c.done ? PALETTE.greenSoft : `${c.accent}15`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18, flexShrink: 0,
+                  flexShrink: 0,
                 }}>
-                  {c.done ? '✓' : c.emoji}
+                  {c.done
+                    ? <Icon name="check" size={16} color={PALETTE.green} strokeWidth={2.5} />
+                    : <Icon name={c.icon} size={16} color={c.accent} strokeWidth={2} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{

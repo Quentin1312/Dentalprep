@@ -22,7 +22,7 @@ export type ChallengeId =
 
 export type Challenge = {
   id: ChallengeId
-  emoji: string
+  icon: string         // nom d'icône (cf src/components/ui/Icon.tsx)
   title: string
   detail: string
   target: number
@@ -34,42 +34,42 @@ export type Challenge = {
 
 const CHALLENGE_DEFS: Record<ChallengeId, Omit<Challenge, 'current' | 'done'>> = {
   questions_100: {
-    id: 'questions_100', emoji: '🎯', title: '100 questions',
+    id: 'questions_100', icon: 'target', title: '100 questions',
     detail: 'Réponds à 100 questions cette semaine',
     target: 100, unit: 'questions', accent: '#0A66E0',
   },
   days_5: {
-    id: 'days_5', emoji: '🔥', title: '5 jours actifs',
+    id: 'days_5', icon: 'flame', title: '5 jours actifs',
     detail: 'Étudie au moins 5 jours différents',
     target: 5, unit: 'jours', accent: '#E11D48',
   },
   flashcards_20: {
-    id: 'flashcards_20', emoji: '🃏', title: '20 flashcards maîtrisées',
+    id: 'flashcards_20', icon: 'cards', title: '20 flashcards maîtrisées',
     detail: 'Marque 20 flashcards comme "Je sais"',
     target: 20, unit: 'cartes', accent: '#7C3AED',
   },
   practice_3: {
-    id: 'practice_3', emoji: '✏️', title: '3 cas pratiques',
+    id: 'practice_3', icon: 'fileText', title: '3 cas pratiques',
     detail: 'Valide 3 cas pratiques à 100%',
     target: 3, unit: 'cas', accent: '#D97706',
   },
   ccam_drill_3: {
-    id: 'ccam_drill_3', emoji: '🦷', title: '3 drills CCAM',
+    id: 'ccam_drill_3', icon: 'tooth', title: '3 drills CCAM',
     detail: 'Termine 3 rounds de drill codes CCAM',
     target: 3, unit: 'rounds', accent: '#0D9488',
   },
   mock_exam_1: {
-    id: 'mock_exam_1', emoji: '⏱', title: 'Une épreuve blanche',
+    id: 'mock_exam_1', icon: 'clock', title: 'Une épreuve blanche',
     detail: 'Passe une épreuve blanche cette semaine',
     target: 1, unit: 'épreuve', accent: '#7C3AED',
   },
   no_wrong_50: {
-    id: 'no_wrong_50', emoji: '⚡', title: '50 sans erreur',
+    id: 'no_wrong_50', icon: 'bolt', title: '50 sans erreur',
     detail: 'Réponds à 50 questions avec au moins 80% de réussite',
     target: 50, unit: 'questions', accent: '#FFD84A',
   },
   module_focus: {
-    id: 'module_focus', emoji: '📚', title: 'Module focus',
+    id: 'module_focus', icon: 'bookOpen', title: 'Module focus',
     detail: 'Fais 50 questions sur ton module le plus faible',
     target: 50, unit: 'questions', accent: '#5B21B6',
   },
