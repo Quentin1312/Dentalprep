@@ -11,8 +11,8 @@ export async function POST(_req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const result = await sendPushTo(user.id, {
-      title: 'DentalPrep',
-      body: 'Test reçu — les rappels fonctionnent bien.',
+      title: 'Notification de test',
+      body: 'Les rappels fonctionnent — on te préviendra en soirée si tu as zappé ta session.',
       url: '/dashboard',
       tag: 'dentalprep-test',
     })
