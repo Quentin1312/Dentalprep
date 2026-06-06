@@ -58,7 +58,8 @@
       "Bash(py rebuild_ccam_pool.py)",
       "Bash(py smart_patch_exos.py)",
       "Bash(git commit -m 'revert\\(dashboard\\): retire les défis hebdo *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git commit *)"
     ]
   }
 }

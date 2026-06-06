@@ -1,21 +1,21 @@
 /**
- * Cron Vercel — rappels quotidiens.
+ * Cron rappels quotidiens — appelé toutes les 15 min par Supabase pg_cron.
  *
- * Tourne toutes les 15 min (cf vercel.json). À chaque tick :
+ * À chaque tick :
  *   1. Récupère tous les profils avec reminders_enabled=true
  *   2. Pour chacun, calcule l'heure locale dans son fuseau horaire
  *   3. Si l'heure courante locale est dans [reminder_time, reminder_time + 15 min)
  *      et qu'on n'a pas déjà envoyé aujourd'hui → envoie le push
- *   4. Le contenu du push s'adapte (cartes dues, mock dispo, streak en danger…)
  *
- * Auth : Vercel Cron envoie un header `Authorization: Bearer ${CRON_SECRET}`.
- * On le vérifie pour bloquer les hits manuels.
+ * Auth : header `Authorization: Bearer ${CRON_SECRET}` OU query ?secret=...
+ * (pg_cron passe le secret en query string, Vercel passait par header).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceRoleClient, sendPushTo, type NotificationPayload } from '@/lib/push-server'
 
 export const maxDuration = 60
+export const dynamic = 'force-dynamic'
 
 type Profile = {
   id: string
@@ -59,12 +59,16 @@ function hhmmToMinutes(s: string): number {
   return h * 60 + m
 }
 
-export async function GET(req: NextRequest) {
-  // Auth Vercel Cron : Authorization: Bearer ${CRON_SECRET}
+async function handle(req: NextRequest) {
+  // Auth : header Authorization OU query ?secret=... (pg_cron friendly)
   const secret = process.env.CRON_SECRET
-  const auth = req.headers.get('authorization') ?? ''
-  if (secret && auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (secret) {
+    const auth = req.headers.get('authorization') ?? ''
+    const url = new URL(req.url)
+    const querySecret = url.searchParams.get('secret') ?? ''
+    if (auth !== `Bearer ${secret}` && querySecret !== secret) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
   }
 
   const supabase = getServiceRoleClient()
@@ -125,6 +129,10 @@ export async function GET(req: NextRequest) {
     timestamp: now.toISOString(),
   })
 }
+
+// Supporte les 2 méthodes pour pg_cron (GET ou POST selon l'extension utilisée)
+export async function GET(req: NextRequest)  { return handle(req) }
+export async function POST(req: NextRequest) { return handle(req) }
 
 async function buildPayloadFor(p: Profile, supabase: ReturnType<typeof getServiceRoleClient>): Promise<NotificationPayload | null> {
   const petName = PET_NAMES[p.pet_type ?? 'cat'] ?? 'Ton compagnon'
