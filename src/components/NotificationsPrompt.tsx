@@ -33,8 +33,6 @@ function setDismissUntil(ms: number) {
   try { localStorage.setItem(DISMISS_KEY, String(ms)) } catch {}
 }
 
-const DEFAULT_TIME = '19:00'
-
 export default function NotificationsPrompt({ userId }: { userId: string | null }) {
   const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -79,7 +77,8 @@ export default function NotificationsPrompt({ userId }: { userId: string | null 
         setBusy(false)
         return
       }
-      // Set reminders_enabled + heure par défaut
+      // Set reminders_enabled + fuseau auto-détecté (pas d'heure choisie,
+      // c'est le cron qui décide intelligemment quand envoyer)
       const supabase = createClient()
       const supaAny = supabase as any
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -87,7 +86,6 @@ export default function NotificationsPrompt({ userId }: { userId: string | null 
       if (user) {
         await supaAny.from('profiles').update({
           reminders_enabled: true,
-          reminder_time: DEFAULT_TIME,
           reminder_tz: tz,
           updated_at: new Date().toISOString(),
         }).eq('id', user.id)
@@ -171,17 +169,17 @@ export default function NotificationsPrompt({ userId }: { userId: string | null 
             Active les rappels
           </div>
           <div style={{ ...typeStyle('sm', 'body', PALETTE.inkMute), marginTop: 6, lineHeight: 1.5 }}>
-            Un push par jour à l'heure de ton choix —<br />
-            on saute si tu n'as rien à réviser.
+            On te prévient en soirée seulement si<br />
+            tu n'as pas étudié dans la journée.
           </div>
         </div>
 
         {/* Bullets */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: sp(5) }}>
           {[
-            { icon: 'cards',   text: 'Sache combien de flashcards sont dues' },
-            { icon: 'flame',   text: 'Ne casse pas ta série de jours' },
-            { icon: 'clock',   text: 'Heure flexible · 1 par jour max' },
+            { icon: 'target',  text: 'Aucun spam : zéro notif si tu as déjà bossé' },
+            { icon: 'flame',   text: 'Sauve ta série de jours quand tu zappes' },
+            { icon: 'clock',   text: 'Entre 18h et 23h · 1 par jour max' },
           ].map(b => (
             <div key={b.text} style={{
               display: 'flex', alignItems: 'center', gap: 12,

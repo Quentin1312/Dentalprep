@@ -628,9 +628,8 @@ function SettingsCard({
 
 function RemindersSection() {
   const [supportInfo, setSupportInfo] = useState<{ supported: boolean; reason?: string } | null>(null)
-  const [permission, setPermission] = useState<NotificationPermission | 'unknown'>('unknown')
+  const [, setPermission] = useState<NotificationPermission | 'unknown'>('unknown')
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const [time, setTime] = useState('19:00')
   const [enabled, setEnabled] = useState(false)
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null)
@@ -651,18 +650,15 @@ function RemindersSection() {
       if (user) {
         const supaAny = supabase as any
         const { data: prof } = await supaAny.from('profiles')
-          .select('reminders_enabled,reminder_time')
+          .select('reminders_enabled')
           .eq('id', user.id).single()
-        if (prof) {
-          setEnabled(!!prof.reminders_enabled)
-          if (prof.reminder_time) setTime(prof.reminder_time)
-        }
+        if (prof) setEnabled(!!prof.reminders_enabled)
       }
       setLoaded(true)
     })()
   }, [])
 
-  async function persistPrefs(nextEnabled: boolean, nextTime: string) {
+  async function persistPrefs(nextEnabled: boolean) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -670,7 +666,6 @@ function RemindersSection() {
     const supaAny = supabase as any
     await supaAny.from('profiles').update({
       reminders_enabled: nextEnabled,
-      reminder_time: nextTime,
       reminder_tz: tz,
       updated_at: new Date().toISOString(),
     }).eq('id', user.id)
@@ -691,13 +686,13 @@ function RemindersSection() {
         setIsSubscribed(true)
         setPermission(Notification.permission)
         setEnabled(true)
-        await persistPrefs(true, time)
+        await persistPrefs(true)
         setFeedback({ kind: 'ok', msg: 'Rappels activés.' })
       } else {
         await unsubscribePush()
         setIsSubscribed(false)
         setEnabled(false)
-        await persistPrefs(false, time)
+        await persistPrefs(false)
         setFeedback({ kind: 'ok', msg: 'Rappels désactivés.' })
       }
     } catch (e: any) {
@@ -705,11 +700,6 @@ function RemindersSection() {
     } finally {
       setBusy(false)
     }
-  }
-
-  async function handleTimeChange(v: string) {
-    setTime(v)
-    if (enabled) await persistPrefs(true, v)
   }
 
   async function handleTest() {
@@ -752,9 +742,9 @@ function RemindersSection() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontSize: 14, fontWeight: 800, color: '#0F1B2D', marginBottom: 2,
-                }}>Rappels quotidiens</div>
+                }}>Rappels intelligents</div>
                 <div style={{ fontSize: 11.5, color: '#5A6675', lineHeight: 1.4 }}>
-                  Un push par jour à l'heure choisie — saute le rappel si rien à réviser.
+                  On te prévient en soirée seulement si tu n'as pas étudié dans la journée.
                 </div>
               </div>
               <button
@@ -777,25 +767,24 @@ function RemindersSection() {
               </button>
             </div>
 
-            {/* Time picker */}
-            <div style={{ padding: '14px 16px', borderBottom: `1px solid #E4E8EE`, opacity: enabled ? 1 : 0.5 }}>
-              <div style={{
-                fontSize: 10.5, fontWeight: 700, color: '#5A6675',
-                letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 8,
-              }}>Heure du rappel</div>
-              <input
-                type="time" value={time} onChange={e => handleTimeChange(e.target.value)}
-                disabled={!enabled}
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  padding: '12px 14px', borderRadius: 12,
-                  background: '#F9FAFC', border: `1px solid #E4E8EE`,
-                  fontSize: 15, fontWeight: 600, color: '#0F1B2D',
-                  fontFamily: 'inherit', outline: 'none',
-                }}
-              />
-              <div style={{ fontSize: 11, color: '#5A6675', marginTop: 6 }}>
-                Fuseau détecté : {Intl.DateTimeFormat().resolvedOptions().timeZone}
+            {/* Info — comment ça marche */}
+            <div style={{ padding: '12px 16px', borderBottom: `1px solid #E4E8EE`, opacity: enabled ? 1 : 0.5 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: '#E6EFFC', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon name="clock" size={14} color="#0A66E0" strokeWidth={2.2} />
+                </div>
+                <div style={{ flex: 1, fontSize: 11.5, color: '#5A6675', lineHeight: 1.5 }}>
+                  Pas d'heure à choisir — si tu n'as pas étudié dans la journée, on
+                  t'envoie un rappel entre <b>18h et 23h</b>. Le ton s'adapte à l'heure.
+                  <br />
+                  <span style={{ fontSize: 10.5, color: '#8A95A5' }}>
+                    Fuseau : {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                  </span>
+                </div>
               </div>
             </div>
 
