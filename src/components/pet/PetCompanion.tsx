@@ -6,6 +6,7 @@ import type { EquippedAccessories } from '@/lib/accessories'
 
 export type PetType = 'cat' | 'dog' | 'bunny'
 export type PetState = 'idle' | 'correct' | 'wrong' | 'thinking'
+export type PetMood = 'excited' | 'happy' | 'normal' | 'sad' | 'sleepy'
 
 const MESSAGES: Record<PetType, Record<'correct' | 'wrong', string[]>> = {
   cat: {
@@ -280,6 +281,7 @@ export default function PetCompanion({
   hideAccessories = false,
   level = 1,
   equipped,
+  mood,
 }: {
   petType?: PetType
   state?: PetState
@@ -290,6 +292,8 @@ export default function PetCompanion({
   level?: number
   /** Équipement explicite. Si absent → fallback automatique basé sur le niveau XP. */
   equipped?: EquippedAccessories
+  /** Humeur affichée comme overlay (zzz, ☁, ✨…) — ignorée pendant correct/wrong. */
+  mood?: PetMood
 }) {
   const [bubble, setBubble] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -311,6 +315,14 @@ export default function PetCompanion({
   const glowColor = LEVEL_GLOW[Math.min(level, 5)] ?? 'transparent'
   const activeEquipped: EquippedAccessories = hideAccessories ? {} : (equipped ?? {})
 
+  // Overlay d'humeur : seulement en idle (sinon correct/wrong/thinking prennent le dessus)
+  const showMoodOverlay = mood && state === 'idle' && mood !== 'normal'
+  const moodEmoji = mood === 'excited' ? '✨'
+                  : mood === 'happy'   ? '😊'
+                  : mood === 'sad'     ? '☁️'
+                  : mood === 'sleepy'  ? '💤'
+                  : ''
+
   return (
     <>
       <style>{`
@@ -329,9 +341,35 @@ export default function PetCompanion({
         .eye-blink  { animation: eye-blink  4s ease-in-out infinite; }
         .star-float  { animation: star-float  1.3s ease-out forwards; }
         .star-float2 { animation: star-float2 1.3s 0.18s ease-out forwards; }
+        @keyframes mood-float    { 0%,100%{transform:translateY(0)}    50%{transform:translateY(-3px)} }
+        @keyframes mood-sleep    { 0%,100%{transform:translateY(0) rotate(-3deg);opacity:0.85} 50%{transform:translateY(-2px) rotate(3deg);opacity:1} }
+        @keyframes mood-sparkle  { 0%,100%{transform:scale(1) rotate(0)} 50%{transform:scale(1.2) rotate(15deg)} }
+        @keyframes mood-droop    { 0%,100%{transform:translateY(0)}    50%{transform:translateY(2px)} }
+        .mood-excited  { animation: mood-sparkle 1.3s ease-in-out infinite; }
+        .mood-happy    { animation: mood-float   2.2s ease-in-out infinite; }
+        .mood-sad      { animation: mood-droop   2.5s ease-in-out infinite; }
+        .mood-sleepy   { animation: mood-sleep   2.5s ease-in-out infinite; }
       `}</style>
 
       <div style={{ position: 'relative', display: 'inline-block', width: size, height: hideName ? size : size + 16 }}>
+
+        {/* Mood overlay — petit emoji flottant au-dessus du pet */}
+        {showMoodOverlay && (
+          <div
+            className={`mood-${mood}`}
+            style={{
+              position: 'absolute',
+              top: -Math.round(size * 0.18),
+              right: -Math.round(size * 0.08),
+              fontSize: Math.round(size * 0.28),
+              lineHeight: 1,
+              zIndex: 5,
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))',
+              pointerEvents: 'none',
+            }}>
+            {moodEmoji}
+          </div>
+        )}
 
         {/* Speech bubble */}
         {bubble && (

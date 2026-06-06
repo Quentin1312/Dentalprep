@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES } from '@/lib/modules'
 import { A, PALETTE, RADIUS, SHADOW, sp, monoStyle, displayStyle, typeStyle } from '@/lib/theme'
@@ -10,6 +12,8 @@ import type { PetType } from '@/components/pet/PetCompanion'
 import { computeXP, xpProgress } from '@/lib/xp'
 import { quizCompletionPct, quizCompletionCount } from '@/lib/quiz-progress'
 import { buildStudyPlan, getPhase, phaseLabel, phaseSubtitle } from '@/lib/study-plan'
+import { computeMood } from '@/lib/pet-mood'
+import { computeChallenges, weekStart, type Challenge } from '@/lib/challenges'
 import type { ModuleId } from '@/types/database'
 
 function daysUntil(d: string | null) {
@@ -39,6 +43,85 @@ function Ring({ pct, size = 44, stroke = 4, color }: { pct: number; size?: numbe
 
 export default function DashboardPage() {
   const { data, loading } = useAppData()
+  const [lastActivity, setLastActivity] = useState<string | null>(null)
+  const [weeklyStats, setWeeklyStats] = useState<{
+    attempts: number; correct: number; activeDays: number
+    flashcardsMastered: number; practiceCompleted: number
+    ccamRounds: number; mockCompleted: number; moduleFocusAttempts: number
+  } | null>(null)
+
+  // Fetch léger pour humeur + défis : dernière activité + stats de la semaine
+  useEffect(() => {
+    if (!data?.userId) return
+    const supabase = createClient()
+    const supaAny = supabase as any
+    const monday = weekStart()
+    const mondayISO = monday.toISOString()
+
+    Promise.all([
+      // Dernière attempt (pour calculer "sinceLast")
+      supabase.from('quiz_attempts')
+        .select('created_at')
+        .eq('user_id', data.userId)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      // Stats de la semaine
+      supabase.from('quiz_attempts')
+        .select('module_id,is_correct')
+        .eq('user_id', data.userId)
+        .gte('created_at', mondayISO),
+      supabase.from('daily_sessions')
+        .select('date')
+        .eq('user_id', data.userId)
+        .gte('date', monday.toISOString().split('T')[0]),
+      supaAny.from('flashcard_progress')
+        .select('flashcard_id', { count: 'exact', head: true })
+        .eq('user_id', data.userId)
+        .gte('updated_at', mondayISO)
+        .eq('status', 'known'),
+      supaAny.from('practical_attempts')
+        .select('exercise_id,score')
+        .eq('user_id', data.userId)
+        .gte('created_at', mondayISO),
+      supaAny.from('ccam_drill_attempts')
+        .select('created_at')
+        .eq('user_id', data.userId)
+        .gte('created_at', mondayISO),
+      supaAny.from('mock_exam_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', data.userId)
+        .eq('is_completed', true)
+        .gte('completed_at', mondayISO),
+    ]).then(([lastAtt, wkAtt, sess, flash, prAtt, ccAtt, mockRes]) => {
+      setLastActivity((lastAtt.data as any)?.created_at ?? null)
+
+      const weekAtts = (wkAtt.data ?? []) as { module_id: string; is_correct: boolean }[]
+      const correct = weekAtts.filter(a => a.is_correct).length
+      const days = new Set((sess.data ?? []).map((s: any) => s.date)).size
+
+      // Module focus = module avec le plus d'attempts cette semaine
+      const byMod: Record<string, number> = {}
+      for (const a of weekAtts) byMod[a.module_id] = (byMod[a.module_id] ?? 0) + 1
+      const moduleFocusAttempts = Math.max(0, ...Object.values(byMod))
+
+      const practiceCompleted = (((prAtt as any).data ?? []) as { exercise_id: string; score: number }[])
+        .filter(p => p.score >= 1).length
+
+      // Drills CCAM : on regroupe par fenêtre de 5 min (un round = 10 questions consécutives)
+      const ccamAttempts = (((ccAtt as any).data ?? []) as { created_at: string }[])
+      const ccamRounds = Math.floor(ccamAttempts.length / 10)
+
+      setWeeklyStats({
+        attempts: weekAtts.length,
+        correct,
+        activeDays: days,
+        flashcardsMastered: (flash as any).count ?? 0,
+        practiceCompleted,
+        ccamRounds,
+        mockCompleted: (mockRes as any).count ?? 0,
+        moduleFocusAttempts,
+      })
+    })
+  }, [data?.userId])
 
   const profile = data?.profile ?? null
   const attempts = data?.attempts ?? []
@@ -50,6 +133,9 @@ export default function DashboardPage() {
   const goalPct = Math.min(100, Math.round((todayMin / goalMin) * 100))
   const xp = computeXP(attempts) + (data?.flashXpBonus ?? 0)
   const xpInfo = xpProgress(xp)
+
+  // Humeur du pet
+  const moodInfo = computeMood(streak, lastActivity, todayMin)
 
   const days = daysUntil(profile?.exam_date ?? null)
   const firstName = profile?.full_name?.split(' ')[0] ?? ''
@@ -157,7 +243,7 @@ export default function DashboardPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   overflow: 'hidden',
                 }}>
-                  <PetCompanion petType={petType} state="idle" size={60} hideName level={xpInfo.level} equipped={data?.profile.equipped_accessories ?? {}} />
+                  <PetCompanion petType={petType} state="idle" size={60} hideName level={xpInfo.level} equipped={data?.profile.equipped_accessories ?? {}} mood={moodInfo.mood} />
                 </div>
               </div>
 
@@ -219,6 +305,39 @@ export default function DashboardPage() {
           </Link>
         )}
       </div>
+
+      {/* Message d'humeur du pet — affiché seulement si triste/endormi (re-engagement) */}
+      {!loading && moodInfo.message && (
+        <div style={{ padding: `${sp(3)}px ${sp(5)}px 0` }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: sp(2),
+            padding: `${sp(2)}px ${sp(3)}px`,
+            background: PALETTE.surface, borderRadius: RADIUS.md,
+            border: `1px solid ${PALETTE.rule}`,
+            borderLeft: `3px solid ${moodInfo.color}`,
+          }}>
+            <div style={{ fontSize: 22 }}>{moodInfo.emoji}</div>
+            <div style={{ ...typeStyle('sm', 'med'), flex: 1 }}>{moodInfo.message}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Défis de la semaine */}
+      {!loading && data && weeklyStats && (() => {
+        const phase = getPhase(days)
+        const challenges = computeChallenges({
+          phase,
+          attemptsThisWeek: weeklyStats.attempts,
+          correctThisWeek: weeklyStats.correct,
+          activeDaysThisWeek: weeklyStats.activeDays,
+          flashcardsMasteredThisWeek: weeklyStats.flashcardsMastered,
+          practiceCompletedThisWeek: weeklyStats.practiceCompleted,
+          ccamRoundsThisWeek: weeklyStats.ccamRounds,
+          mockCompletedThisWeek: weeklyStats.mockCompleted,
+          moduleFocusAttemptsThisWeek: weeklyStats.moduleFocusAttempts,
+        })
+        return <ChallengesCard challenges={challenges} />
+      })()}
 
       {/* Carte Reprendre — la prochaine action recommandée mise en avant */}
       {!loading && data && (() => {
@@ -380,6 +499,93 @@ export default function DashboardPage() {
             })}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ChallengesCard — 3 défis hebdo avec progression
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ChallengesCard({ challenges }: { challenges: Challenge[] }) {
+  const doneCount = challenges.filter(c => c.done).length
+  return (
+    <div style={{ padding: `${sp(4)}px ${sp(5)}px 0` }}>
+      <div style={{
+        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+        marginBottom: sp(2),
+      }}>
+        <div style={{
+          ...monoStyle('xs', 'med', PALETTE.accent),
+          textTransform: 'uppercase', letterSpacing: 1.4,
+        }}>
+          Défis de la semaine
+        </div>
+        <div style={{
+          ...monoStyle('xs', 'med', PALETTE.inkMute),
+          background: PALETTE.surfaceAlt, padding: '2px 8px', borderRadius: RADIUS.sm,
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {doneCount}/{challenges.length}
+        </div>
+      </div>
+
+      <div style={{
+        background: PALETTE.surface, borderRadius: RADIUS.lg,
+        border: `1px solid ${PALETTE.rule}`, overflow: 'hidden',
+      }}>
+        {challenges.map((c, i) => {
+          const pct = Math.round((c.current / c.target) * 100)
+          const isLast = i === challenges.length - 1
+          return (
+            <div key={c.id} style={{
+              padding: sp(3),
+              borderBottom: isLast ? 'none' : `1px solid ${PALETTE.rule}`,
+              opacity: c.done ? 0.85 : 1,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: sp(2), marginBottom: 6 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 10,
+                  background: c.done ? PALETTE.greenSoft : `${c.accent}15`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, flexShrink: 0,
+                }}>
+                  {c.done ? '✓' : c.emoji}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    ...typeStyle('sm', 'bold'),
+                    color: c.done ? PALETTE.green : PALETTE.ink,
+                    textDecoration: c.done ? 'line-through' : 'none',
+                  }}>
+                    {c.title}
+                  </div>
+                  <div style={{ ...typeStyle('xs', 'body', PALETTE.inkMute), marginTop: 1 }}>
+                    {c.detail}
+                  </div>
+                </div>
+                <div style={{
+                  ...monoStyle('xs', 'med', c.done ? PALETTE.green : c.accent),
+                  fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {c.current}/{c.target}
+                </div>
+              </div>
+              <div style={{
+                height: 5, background: PALETTE.surfaceAlt,
+                borderRadius: 999, overflow: 'hidden', marginLeft: 40,
+              }}>
+                <div style={{
+                  width: `${pct}%`, height: '100%',
+                  background: c.done ? PALETTE.green : c.accent,
+                  borderRadius: 999, transition: 'width .6s ease',
+                }} />
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
