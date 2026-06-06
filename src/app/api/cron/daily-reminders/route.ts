@@ -134,9 +134,62 @@ async function handle(req: NextRequest) {
 export async function GET(req: NextRequest)  { return handle(req) }
 export async function POST(req: NextRequest) { return handle(req) }
 
+// ─── Pool de messages ──────────────────────────────────────────────────────
+// Chaque catégorie est un tableau de templates. Variables disponibles :
+//   {pet}     → nom du compagnon (Heidi/Rex/Lune)
+//   {name}    → prénom (ou '' si absent)
+//   {cards}   → nb de flashcards dues
+//   {quiz}    → nb de questions dues
+//   {total}   → cards + quiz
+//   {streak}  → série en cours
+// Sélection : random parmi la catégorie.
+
+const MESSAGES = {
+  // Streak en danger, rien d'autre à réviser
+  streakOnly: [
+    { title: '{pet} surveille ta série', body: '{streak} jours d\'affilée, on lâche pas {name} — quelques questions et c\'est plié.' },
+    { title: 'Ta série de {streak} jours', body: '{pet} sait que tu peux la garder. Allez, 5 minutes.' },
+    { title: 'Reste régulier·e', body: '{streak} jours d\'affilée — un petit quiz et la série tient.' },
+    { title: 'Ne casse pas la magie', body: '{pet} compte sur toi pour le {streak}e jour.' },
+  ],
+  // Cartes ET quiz dues
+  both: [
+    { title: '{pet} a sorti tes cartes', body: '{cards} flashcards et {quiz} questions t\'attendent pour la révision du jour.' },
+    { title: 'On s\'y met {name}?', body: '{total} cartes à revoir aujourd\'hui — répétition espacée oblige.' },
+    { title: 'C\'est le moment', body: '{pet} a préparé {total} cartes : {cards} flashcards + {quiz} questions.' },
+    { title: 'Petit créneau révisions ?', body: '{total} cartes prêtes — {pet} attend que tu commences.' },
+  ],
+  // Seulement flashcards
+  cardsOnly: [
+    { title: '{cards} flashcards à revoir', body: '{pet} les a triées par ordre d\'urgence — 5-10 min suffisent.' },
+    { title: 'Tes cartes du jour', body: '{cards} flashcards en attente. {pet} a hâte de réviser avec toi.' },
+    { title: 'Petit échauffement ?', body: '{cards} flashcards à revoir{name}. On commence par les plus urgentes.' },
+    { title: '{pet} t\'attend', body: '{cards} cartes dues aujourd\'hui — la mémoire à long terme aime la régularité.' },
+    { title: 'Carte du jour', body: 'Y\'a {cards} flashcards qui pointent. Allez {name}, on s\'y colle.' },
+  ],
+  // Seulement quiz
+  quizOnly: [
+    { title: '{quiz} questions à revoir', body: '{pet} a sorti les QCM — c\'est le moment de tester ta mémoire.' },
+    { title: 'Quiz du jour', body: '{quiz} questions t\'attendent. {pet} a hâte de voir le score.' },
+    { title: 'C\'est l\'heure du quiz', body: '{quiz} questions dues — un petit créneau et c\'est plié{name}.' },
+    { title: '{pet} a une idée', body: '{quiz} questions à revoir. Allez, on prend 10 min ?' },
+    { title: 'On teste ?', body: '{quiz} QCM en attente — la mémoire bosse mieux avec la pratique.' },
+  ],
+} as const
+
+function pickMessage(category: keyof typeof MESSAGES): { title: string; body: string } {
+  const pool = MESSAGES[category]
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+function fillTemplate(tpl: string, vars: Record<string, string | number>): string {
+  return tpl.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? '')).replace(/\s+,/g, ',').replace(/\s+\./g, '.').trim()
+}
+
 async function buildPayloadFor(p: Profile, supabase: ReturnType<typeof getServiceRoleClient>): Promise<NotificationPayload | null> {
   const petName = PET_NAMES[p.pet_type ?? 'cat'] ?? 'Ton compagnon'
   const firstName = p.full_name?.split(' ')[0] ?? ''
+  const nameWithComma = firstName ? `, ${firstName}` : ''
 
   // Récupère le nb de cartes / questions dues
   const nowIso = new Date().toISOString()
@@ -156,32 +209,33 @@ async function buildPayloadFor(p: Profile, supabase: ReturnType<typeof getServic
   const quiz = dueQuiz ?? 0
   const total = cards + quiz
 
-  // Streak en danger : si streak >= 3 et pas d'activité aujourd'hui
-  // (cron tourne plutôt le soir donc on imagine qu'il a la journée pour réviser)
-  const isStreakAtRisk = p.streak >= 3
-
-  let title = 'DentalPrep'
-  let body: string
-
-  if (total === 0 && isStreakAtRisk) {
-    title = `${petName} t'attend`
-    body = `Ne casse pas ta série de ${p.streak} jours${firstName ? `, ${firstName}` : ''} — fais quelques questions.`
-  } else if (total === 0) {
-    // Rien à réviser et pas de streak : skip le rappel (sinon spam inutile)
-    return null
+  let category: keyof typeof MESSAGES
+  if (total === 0) {
+    if (p.streak >= 3) {
+      category = 'streakOnly'
+    } else {
+      // Rien à réviser et pas de streak → on n'envoie rien
+      return null
+    }
   } else if (cards > 0 && quiz > 0) {
-    title = `${petName} t'attend`
-    body = `${cards} flashcard${cards > 1 ? 's' : ''} et ${quiz} question${quiz > 1 ? 's' : ''} à revoir aujourd'hui.`
+    category = 'both'
   } else if (cards > 0) {
-    title = `${cards} flashcard${cards > 1 ? 's' : ''} à revoir`
-    body = `${petName} t'attend pour la révision du jour${firstName ? `, ${firstName}` : ''}.`
+    category = 'cardsOnly'
   } else {
-    title = `${quiz} question${quiz > 1 ? 's' : ''} à revoir`
-    body = `${petName} a hâte de réviser avec toi${firstName ? `, ${firstName}` : ''}.`
+    category = 'quizOnly'
+  }
+
+  const tpl = pickMessage(category)
+  const vars = {
+    pet: petName,
+    name: nameWithComma,
+    cards, quiz, total,
+    streak: p.streak,
   }
 
   return {
-    title, body,
+    title: fillTemplate(tpl.title, vars),
+    body: fillTemplate(tpl.body, vars),
     url: cards > 0 ? '/flashcards/due' : quiz > 0 ? '/quiz/due' : '/dashboard',
     tag: 'dentalprep-daily',
     renotify: true,

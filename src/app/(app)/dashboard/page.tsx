@@ -9,6 +9,7 @@ import { A, PALETTE, RADIUS, SHADOW, sp, monoStyle, displayStyle, typeStyle } fr
 import Icon from '@/components/ui/Icon'
 import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
+import NotificationsPrompt from '@/components/NotificationsPrompt'
 import { computeXP, xpProgress } from '@/lib/xp'
 import { quizCompletionPct, quizCompletionCount } from '@/lib/quiz-progress'
 import { buildStudyPlan, getPhase, phaseLabel, phaseSubtitle } from '@/lib/study-plan'
@@ -99,6 +100,9 @@ export default function DashboardPage() {
         @keyframes flame-pulse { 0%,100%{transform:scaleY(1) rotate(-2deg)} 50%{transform:scaleY(1.1) rotate(2deg)} }
         @keyframes goal-glow  { 0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,0)} 50%{box-shadow:0 0 16px 4px rgba(22,163,74,0.22)} }
       `}</style>
+
+      {/* Prompt d'activation des notifs (s'auto-affiche si pertinent) */}
+      <NotificationsPrompt userId={data?.userId ?? null} />
 
       {/* Header */}
       <div style={{ padding: `${sp(12)}px ${sp(5)}px 0`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
