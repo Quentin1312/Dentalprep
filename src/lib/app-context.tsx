@@ -24,6 +24,8 @@ interface AppData {
   quizDueCount: number                  // questions de quiz dont next_review_at <= now (SM-2)
   recentWrongQuestionCount: number     // questions dont la dernière tentative = fausse
   practiceTodoCount: number             // cas pratiques pas validés à 100%
+  ccamCodesCount: number                // total de codes CCAM importés
+  ccamMasteredCount: number             // codes CCAM ayant au moins 1 bonne réponse au drill
 }
 
 interface AppContextValue {
@@ -67,7 +69,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const today = new Date().toISOString().split('T')[0]
     const supaAny = supabase as any
-    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes, dueQuizRes] = await Promise.all([
+    const [profRes, coursesRes, attemptsRes, todayRes, questionsRes, dueCardsRes, practicalExosRes, practicalAttemptsRes, attemptsTimedRes, dueQuizRes, ccamCodesRes, ccamAttemptsRes] = await Promise.all([
       supaAny.from('profiles').select('full_name,exam_date,streak,daily_goal_minutes,pet_type,equipped_accessories').eq('id', user.id).single(),
       supabase.from('courses').select('id,module_id,title,page_count').eq('user_id', user.id),
       // Ordre chronologique requis par computeXP (XP dégressif + combo)
@@ -86,6 +88,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', user.id)
         .eq('is_suspended', false)
         .lte('next_review_at', new Date().toISOString()),
+      supaAny.from('ccam_codes')
+        .select('code', { count: 'exact', head: false })
+        .eq('user_id', user.id),
+      supaAny.from('ccam_drill_attempts')
+        .select('code,is_correct')
+        .eq('user_id', user.id),
     ])
 
     // last-wrong : pour chaque question, on garde la dernière tentative
@@ -102,6 +110,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     const practiceExoIds: string[] = ((practicalExosRes.data ?? []) as { id: string }[]).map(e => e.id)
     const practiceTodoCount = practiceExoIds.filter(id => (bestScore.get(id) ?? 0) < 1).length
+
+    // CCAM : codes "maîtrisés" = au moins 1 bonne réponse au drill
+    const ccamCodesCount = ((ccamCodesRes as any).data ?? []).length
+    const masteredCcam = new Set<string>()
+    for (const a of ((ccamAttemptsRes as any).data ?? []) as { code: string; is_correct: boolean }[]) {
+      if (a.is_correct) masteredCcam.add(a.code)
+    }
+    const ccamMasteredCount = masteredCcam.size
 
     if (!profRes.data?.full_name) { router.replace('/setup'); return }
 
@@ -121,6 +137,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       flashXpBonus: readFlashXP(),
       flashcardsDueCount: (dueCardsRes as any).count ?? 0,
       quizDueCount: (dueQuizRes as any).count ?? 0,
+      ccamCodesCount,
+      ccamMasteredCount,
       recentWrongQuestionCount,
       practiceTodoCount,
     }

@@ -9,7 +9,7 @@ import PetCompanion from '@/components/pet/PetCompanion'
 import type { PetType } from '@/components/pet/PetCompanion'
 import { computeXP, xpProgress } from '@/lib/xp'
 import { quizCompletionPct, quizCompletionCount } from '@/lib/quiz-progress'
-import { buildStudyPlan, planTotalMinutes } from '@/lib/study-plan'
+import { buildStudyPlan, getPhase, phaseLabel, phaseSubtitle } from '@/lib/study-plan'
 import type { ModuleId } from '@/types/database'
 
 function daysUntil(d: string | null) {
@@ -222,6 +222,7 @@ export default function DashboardPage() {
 
       {/* Carte Reprendre — la prochaine action recommandée mise en avant */}
       {!loading && data && (() => {
+        const phase = getPhase(days)
         const plan = buildStudyPlan({
           daysUntilExam: days,
           dailyGoalMinutes: goalMin,
@@ -238,25 +239,46 @@ export default function DashboardPage() {
           practiceTodoCount: data.practiceTodoCount,
           recentWrongQuestionCount: data.recentWrongQuestionCount,
           totalQuestionsCount: data.questions.length,
+          ccamCodesCount: data.ccamCodesCount,
+          ccamMasteredCount: data.ccamMasteredCount,
         })
         if (plan.length === 0) return null
         return (
           <div style={{ padding: `${sp(4)}px ${sp(5)}px 0`, display: 'flex', flexDirection: 'column', gap: sp(2) }}>
+            {/* Header de phase */}
+            <div style={{
+              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+              marginBottom: -sp(1),
+            }}>
+              <div>
+                <div style={{
+                  ...monoStyle('xs', 'med', PALETTE.accent),
+                  textTransform: 'uppercase', letterSpacing: 1.4,
+                }}>
+                  Plan du jour · {phaseLabel(phase)}
+                </div>
+                <div style={{ ...typeStyle('xs', 'body', PALETTE.inkMute), marginTop: 2 }}>
+                  {phaseSubtitle(phase, days)}
+                </div>
+              </div>
+            </div>
+
             {plan.map((item, idx) => (
               <Link key={item.id} href={item.href} style={{ textDecoration: 'none', display: 'block' }}>
                 <div style={{
                   background: PALETTE.surface,
                   borderRadius: RADIUS.lg,
                   border: `1px solid ${PALETTE.rule}`,
-                  padding: sp(4),
+                  padding: idx === 0 ? sp(4) : sp(3),
                   boxShadow: idx === 0 ? SHADOW.md : SHADOW.sm,
+                  borderLeft: idx === 0 ? `3px solid ${item.accent}` : `1px solid ${PALETTE.rule}`,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: sp(1) }}>
                     <div style={{
-                      ...monoStyle('xs', 'med', idx === 0 ? PALETTE.accent : item.accent),
+                      ...monoStyle('xs', 'med', item.accent),
                       textTransform: 'uppercase', letterSpacing: 1.4,
                     }}>
-                      {idx === 0 ? 'Reprendre' : 'Ensuite'}
+                      {idx === 0 ? '★ Maintenant' : idx === 1 ? 'Ensuite' : 'Bonus'}
                     </div>
                     <div style={{
                       ...monoStyle('xs', 'med', PALETTE.inkDim),
@@ -265,23 +287,27 @@ export default function DashboardPage() {
                       ≈ {item.estimatedMin} min
                     </div>
                   </div>
-                  <div style={displayStyle('xl', 'bold')}>{item.title}</div>
+                  <div style={idx === 0 ? displayStyle('xl', 'bold') : displayStyle('base', 'bold')}>
+                    {item.title}
+                  </div>
                   <div style={{ ...typeStyle('sm', 'body', PALETTE.inkMute), marginTop: 2 }}>
                     {item.detail}
                   </div>
-                  <div style={{
-                    marginTop: sp(3),
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: `${sp(2)}px ${sp(4)}px`,
-                    background: idx === 0 ? PALETTE.brand : item.accent,
-                    color: '#fff',
-                    borderRadius: RADIUS.pill,
-                    ...monoStyle('xs', 'med', '#fff'),
-                    letterSpacing: 0.4,
-                  }}>
-                    Continuer
-                    <Icon name="chevronR" size={12} color="#fff" strokeWidth={2.4} />
-                  </div>
+                  {idx === 0 && (
+                    <div style={{
+                      marginTop: sp(3),
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: `${sp(2)}px ${sp(4)}px`,
+                      background: item.accent,
+                      color: '#fff',
+                      borderRadius: RADIUS.pill,
+                      ...monoStyle('xs', 'med', '#fff'),
+                      letterSpacing: 0.4,
+                    }}>
+                      Continuer
+                      <Icon name="chevronR" size={12} color="#fff" strokeWidth={2.4} />
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}

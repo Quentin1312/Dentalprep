@@ -1,12 +1,21 @@
 /**
- * Plan de révision auto.
+ * Plan de révision adaptatif.
  *
- * À partir de l'état actuel de l'élève (XP, modules faibles, flashcards dues,
- * quiz ratés, cas pratiques non validés), compose une liste de 2-4 tâches
- * adaptées à son objectif quotidien.
+ * Trois phases déterminées par daysUntilExam :
+ *   - "construction"   (J > 90 ou aucune date)   : on bâtit les bases — flashcards,
+ *                                                  nouveau contenu, premiers codes CCAM.
+ *   - "consolidation"  (30 < J ≤ 90)             : on entretient — quiz SM-2 dus,
+ *                                                  cas pratiques, drill CCAM.
+ *   - "sprint"         (J ≤ 30)                  : on bachote — quiz dus, modules
+ *                                                  faibles, cas pratiques, codes CCAM.
+ *
+ * Le plan calcule jusqu'à 6 candidats, leur attribue une urgence (0-100) modulée
+ * par la phase, et renvoie les 3 meilleurs (urgence > 0).
  */
 
 import type { ModuleId } from '@/types/database'
+
+export type StudyPhase = 'construction' | 'consolidation' | 'sprint'
 
 export type StudyPlanItem = {
   id: string
@@ -16,7 +25,7 @@ export type StudyPlanItem = {
   estimatedMin: number
   href: string
   accent: string
-  priority: number        // 0 = top
+  urgency: number         // 0-100
 }
 
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
@@ -26,12 +35,14 @@ type Input = {
   daysUntilExam: number | null
   dailyGoalMinutes: number
   flashcardsDueCount: number
-  quizDueCount: number          // SM-2 : questions de quiz dues
+  quizDueCount: number
   attempts: Attempt[]
   moduleStats: ModuleStat[]
-  practiceTodoCount: number     // nb de cas pratiques non validés à 100%
-  recentWrongQuestionCount: number  // dernière tentative = fausse (fallback si SM-2 vide)
+  practiceTodoCount: number
+  recentWrongQuestionCount: number
   totalQuestionsCount: number
+  ccamCodesCount: number
+  ccamMasteredCount: number
 }
 
 const MODULE_ACCENT: Record<string, string> = {
@@ -39,98 +50,190 @@ const MODULE_ACCENT: Record<string, string> = {
   M4: '#E11D48', M5: '#D97706', M6: '#5B21B6',
 }
 
-// Cap les nombres pour ne pas effrayer l'étudiant (109 flashcards = panique)
 const CARDS_PER_SESSION = 15
+const QUIZ_PER_SESSION = 20
 const PRACTICE_PER_SESSION = 3
-const WRONG_PER_SESSION = 10
 
-export function buildStudyPlan(i: Input): StudyPlanItem[] {
-  const items: StudyPlanItem[] = []
+export function getPhase(daysUntilExam: number | null): StudyPhase {
+  if (daysUntilExam === null) return 'construction'
+  if (daysUntilExam <= 30) return 'sprint'
+  if (daysUntilExam <= 90) return 'consolidation'
+  return 'construction'
+}
 
-  // 1. Flashcards dues (priorité absolue) — capé à 15 par session
-  if (i.flashcardsDueCount > 0) {
-    const shown = Math.min(i.flashcardsDueCount, CARDS_PER_SESSION)
-    items.push({
-      id: 'due-cards',
-      icon: 'cards',
-      title: `Réviser ${shown} flashcard${shown > 1 ? 's' : ''}`,
-      detail: i.flashcardsDueCount > CARDS_PER_SESSION
-        ? `${i.flashcardsDueCount} en attente · on commence par les + urgentes`
-        : 'Répétition espacée — quelques minutes',
-      estimatedMin: Math.max(5, Math.ceil(shown * 0.5)),
-      href: '/flashcards/due',
-      accent: '#0A66E0',
-      priority: 0,
-    })
+export function phaseLabel(phase: StudyPhase): string {
+  return phase === 'sprint'      ? 'Sprint examen'
+       : phase === 'consolidation' ? 'Consolidation'
+       :                              'Construction'
+}
+
+export function phaseSubtitle(phase: StudyPhase, days: number | null): string {
+  if (phase === 'sprint')      return `J−${days} · on bachote les points faibles`
+  if (phase === 'consolidation') return `J−${days} · on ancre et on enchaîne`
+  return days !== null ? `J−${days} · on bâtit les bases` : 'On bâtit les bases'
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Builders de candidats
+// ─────────────────────────────────────────────────────────────────────────────
+
+function dueFlashcards(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  if (i.flashcardsDueCount === 0) return null
+  const shown = Math.min(i.flashcardsDueCount, CARDS_PER_SESSION)
+  // Urgence : très haute en construction, baisse mais reste forte en sprint
+  const base = phase === 'construction' ? 85 : phase === 'consolidation' ? 70 : 60
+  const urgency = Math.min(100, base + Math.min(15, i.flashcardsDueCount / 5))
+  return {
+    id: 'due-flashcards',
+    icon: 'cards',
+    title: `Réviser ${shown} flashcard${shown > 1 ? 's' : ''}`,
+    detail: i.flashcardsDueCount > CARDS_PER_SESSION
+      ? `${i.flashcardsDueCount} en attente · on commence par les + urgentes`
+      : 'Répétition espacée — quelques minutes',
+    estimatedMin: Math.max(5, Math.ceil(shown * 0.5)),
+    href: '/flashcards/due',
+    accent: '#0A66E0',
+    urgency,
   }
+}
 
-  // 2. Questions de quiz dues (SM-2) — priorité haute, capé à 20
-  const QUIZ_PER_SESSION = 20
-  if (i.quizDueCount > 0) {
-    const shown = Math.min(i.quizDueCount, QUIZ_PER_SESSION)
-    items.push({
-      id: 'due-quiz',
-      icon: 'refresh',
-      title: `Réviser ${shown} question${shown > 1 ? 's' : ''}`,
-      detail: i.quizDueCount > QUIZ_PER_SESSION
-        ? `${i.quizDueCount} à revoir · on commence par les + urgentes`
-        : 'Questions à revoir aujourd\'hui',
-      estimatedMin: Math.max(5, Math.ceil(shown * 0.8)),
-      href: '/quiz/due',
-      accent: '#E11D48',
-      priority: 1,
-    })
-  } else if (i.recentWrongQuestionCount >= 3) {
-    // Fallback tant que SM-2 n'est pas encore alimenté (utilisateur avant backfill)
-    const shown = Math.min(i.recentWrongQuestionCount, WRONG_PER_SESSION)
-    items.push({
-      id: 'wrong-quiz',
-      icon: 'refresh',
-      title: `Reprendre ${shown} erreur${shown > 1 ? 's' : ''}`,
-      detail: 'Refaire les questions que tu as ratées',
-      estimatedMin: Math.min(12, shown),
-      href: '/mes-erreurs',
-      accent: '#E11D48',
-      priority: 1,
-    })
+function dueQuiz(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  if (i.quizDueCount === 0) {
+    // Fallback : si SM-2 vide mais erreurs récentes, propose "Mes erreurs"
+    if (i.recentWrongQuestionCount >= 3) {
+      const shown = Math.min(i.recentWrongQuestionCount, 10)
+      return {
+        id: 'wrong-quiz',
+        icon: 'refresh',
+        title: `Reprendre ${shown} erreur${shown > 1 ? 's' : ''}`,
+        detail: 'Refaire les questions ratées',
+        estimatedMin: Math.min(12, shown),
+        href: '/mes-erreurs',
+        accent: '#E11D48',
+        urgency: 65,
+      }
+    }
+    return null
   }
+  const shown = Math.min(i.quizDueCount, QUIZ_PER_SESSION)
+  const base = phase === 'sprint' ? 95 : phase === 'consolidation' ? 85 : 70
+  const urgency = Math.min(100, base + Math.min(10, i.quizDueCount / 10))
+  return {
+    id: 'due-quiz',
+    icon: 'refresh',
+    title: `Réviser ${shown} question${shown > 1 ? 's' : ''}`,
+    detail: i.quizDueCount > QUIZ_PER_SESSION
+      ? `${i.quizDueCount} à revoir · on commence par les + urgentes`
+      : 'Questions à revoir aujourd\'hui',
+    estimatedMin: Math.max(5, Math.ceil(shown * 0.8)),
+    href: '/quiz/due',
+    accent: '#E11D48',
+    urgency,
+  }
+}
 
-  // 3. Module faible — seulement si ≥ 15 tentatives ET < 60% (sinon "0% sur 0" = pas faible, jamais touché)
-  const weakestModule = i.moduleStats
+function weakModule(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  const weak = i.moduleStats
     .filter(m => m.totalQuestions >= 15 && m.pct < 60)
     .sort((a, b) => a.pct - b.pct)[0]
-  if (weakestModule) {
-    items.push({
-      id: `weak-${weakestModule.id}`,
-      icon: 'target',
-      title: `Renforcer ${weakestModule.id}`,
-      detail: `${weakestModule.pct}% de précision · ${weakestModule.label}`,
-      estimatedMin: 15,
-      href: `/quiz/${weakestModule.id}?mode=smart`,
-      accent: MODULE_ACCENT[weakestModule.id] ?? '#0A66E0',
-      priority: 2,
-    })
+  if (!weak) return null
+  // Urgence : énorme en sprint, modérée sinon
+  const base = phase === 'sprint' ? 90 : phase === 'consolidation' ? 60 : 45
+  const urgency = Math.min(100, base + (60 - weak.pct) * 0.5)
+  return {
+    id: `weak-${weak.id}`,
+    icon: 'target',
+    title: `Renforcer ${weak.id}`,
+    detail: `${weak.pct}% de précision · ${weak.label}`,
+    estimatedMin: 15,
+    href: `/quiz/${weak.id}?mode=smart`,
+    accent: MODULE_ACCENT[weak.id] ?? '#0A66E0',
+    urgency,
   }
+}
 
-  // 4. Cas pratiques — n'apparaît QUE si rien d'autre de plus urgent OU peu de cas restants
-  // et capé à 3 pour pas effrayer
-  if (i.practiceTodoCount > 0 && items.length < 2) {
-    const shown = Math.min(i.practiceTodoCount, PRACTICE_PER_SESSION)
-    items.push({
-      id: 'practice',
-      icon: 'edit',
-      title: `${shown} cas pratique${shown > 1 ? 's' : ''}`,
-      detail: 'Coder une feuille de soins CCAM',
-      estimatedMin: shown * 4,
-      href: '/practice',
-      accent: '#D97706',
-      priority: 3,
-    })
+function practice(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  if (i.practiceTodoCount === 0) return null
+  const shown = Math.min(i.practiceTodoCount, PRACTICE_PER_SESSION)
+  // Cas pratiques = CCAM appliqué → de + en + critique à mesure que l'examen approche
+  const base = phase === 'sprint' ? 80 : phase === 'consolidation' ? 65 : 35
+  const urgency = base + Math.min(15, i.practiceTodoCount / 4)
+  return {
+    id: 'practice',
+    icon: 'edit',
+    title: `${shown} cas pratique${shown > 1 ? 's' : ''}`,
+    detail: 'Coder une feuille de soins CCAM',
+    estimatedMin: shown * 4,
+    href: '/practice',
+    accent: '#D97706',
+    urgency,
   }
+}
 
-  // 5. Backup si rien à proposer (utilisateur tout neuf ou parfait)
-  if (items.length === 0) {
-    items.push({
+function ccamDrill(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  if (i.ccamCodesCount === 0) return null
+  const coverage = i.ccamMasteredCount / i.ccamCodesCount
+  if (coverage >= 0.85) return null   // bien maîtrisé, pas besoin
+  const remaining = i.ccamCodesCount - i.ccamMasteredCount
+  // Très utile en consolidation et sprint, optionnel en construction
+  const base = phase === 'sprint' ? 70 : phase === 'consolidation' ? 60 : 40
+  const urgency = base + Math.min(25, (1 - coverage) * 30)
+  const pct = Math.round(coverage * 100)
+  return {
+    id: 'ccam-drill',
+    icon: 'target',
+    title: 'Drill codes CCAM',
+    detail: `${pct}% maîtrisés · ${remaining} codes restants · ~1 min`,
+    estimatedMin: 2,
+    href: '/practice/drill',
+    accent: '#0D9488',
+    urgency,
+  }
+}
+
+function discoverModule(i: Input, phase: StudyPhase): StudyPlanItem | null {
+  // Module avec peu de questions tentées (couverture < 30%) — utile en construction
+  if (phase === 'sprint') return null
+  const candidate = i.moduleStats
+    .filter(m => m.totalQuestions > 0 && m.doneQuestions / m.totalQuestions < 0.3)
+    .sort((a, b) => (a.doneQuestions / a.totalQuestions) - (b.doneQuestions / b.totalQuestions))[0]
+  if (!candidate) return null
+  const base = phase === 'construction' ? 55 : 35
+  return {
+    id: `discover-${candidate.id}`,
+    icon: 'bookOpen',
+    title: `Découvrir ${candidate.id}`,
+    detail: `${candidate.label} · ${candidate.doneQuestions}/${candidate.totalQuestions} questions vues`,
+    estimatedMin: 10,
+    href: `/quiz/${candidate.id}?mode=smart`,
+    accent: MODULE_ACCENT[candidate.id] ?? '#0A66E0',
+    urgency: base,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Plan principal — calcule les candidats, trie par urgence, renvoie le top 3.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function buildStudyPlan(i: Input): StudyPlanItem[] {
+  const phase = getPhase(i.daysUntilExam)
+
+  const candidates: (StudyPlanItem | null)[] = [
+    dueFlashcards(i, phase),
+    dueQuiz(i, phase),
+    weakModule(i, phase),
+    practice(i, phase),
+    ccamDrill(i, phase),
+    discoverModule(i, phase),
+  ]
+
+  const sorted = candidates
+    .filter((c): c is StudyPlanItem => c !== null && c.urgency > 0)
+    .sort((a, b) => b.urgency - a.urgency)
+
+  // Backup si tout est vide (élève tout neuf ou parfait)
+  if (sorted.length === 0) {
+    return [{
       id: 'discover',
       icon: 'bookOpen',
       title: 'Continue ton apprentissage',
@@ -138,12 +241,11 @@ export function buildStudyPlan(i: Input): StudyPlanItem[] {
       estimatedMin: i.dailyGoalMinutes,
       href: '/library',
       accent: '#0A66E0',
-      priority: 5,
-    })
+      urgency: 10,
+    }]
   }
 
-  // Limite à 2 items max — un plan trop long décourage
-  return items.sort((a, b) => a.priority - b.priority).slice(0, 2)
+  return sorted.slice(0, 3)
 }
 
 export function planTotalMinutes(items: StudyPlanItem[]): number {
