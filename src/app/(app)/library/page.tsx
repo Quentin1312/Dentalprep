@@ -308,9 +308,9 @@ export default function LibraryPage() {
                         <PathNode state={state} icon={icon} accent={accent} label={shortTitle} justCompleted={just} />
                       </div>
                     ) : (
-                      <Link href={`/upload?fascicule=${f.n}`} style={{ textDecoration: 'none' }}>
+                      <div style={{ opacity: 0.55, cursor: 'default' }}>
                         <PathNode state={state} icon={icon} accent={accent} label={shortTitle} justCompleted={just} />
-                      </Link>
+                      </div>
                     )}
                   </PathRow>
                 )

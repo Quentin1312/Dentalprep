@@ -105,9 +105,9 @@ export default function ModuleParcours({ moduleId, fascicules, courses, coursePr
                 <NodeCircle state={it.allDone ? 'done' : it.isCurrent ? 'current' : it.isStarted ? 'started' : 'unstarted'} number={it.f.n} />
               </Link>
             ) : (
-              <Link href={`/upload?fascicule=${it.f.n}`} style={{ textDecoration: 'none' }}>
+              <div style={{ cursor: 'default' }}>
                 <NodeCircle state="locked" number={it.f.n} />
-              </Link>
+              </div>
             )}
 
             <div style={{ marginTop: 8, textAlign: 'center', maxWidth: 150 }}>
