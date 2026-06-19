@@ -86,7 +86,7 @@ export default function DrillPage() {
       setUserId(user.id)
       startRef.current = Date.now()
       Promise.all([
-        supabase.from('ccam_codes').select('id,code,label,family').eq('user_id', user.id),
+        supabase.from('ccam_codes').select('id,code,label,family'),
         supabase.from('ccam_drill_attempts').select('code,is_correct').eq('user_id', user.id),
       ]).then(([codesRes, attemptsRes]: any) => {
         const codes: Code[] = codesRes.data ?? []

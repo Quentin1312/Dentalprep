@@ -31,7 +31,7 @@ function FlashcardsInner() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
-      let q = supabase.from('flashcards').select('id,concept,definition').eq('user_id', user.id)
+      let q = supabase.from('flashcards').select('id,concept,definition')
       if (courseId) {
         q = q.eq('course_id', courseId).eq('module_id', moduleId as ModuleId)
       } else {

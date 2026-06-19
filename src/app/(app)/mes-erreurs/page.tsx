@@ -71,7 +71,6 @@ export default function MesErreursPage() {
       const { data: qs } = await supabase
         .from('quiz_questions')
         .select('*')
-        .eq('user_id', user.id)
         .in('id', errorIds)
 
       if (!qs?.length) { setPhase('list'); return }

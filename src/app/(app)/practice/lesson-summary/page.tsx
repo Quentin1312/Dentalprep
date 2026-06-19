@@ -47,7 +47,7 @@ function LessonSummaryInner() {
       Promise.all([
         supabase.from('practical_exercises')
           .select('id,n,title,category')
-          .eq('user_id', user.id).eq('category', category)
+          .eq('category', category)
           .gte('n', startN).lte('n', endN).order('n'),
         supabase.from('practical_attempts')
           .select('exercise_id,score,created_at')

@@ -87,7 +87,7 @@ function QuizInner() {
         if (data?.pet_type) setPetType(data.pet_type)
       })
 
-      let q = supabase.from('quiz_questions').select('*').eq('user_id', user.id).eq('module_id', moduleId as ModuleId)
+      let q = supabase.from('quiz_questions').select('*').eq('module_id', moduleId as ModuleId)
       if (courseId) q = q.eq('course_id', courseId)
 
       const supaAny = supabase as any

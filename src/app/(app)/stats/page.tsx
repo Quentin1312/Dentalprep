@@ -39,7 +39,7 @@ export default function StatsPage() {
         supabase.from('quiz_attempts').select('module_id,is_correct,created_at,question_id').eq('user_id', user.id),
         // Heatmap : 120 jours pour ~17 semaines de recul
         supabase.from('daily_sessions').select('date,minutes_studied').eq('user_id', user.id).order('date', { ascending: false }).limit(120),
-        supabase.from('quiz_questions').select('id,module_id,course_id').eq('user_id', user.id),
+        supabase.from('quiz_questions').select('id,module_id,course_id'),
       ]).then(([p, a, s, q]) => {
         setStreak(p.data?.streak ?? 0)
         setExamDate(p.data?.exam_date ?? null)

@@ -102,7 +102,7 @@ function PracticeExerciseInner() {
     Promise.all([
       supabase.from('practical_exercises')
         .select('id,n')
-        .eq('user_id', userId).eq('category', exo.category)
+        .eq('category', exo.category)
         .gte('n', startN).lte('n', endN).order('n', { ascending: true }),
       supabase.from('practical_attempts')
         .select('exercise_id,score').eq('user_id', userId),
@@ -118,7 +118,7 @@ function PracticeExerciseInner() {
     })
     // Exo suivant (n+1 dans la catégorie)
     supabase.from('practical_exercises')
-      .select('id,n').eq('user_id', userId).eq('category', exo.category)
+      .select('id,n').eq('category', exo.category)
       .gt('n', exo.n).order('n', { ascending: true }).limit(1)
       .then(({ data }: any) => {
         setNextExoId(data && data.length > 0 ? data[0].id : null)

@@ -69,7 +69,7 @@ export default function MockExamLobbyPage() {
 
     // Fetch pool + SM-2 state pour exclure leeches
     const [{ data: questions }, sm2Res] = await Promise.all([
-      supabase.from('quiz_questions').select('id,module_id').eq('user_id', userId),
+      supabase.from('quiz_questions').select('id,module_id'),
       supaAny.from('quiz_question_progress').select('question_id,is_leech,is_suspended').eq('user_id', userId),
     ])
 

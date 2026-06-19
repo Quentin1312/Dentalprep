@@ -50,8 +50,8 @@ export default function ModulePage() {
     const mid = id as ModuleId
 
     const [{ data: c }, { data: f }, { data: a }] = await Promise.all([
-      supabase.from('courses').select('id,title,page_count').eq('user_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('flashcards').select('id').eq('user_id', user.id).eq('module_id', mid),
+      supabase.from('courses').select('id,title,page_count').order('created_at', { ascending: false }),
+      supabase.from('flashcards').select('id').eq('module_id', mid),
       supabase.from('quiz_attempts').select('is_correct').eq('user_id', user.id).eq('module_id', mid),
     ])
 
