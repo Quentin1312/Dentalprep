@@ -160,6 +160,10 @@ function QuizInner() {
             ...mastered.slice(0, 2),
           ].slice(0, 20)
           setQuestions(sorted)
+        } else if (slug) {
+          // Mode chapitre : on prend TOUTES les questions du chapitre, pas de chunking
+          setTotalLessons(1)
+          setQuestions(sorted)
         } else {
           const total = Math.ceil(sorted.length / LESSON_SIZE)
           setTotalLessons(total || 1)
