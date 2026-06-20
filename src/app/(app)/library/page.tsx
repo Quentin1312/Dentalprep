@@ -468,45 +468,34 @@ export default function LibraryPage() {
                       >
                         <div style={{
                           display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '12px 14px',
+                          padding: '14px 16px',
                           background: '#fff',
                           border: `1px solid ${A.border}`,
-                          borderRadius: 14,
+                          borderLeft: `3px solid ${dotColor}`,
+                          borderRadius: 12,
                           transition: 'background 0.15s',
                         }}>
                           <div style={{
-                            width: 36, height: 36, borderRadius: 10,
-                            background: '#F4F5F2',
+                            minWidth: 28, height: 28,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 18, flexShrink: 0,
-                          }}>{c.emoji ?? '📖'}</div>
+                            fontSize: 12, fontWeight: 800,
+                            color: dotColor,
+                            letterSpacing: 0,
+                            flexShrink: 0,
+                          }}>{String(c.n).padStart(2, '0')}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{
-                              display: 'flex', alignItems: 'baseline', gap: 8,
                               fontSize: 14, fontWeight: 700, color: A.text,
                               letterSpacing: -0.2,
-                            }}>
-                              <span style={{
-                                fontSize: 10, fontWeight: 800, color: A.textMuted,
-                                textTransform: 'uppercase', letterSpacing: 0.4,
-                                whiteSpace: 'nowrap',
-                              }}>Ch. {c.n}</span>
-                              <span style={{
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                              }}>{c.title}</span>
-                            </div>
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>{c.title}</div>
                             <div style={{
                               fontSize: 11, color: A.textMuted, marginTop: 2,
-                              display: 'flex', alignItems: 'center', gap: 6,
+                              fontWeight: 500,
                             }}>
-                              <span style={{
-                                width: 6, height: 6, borderRadius: 999, background: dotColor,
-                              }} />
-                              <span>
-                                {c.total === 0
-                                  ? 'Fiche seule'
-                                  : `${c.correct}/${c.total} validées · ${pct}%`}
-                              </span>
+                              {c.total === 0
+                                ? 'Fiche seule'
+                                : `${c.correct}/${c.total} validées · ${pct}%`}
                             </div>
                           </div>
                           <Icon name="chevronR" size={14} color={A.textMuted} />

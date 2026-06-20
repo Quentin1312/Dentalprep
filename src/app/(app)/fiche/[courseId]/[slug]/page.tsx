@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { useAppData } from '@/lib/app-context'
 import FicheRenderer, { type FicheContent } from '@/components/lesson/FicheRenderer'
 import { PALETTE, TYPE, WEIGHT, FONT_DISPLAY, RADIUS } from '@/lib/theme'
 import Icon from '@/components/ui/Icon'
@@ -25,27 +24,29 @@ export default function FichePage() {
   const params = useParams<{ courseId: string; slug: string }>()
   const sp = useSearchParams()
   const modId = sp.get('modId') ?? 'M2'
-  const { data } = useAppData()
   const [fiche, setFiche] = useState<Fiche | null>(null)
+  const [questionCount, setQuestionCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient() as any
-    supabase.from('lesson_sheets')
-      .select('*')
-      .eq('course_id', params.courseId)
-      .eq('slug', params.slug)
-      .maybeSingle()
-      .then(({ data: f }: any) => {
-        if (f) setFiche(f as Fiche)
-        setLoading(false)
-      })
-  }, [params.courseId, params.slug])
-
-  // Compte des questions liées à cette fiche
-  const questionCount = (data?.questions ?? []).filter(
-    q => q.course_id === params.courseId && q.module_id === modId && q.lesson_slug === params.slug
-  ).length
+    Promise.all([
+      supabase.from('lesson_sheets')
+        .select('*')
+        .eq('course_id', params.courseId)
+        .eq('slug', params.slug)
+        .maybeSingle(),
+      supabase.from('quiz_questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('course_id', params.courseId)
+        .eq('module_id', modId)
+        .eq('lesson_slug', params.slug),
+    ]).then(([fRes, qRes]: any) => {
+      if (fRes.data) setFiche(fRes.data as Fiche)
+      setQuestionCount(qRes.count ?? 0)
+      setLoading(false)
+    })
+  }, [params.courseId, params.slug, modId])
 
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center', color: PALETTE.inkMute }}>Chargement…</div>
@@ -104,23 +105,16 @@ export default function FichePage() {
         color: '#fff',
         position: 'relative', overflow: 'hidden',
       }}>
-        {fiche.emoji && (
-          <div style={{
-            position: 'absolute', top: 16, right: 18,
-            fontSize: 42, opacity: 0.95,
-          }}>{fiche.emoji}</div>
-        )}
         <div style={{
           fontSize: TYPE.xs.size, color: 'rgba(255,255,255,0.7)',
           fontWeight: WEIGHT.med, textTransform: 'uppercase', letterSpacing: 0.6,
           marginBottom: 8,
-        }}>Fiche de révision</div>
+        }}>Chapitre {fiche.n} · Fiche de révision</div>
         <h1 style={{
           margin: 0,
           fontFamily: FONT_DISPLAY,
           fontSize: TYPE['2xl'].size, lineHeight: `${TYPE['2xl'].line}px`,
           fontWeight: WEIGHT.bold, letterSpacing: TYPE['2xl'].track,
-          paddingRight: fiche.emoji ? 48 : 0,
         }}>{fiche.title}</h1>
         {fiche.subtitle && (
           <p style={{
