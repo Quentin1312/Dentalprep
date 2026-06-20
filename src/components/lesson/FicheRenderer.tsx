@@ -75,6 +75,16 @@ function Callout({ variant = 'info', text }: { variant?: string; text: string })
 }
 
 function Table({ title, subtitle, headers, rows }: { title?: string; subtitle?: string; headers: string[]; rows: string[][] }) {
+  // 2 colonnes → 38% / 62% (label/valeur typique).
+  // 3+ colonnes → on fixe une largeur min par colonne et on autorise le scroll horizontal
+  // pour ne pas tronquer le texte sur mobile.
+  const cols = headers.length
+  const isManyCols = cols >= 3
+  const colMinWidth = cols === 3 ? 130 : 110
+  const gridTemplate = cols === 2
+    ? '38% 62%'
+    : `repeat(${cols}, minmax(${colMinWidth}px, 1fr))`
+
   return (
     <div style={{
       margin: '12px 0',
@@ -93,26 +103,30 @@ function Table({ title, subtitle, headers, rows }: { title?: string; subtitle?: 
           {subtitle && <div style={{ fontSize: TYPE.xs.size, color: PALETTE.inkMute, marginTop: 2 }}>{subtitle}</div>}
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: headers.length === 2 ? '38% 62%' : `repeat(${headers.length}, 1fr)` }}>
-        {headers.map((h, i) => (
-          <div key={`h${i}`} style={{
-            padding: '8px 12px',
-            background: PALETTE.brandSoft,
-            borderRight: i < headers.length - 1 ? `1px solid ${PALETTE.rule}` : undefined,
-            fontSize: TYPE.xs.size, fontWeight: WEIGHT.bold, color: PALETTE.brandDeep,
-            textTransform: 'uppercase', letterSpacing: 0.4,
-          }}>{h}</div>
-        ))}
-        {rows.map((row, ri) => row.map((cell, ci) => (
-          <div key={`r${ri}c${ci}`} style={{
-            padding: '10px 12px',
-            borderTop: `1px solid ${PALETTE.ruleSoft}`,
-            borderRight: ci < row.length - 1 ? `1px solid ${PALETTE.ruleSoft}` : undefined,
-            fontSize: TYPE.sm.size, lineHeight: `${TYPE.sm.line}px`,
-            color: ci === 0 ? PALETTE.ink : PALETTE.inkMute,
-            fontWeight: ci === 0 ? WEIGHT.med : WEIGHT.body,
-          }}>{cell}</div>
-        )))}
+      <div style={{ overflowX: isManyCols ? 'auto' : undefined, WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: gridTemplate, minWidth: isManyCols ? cols * colMinWidth : undefined }}>
+          {headers.map((h, i) => (
+            <div key={`h${i}`} style={{
+              padding: '8px 12px',
+              background: PALETTE.brandSoft,
+              borderRight: i < headers.length - 1 ? `1px solid ${PALETTE.rule}` : undefined,
+              fontSize: TYPE.xs.size, fontWeight: WEIGHT.bold, color: PALETTE.brandDeep,
+              textTransform: 'uppercase', letterSpacing: 0.4,
+              wordBreak: 'break-word',
+            }}>{h}</div>
+          ))}
+          {rows.map((row, ri) => row.map((cell, ci) => (
+            <div key={`r${ri}c${ci}`} style={{
+              padding: '10px 12px',
+              borderTop: `1px solid ${PALETTE.ruleSoft}`,
+              borderRight: ci < row.length - 1 ? `1px solid ${PALETTE.ruleSoft}` : undefined,
+              fontSize: TYPE.sm.size, lineHeight: `${TYPE.sm.line}px`,
+              color: ci === 0 ? PALETTE.ink : PALETTE.inkMute,
+              fontWeight: ci === 0 ? WEIGHT.med : WEIGHT.body,
+              wordBreak: 'break-word',
+            }}>{cell}</div>
+          )))}
+        </div>
       </div>
     </div>
   )
