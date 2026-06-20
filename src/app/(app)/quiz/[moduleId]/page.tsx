@@ -61,6 +61,7 @@ function QuizInner() {
   const router = useRouter()
 
   const courseId = searchParams.get('courseId') ?? null
+  const slug = searchParams.get('slug') ?? null
   const mode = searchParams.get('mode') ?? 'normal' // 'normal' | 'smart' | 'errors'
   const lesson = parseInt(searchParams.get('lesson') ?? '0', 10)
 
@@ -89,6 +90,7 @@ function QuizInner() {
 
       let q = supabase.from('quiz_questions').select('*').eq('module_id', moduleId as ModuleId)
       if (courseId) q = q.eq('course_id', courseId)
+      if (slug) q = (q as any).eq('lesson_slug', slug)
 
       const supaAny = supabase as any
       Promise.all([
@@ -164,7 +166,7 @@ function QuizInner() {
         setLoading(false)
       })
     })
-  }, [moduleId, courseId, mode, lesson, mod, router])
+  }, [moduleId, courseId, slug, mode, lesson, mod, router])
 
   const style = `@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`
 

@@ -14,6 +14,16 @@ import {
   type RailModule, type ModuleBreakVariant,
 } from '@/components/ui/PathSystem'
 import { quizCompletionCount } from '@/lib/quiz-progress'
+import { createClient } from '@/lib/supabase/client'
+
+type LessonSheet = {
+  course_id: string
+  slug: string
+  n: number
+  title: string
+  emoji: string | null
+  subtitle: string | null
+}
 
 function fasciculeN(title: string): number | null {
   const m = title.match(/Fascicule\s+(\d+)/i)
@@ -78,6 +88,13 @@ export default function LibraryPage() {
   const attempts = data?.attempts ?? []
   const questions = data?.questions ?? []
   const questionCourseMap = data?.questionCourseMap ?? {}
+  const [lessonSheets, setLessonSheets] = useState<LessonSheet[]>([])
+
+  useEffect(() => {
+    const supabase = createClient() as any
+    supabase.from('lesson_sheets').select('course_id,slug,n,title,emoji,subtitle')
+      .then(({ data: rows }: any) => { if (rows) setLessonSheets(rows as LessonSheet[]) })
+  }, [])
 
   // Détection "nouveau passage à completed" — déclenche l'anim 1 seule fois.
   // Clé d'un fascicule complété = "{moduleId}:{fasciculeN}".
@@ -372,6 +389,25 @@ export default function LibraryPage() {
           ? `/flashcards/${sheet.modId}?courseId=${sheet.courseId}&lesson=${activeLesson}`
           : '#'
 
+        // Chapitres (fiches de révision) pour ce cours
+        const courseSheets = lessonSheets
+          .filter(s => s.course_id === sheet.courseId)
+          .sort((a, b) => a.n - b.n)
+        const hasSheets = courseSheets.length > 0
+
+        // Pour chaque chapitre : nb questions + nb correctes
+        const correctIds = new Set(attempts.filter(a => a.is_correct && a.module_id === sheet.modId).map(a => a.question_id))
+        const chapterStats = courseSheets.map(cs => {
+          const qs = questions.filter(q => q.course_id === sheet.courseId && q.module_id === sheet.modId && q.lesson_slug === cs.slug)
+          const correct = qs.filter(q => correctIds.has(q.id)).length
+          return {
+            ...cs,
+            total: qs.length,
+            correct,
+            status: qs.length === 0 ? 'empty' as const : correct === qs.length ? 'done' as const : correct > 0 ? 'started' as const : 'open' as const,
+          }
+        })
+
         return (
         <>
           <style>{`@keyframes dp-slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes dp-lesson-pulse{0%,100%{opacity:.55;transform:scaleX(.96)}50%{opacity:1;transform:scaleX(1)}}`}</style>
@@ -398,8 +434,92 @@ export default function LibraryPage() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: A.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sheet.title}</div>
               </div>
             </div>
-            {/* Lesson progress */}
-            <div style={{
+            {/* Si le cours a des fiches (chapitres) — nouveau format */}
+            {hasSheets && (
+              <div style={{ marginBottom: 8 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                  marginBottom: 10,
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: A.text, letterSpacing: -0.1 }}>
+                    {chapterStats.length} chapitre{chapterStats.length > 1 ? 's' : ''}
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: A.textMuted }}>
+                    {chapterStats.filter(c => c.status === 'done').length}/{chapterStats.length} terminés
+                  </div>
+                </div>
+                <div style={{
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                  maxHeight: '52vh', overflowY: 'auto',
+                  margin: '0 -4px', padding: '0 4px',
+                }}>
+                  {chapterStats.map(c => {
+                    const dotColor =
+                      c.status === 'done'    ? '#16A34A' :
+                      c.status === 'started' ? '#D97706' :
+                      c.status === 'empty'   ? '#94A3B8' : A.primary
+                    const pct = c.total > 0 ? Math.round((c.correct / c.total) * 100) : 0
+                    return (
+                      <Link
+                        key={c.slug}
+                        href={`/fiche/${sheet.courseId}/${c.slug}?modId=${sheet.modId}`}
+                        style={{ textDecoration: 'none' }}
+                        onClick={() => setSheet(null)}
+                      >
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '12px 14px',
+                          background: '#fff',
+                          border: `1px solid ${A.border}`,
+                          borderRadius: 14,
+                          transition: 'background 0.15s',
+                        }}>
+                          <div style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: '#F4F5F2',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 18, flexShrink: 0,
+                          }}>{c.emoji ?? '📖'}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              display: 'flex', alignItems: 'baseline', gap: 8,
+                              fontSize: 14, fontWeight: 700, color: A.text,
+                              letterSpacing: -0.2,
+                            }}>
+                              <span style={{
+                                fontSize: 10, fontWeight: 800, color: A.textMuted,
+                                textTransform: 'uppercase', letterSpacing: 0.4,
+                                whiteSpace: 'nowrap',
+                              }}>Ch. {c.n}</span>
+                              <span style={{
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              }}>{c.title}</span>
+                            </div>
+                            <div style={{
+                              fontSize: 11, color: A.textMuted, marginTop: 2,
+                              display: 'flex', alignItems: 'center', gap: 6,
+                            }}>
+                              <span style={{
+                                width: 6, height: 6, borderRadius: 999, background: dotColor,
+                              }} />
+                              <span>
+                                {c.total === 0
+                                  ? 'Fiche seule'
+                                  : `${c.correct}/${c.total} validées · ${pct}%`}
+                              </span>
+                            </div>
+                          </div>
+                          <Icon name="chevronR" size={14} color={A.textMuted} />
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Lesson progress (ancien format — affiché si pas de fiches) */}
+            {!hasSheets && <div style={{
               border: `1px solid ${A.border}`,
               borderRadius: 16,
               padding: '13px 14px 14px',
@@ -451,9 +571,9 @@ export default function LibraryPage() {
                   <div style={{ borderRadius: 999, background: '#DDE4EE' }} />
                 )}
               </div>
-            </div>
-            {/* Lesson */}
-            <Link href={lessonHref} style={{ textDecoration: 'none', display: 'block', pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
+            </div>}
+            {/* Lesson (ancien format — caché si fiches présentes) */}
+            {!hasSheets && <Link href={lessonHref} style={{ textDecoration: 'none', display: 'block', pointerEvents: progress.hasQuestions ? 'auto' : 'none', opacity: progress.hasQuestions ? 1 : 0.55 }} onClick={() => setSheet(null)}>
               <div style={{
                 background: `linear-gradient(135deg, ${A.primary} 0%, #0850B8 100%)`,
                 borderRadius: 16, padding: '16px 18px',
@@ -473,7 +593,7 @@ export default function LibraryPage() {
                 </div>
                 <Icon name="chevronR" size={16} color="rgba(255,255,255,0.7)" />
               </div>
-            </Link>
+            </Link>}
           </div>
         </>
         )

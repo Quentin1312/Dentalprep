@@ -9,7 +9,7 @@ import type { EquippedAccessories } from '@/lib/accessories'
 type Profile = { full_name: string | null; exam_date: string | null; streak: number; daily_goal_minutes: number; pet_type: string | null; equipped_accessories: EquippedAccessories }
 type Course = { id: string; module_id: string; title: string; page_count: number | null }
 type Attempt = { module_id: string; is_correct: boolean; question_id: string }
-type QuestionRef = { id: string; course_id: string; module_id: string }
+type QuestionRef = { id: string; course_id: string; module_id: string; lesson_slug: string | null }
 
 interface AppData {
   userId: string
@@ -76,7 +76,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Ordre chronologique requis par computeXP (XP dégressif + combo)
       supabase.from('quiz_attempts').select('module_id,is_correct,question_id').eq('user_id', user.id).order('created_at', { ascending: true }),
       supabase.from('daily_sessions').select('minutes_studied').eq('user_id', user.id).eq('date', today).maybeSingle(),
-      supabase.from('quiz_questions').select('id,course_id,module_id'),
+      supaAny.from('quiz_questions').select('id,course_id,module_id,lesson_slug'),
       supaAny.from('flashcard_progress')
         .select('flashcard_id', { count: 'exact', head: true })
         .eq('user_id', user.id)
