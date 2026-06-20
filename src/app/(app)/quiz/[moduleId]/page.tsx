@@ -232,7 +232,11 @@ function QuizInner() {
       attemptStats={attemptStats}
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
-      backHref={`/library`}
+      backHref={
+        courseId && slug
+          ? `/library?openCourse=${courseId}&openMod=${moduleId}`
+          : `/library`
+      }
       headerLabel={
         slug && currentChapterTitle ? currentChapterTitle
         : mode === 'errors' ? 'Mes erreurs'

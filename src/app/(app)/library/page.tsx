@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAppData } from '@/lib/app-context'
 import { MODULES, FASCICULES, type Fascicule } from '@/lib/modules'
@@ -80,6 +80,7 @@ const CELEBRATED_KEY = 'lib_celebrated_fasc_v1'
 
 export default function LibraryPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data, loading } = useAppData()
   const [themeId] = useThemeBg()
   const [sheet, setSheet] = useState<{ courseId: string; modId: ModuleId; title: string; n: number } | null>(null)
@@ -89,6 +90,20 @@ export default function LibraryPage() {
   const questions = data?.questions ?? []
   const questionCourseMap = data?.questionCourseMap ?? {}
   const [lessonSheets, setLessonSheets] = useState<LessonSheet[]>([])
+
+  // Auto-ouvre la sheet si on arrive depuis ?openCourse=<id>&openMod=<M>
+  useEffect(() => {
+    if (loading || !data) return
+    const oc = searchParams.get('openCourse')
+    const om = searchParams.get('openMod') as ModuleId | null
+    if (!oc || !om) return
+    const course = data.courses.find(c => c.id === oc)
+    if (!course) return
+    const n = fasciculeN(course.title)
+    const fasc = FASCICULES.find(f => f.n === n)
+    if (!fasc) return
+    setSheet({ courseId: oc, modId: om, title: fasc.title, n: fasc.n })
+  }, [loading, data, searchParams])
 
   useEffect(() => {
     const supabase = createClient() as any
