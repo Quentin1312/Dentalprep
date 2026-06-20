@@ -63,7 +63,7 @@ export default function FichePage() {
   const quizHref = `/flashcards/${modId}?courseId=${params.courseId}&slug=${params.slug}`
 
   return (
-    <div style={{ background: PALETTE.bg, minHeight: '100vh', paddingBottom: 100 }}>
+    <div style={{ background: PALETTE.bg, minHeight: '100vh', paddingBottom: 180 }}>
       {/* Top bar */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 10,
@@ -130,15 +130,14 @@ export default function FichePage() {
         <FicheRenderer content={fiche.content} />
       </div>
 
-      {/* CTA quiz — fixé en bas */}
+      {/* CTA quiz — fixé juste au-dessus de la TabBar */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'rgba(255,255,255,0.94)',
-        backdropFilter: 'blur(10px)',
-        borderTop: `1px solid ${PALETTE.rule}`,
-        padding: '12px 18px 18px',
-        zIndex: 20,
+        position: 'fixed', bottom: 76, left: 0, right: 0,
+        padding: '0 18px',
+        zIndex: 25,
+        pointerEvents: 'none',
       }}>
+        <div style={{ pointerEvents: 'auto' }}>
         {questionCount > 0 ? (
           <Link href={quizHref} style={{ textDecoration: 'none' }}>
             <div style={{
@@ -177,6 +176,7 @@ export default function FichePage() {
             fontSize: TYPE.sm.size, color: PALETTE.inkMute,
           }}>Pas de quiz pour ce chapitre pour le moment</div>
         )}
+        </div>
       </div>
     </div>
   )
