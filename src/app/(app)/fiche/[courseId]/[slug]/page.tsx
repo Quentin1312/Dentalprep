@@ -60,7 +60,7 @@ export default function FichePage() {
     )
   }
 
-  const quizHref = `/quiz/${modId}?courseId=${params.courseId}&slug=${params.slug}`
+  const quizHref = `/flashcards/${modId}?courseId=${params.courseId}&slug=${params.slug}`
 
   return (
     <div style={{ background: PALETTE.bg, minHeight: '100vh', paddingBottom: 100 }}>
@@ -159,9 +159,9 @@ export default function FichePage() {
                 <div style={{
                   fontSize: TYPE.base.size, fontWeight: WEIGHT.bold, color: '#fff',
                   letterSpacing: -0.2,
-                }}>Faire le quiz</div>
+                }}>Commencer la leçon</div>
                 <div style={{ fontSize: TYPE.xs.size, color: 'rgba(255,255,255,0.78)', marginTop: 2 }}>
-                  Flashcards puis questions · {questionCount} questions
+                  Flashcards puis quiz · {questionCount} questions
                 </div>
               </div>
               <Icon name="chevronR" size={16} color="rgba(255,255,255,0.8)" />

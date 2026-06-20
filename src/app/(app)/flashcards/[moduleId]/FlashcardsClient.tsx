@@ -24,6 +24,7 @@ export default function FlashcardsClient({
   lesson,
   totalLessons,
   totalCards,
+  slug,
 }: {
   flashcards: Flashcard[]
   moduleId: string
@@ -32,14 +33,20 @@ export default function FlashcardsClient({
   lesson?: number
   totalLessons?: number
   totalCards?: number
+  slug?: string | null
 }) {
   const router = useRouter()
   const startRef = useRef<number | null>(null)
   const isCourseLesson = !!courseId && lesson !== undefined
-  const lessonLabel = isCourseLesson && totalLessons ? `Leçon ${lesson + 1}/${totalLessons}` : `Flashcards ${moduleId}`
-  const quizHref = isCourseLesson
-    ? `/quiz/${moduleId}?courseId=${courseId}&lesson=${lesson}`
-    : `/quiz/${moduleId}`
+  const isChapter = !!courseId && !!slug
+  const lessonLabel = isChapter
+    ? 'Flashcards du chapitre'
+    : isCourseLesson && totalLessons ? `Leçon ${lesson + 1}/${totalLessons}` : `Flashcards ${moduleId}`
+  const quizHref = isChapter
+    ? `/quiz/${moduleId}?courseId=${courseId}&slug=${slug}`
+    : isCourseLesson
+      ? `/quiz/${moduleId}?courseId=${courseId}&lesson=${lesson}`
+      : `/quiz/${moduleId}`
   // progress map loaded from DB: flashcard_id → full row
   const [progressMap, setProgressMap] = useState<Record<string, ProgressRow>>({})
   // backward-compat status map (used by parts of the UI)

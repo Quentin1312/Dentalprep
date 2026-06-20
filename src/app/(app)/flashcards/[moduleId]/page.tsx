@@ -18,6 +18,7 @@ function FlashcardsInner() {
   const { moduleId } = useParams() as { moduleId: string }
   const searchParams = useSearchParams()
   const courseId = searchParams.get('courseId')
+  const slug = searchParams.get('slug')
   const lesson = Math.max(0, parseInt(searchParams.get('lesson') ?? '0', 10) || 0)
   const router = useRouter()
   const [flashcards, setFlashcards] = useState<Flashcard[] | null>(null)
@@ -31,21 +32,29 @@ function FlashcardsInner() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
-      let q = supabase.from('flashcards').select('id,concept,definition')
+      let q: any = supabase.from('flashcards').select('id,concept,definition')
       if (courseId) {
         q = q.eq('course_id', courseId).eq('module_id', moduleId as ModuleId)
       } else {
         q = q.eq('module_id', moduleId as ModuleId)
       }
-      q.order('created_at').then(({ data }) => {
+      if (slug) q = q.eq('lesson_slug', slug)
+      q.order('created_at').then(({ data }: any) => {
         const allCards = data ?? []
         setTotalCards(allCards.length)
-        setTotalLessons(Math.max(1, Math.ceil(allCards.length / LESSON_SIZE)))
-        setFlashcards(courseId ? allCards.slice(lesson * LESSON_SIZE, (lesson + 1) * LESSON_SIZE) : allCards)
+        // Si slug filtré, on prend toutes les cartes (pas de chunking).
+        // Sinon, fallback ancien : chunking par leçon de 10.
+        if (slug) {
+          setTotalLessons(1)
+          setFlashcards(allCards)
+        } else {
+          setTotalLessons(Math.max(1, Math.ceil(allCards.length / LESSON_SIZE)))
+          setFlashcards(courseId ? allCards.slice(lesson * LESSON_SIZE, (lesson + 1) * LESSON_SIZE) : allCards)
+        }
         setLoading(false)
       })
     })
-  }, [moduleId, courseId, lesson, router])
+  }, [moduleId, courseId, slug, lesson, router])
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: A.bg, fontFamily: A.font, padding: '60px 20px 0' }}>
@@ -69,6 +78,7 @@ function FlashcardsInner() {
       moduleId={moduleId}
       userId={userId!}
       courseId={courseId}
+      slug={slug}
       lesson={courseId ? lesson : undefined}
       totalLessons={courseId ? totalLessons : undefined}
       totalCards={courseId ? totalCards : undefined}
