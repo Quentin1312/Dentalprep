@@ -78,6 +78,7 @@ export default function QuizClient({
   level = 1,
   backHref,
   headerLabel,
+  nextChapter,
 }: {
   questions: Question[]
   moduleId: string
@@ -87,6 +88,7 @@ export default function QuizClient({
   petType?: PetType
   level?: number
   backHref?: string
+  nextChapter?: { href: string; title: string } | null
   headerLabel?: string
 }) {
   const router = useRouter()
@@ -238,6 +240,7 @@ export default function QuizClient({
       petType={petType}
       level={level}
       xpBefore={xpBefore}
+      nextChapter={nextChapter}
     />
   )
 

@@ -323,6 +323,7 @@ export default function QuizSummary({
   petType = 'cat',
   level = 1,
   xpBefore = 0,
+  nextChapter,
 }: {
   scoreOk: number
   scoreBad: number
@@ -335,6 +336,7 @@ export default function QuizSummary({
   petType?: PetType
   level?: number
   xpBefore?: number
+  nextChapter?: { href: string; title: string } | null
 }) {
   const router = useRouter()
   const accuracy = total > 0 ? Math.round((scoreOk / total) * 100) : 0
@@ -447,6 +449,51 @@ export default function QuizSummary({
                 }}>
                 Terminer quand même →
               </button>
+            </>
+          ) : nextChapter ? (
+            <>
+              <button
+                onClick={() => router.push(nextChapter.href)}
+                style={{
+                  height: 60, borderRadius: 16, border: 'none',
+                  background: A.primary, color: '#fff',
+                  fontSize: 15, fontWeight: 700, fontFamily: A.font, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '0 18px', gap: 12,
+                  letterSpacing: -0.1, textAlign: 'left',
+                  boxShadow: '0 10px 24px -6px rgba(10,102,224,0.55), 0 2px 6px rgba(10,102,224,0.18), inset 0 1px 0 rgba(255,255,255,0.18)',
+                  transition: 'transform .12s ease, box-shadow .12s ease',
+                }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 2 }}>
+                    Chapitre suivant
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {nextChapter.title}
+                  </div>
+                </div>
+                <Icon name="arrowR" size={16} color="#fff" strokeWidth={2.4} />
+              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={onRestart}
+                  style={{
+                    flex: 1, height: 42, borderRadius: 12, border: 'none',
+                    background: 'transparent', color: A.textMuted,
+                    fontSize: 13, fontWeight: 600, fontFamily: A.font, cursor: 'pointer',
+                  }}>
+                  Recommencer
+                </button>
+                <button
+                  onClick={() => router.push(backHref ?? `/library`)}
+                  style={{
+                    flex: 1, height: 42, borderRadius: 12, border: 'none',
+                    background: 'transparent', color: A.textMuted,
+                    fontSize: 13, fontWeight: 600, fontFamily: A.font, cursor: 'pointer',
+                  }}>
+                  Tous les chapitres
+                </button>
+              </div>
             </>
           ) : (
             <>

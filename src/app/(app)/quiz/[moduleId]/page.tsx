@@ -73,6 +73,8 @@ function QuizInner() {
   const [userId, setUserId] = useState<string | null>(null)
   const [petType, setPetType] = useState<string>('cat')
   const [loading, setLoading] = useState(true)
+  const [nextChapter, setNextChapter] = useState<{ href: string; title: string } | null>(null)
+  const [currentChapterTitle, setCurrentChapterTitle] = useState<string | null>(null)
   const { data: appData } = useAppData()
 
   const mod = MODULE_MAP[moduleId as ModuleId]
@@ -168,6 +170,32 @@ function QuizInner() {
     })
   }, [moduleId, courseId, slug, mode, lesson, mod, router])
 
+  // Si on est sur un chapitre (slug), précharge le titre actuel + chapitre suivant
+  useEffect(() => {
+    if (!courseId || !slug) return
+    const supabase = createClient() as any
+    supabase.from('lesson_sheets')
+      .select('slug,n,title')
+      .eq('course_id', courseId)
+      .order('n', { ascending: true })
+      .then(({ data: sheets }: any) => {
+        if (!sheets) return
+        const idx = sheets.findIndex((s: any) => s.slug === slug)
+        if (idx >= 0) {
+          setCurrentChapterTitle(sheets[idx].title)
+          const next = sheets[idx + 1]
+          if (next) {
+            setNextChapter({
+              href: `/fiche/${courseId}/${next.slug}?modId=${moduleId}`,
+              title: next.title,
+            })
+          } else {
+            setNextChapter(null)
+          }
+        }
+      })
+  }, [courseId, slug, moduleId])
+
   const style = `@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`
 
   if (loading) return (
@@ -205,7 +233,14 @@ function QuizInner() {
       petType={petType as 'cat' | 'dog' | 'bunny'}
       level={petLevel}
       backHref={`/library`}
-      headerLabel={mode === 'errors' ? 'Mes erreurs' : mode === 'module' ? 'Quiz du module' : mode === 'smart' ? 'Quiz intelligent' : `Leçon ${lesson + 1}/${totalLessons}`}
+      headerLabel={
+        slug && currentChapterTitle ? currentChapterTitle
+        : mode === 'errors' ? 'Mes erreurs'
+        : mode === 'module' ? 'Quiz du module'
+        : mode === 'smart' ? 'Quiz intelligent'
+        : `Leçon ${lesson + 1}/${totalLessons}`
+      }
+      nextChapter={nextChapter}
     />
   )
 }
