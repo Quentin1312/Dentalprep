@@ -411,9 +411,11 @@ export default function LibraryPage() {
         const hasSheets = courseSheets.length > 0
 
         // Pour chaque chapitre : nb questions + nb correctes
-        const correctIds = new Set(attempts.filter(a => a.is_correct && a.module_id === sheet.modId).map(a => a.question_id))
+        // Le chapitre est l'unité de regroupement — on compte TOUTES les questions
+        // du chapitre, tous modules confondus (cf. fix multi-module dispatch).
+        const correctIds = new Set(attempts.filter(a => a.is_correct).map(a => a.question_id))
         const chapterStats = courseSheets.map(cs => {
-          const qs = questions.filter(q => q.course_id === sheet.courseId && q.module_id === sheet.modId && q.lesson_slug === cs.slug)
+          const qs = questions.filter(q => q.course_id === sheet.courseId && q.lesson_slug === cs.slug)
           const correct = qs.filter(q => correctIds.has(q.id)).length
           return {
             ...cs,

@@ -90,9 +90,17 @@ function QuizInner() {
         if (data?.pet_type) setPetType(data.pet_type)
       })
 
-      let q = supabase.from('quiz_questions').select('*').eq('module_id', moduleId as ModuleId)
-      if (courseId) q = q.eq('course_id', courseId)
-      if (slug) q = (q as any).eq('lesson_slug', slug)
+      // Si on est dans un chapitre (slug), on prend TOUTES les questions du chapitre
+      // peu importe le module (un fasc multi-modules a ses questions dispatchées,
+      // mais le chapitre est l'unité de regroupement).
+      let q: any = supabase.from('quiz_questions').select('*')
+      if (slug) {
+        if (courseId) q = q.eq('course_id', courseId)
+        q = q.eq('lesson_slug', slug)
+      } else {
+        q = q.eq('module_id', moduleId as ModuleId)
+        if (courseId) q = q.eq('course_id', courseId)
+      }
 
       const supaAny = supabase as any
       Promise.all([

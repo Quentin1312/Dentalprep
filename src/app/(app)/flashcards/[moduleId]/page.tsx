@@ -33,12 +33,15 @@ function FlashcardsInner() {
       if (!user) { router.replace('/auth/login'); return }
       setUserId(user.id)
       let q: any = supabase.from('flashcards').select('id,concept,definition')
-      if (courseId) {
+      if (slug) {
+        // Mode chapitre : on prend TOUTES les cartes du chapitre, peu importe le module
+        if (courseId) q = q.eq('course_id', courseId)
+        q = q.eq('lesson_slug', slug)
+      } else if (courseId) {
         q = q.eq('course_id', courseId).eq('module_id', moduleId as ModuleId)
       } else {
         q = q.eq('module_id', moduleId as ModuleId)
       }
-      if (slug) q = q.eq('lesson_slug', slug)
       q.order('created_at').then(({ data }: any) => {
         const allCards = data ?? []
         setTotalCards(allCards.length)

@@ -36,10 +36,11 @@ export default function FichePage() {
         .eq('course_id', params.courseId)
         .eq('slug', params.slug)
         .maybeSingle(),
+      // Compte TOUTES les questions du chapitre, tous modules confondus
+      // (le chapitre est l'unité, pas le module — voir quiz/[moduleId]/page.tsx)
       supabase.from('quiz_questions')
         .select('id', { count: 'exact', head: true })
         .eq('course_id', params.courseId)
-        .eq('module_id', modId)
         .eq('lesson_slug', params.slug),
     ]).then(([fRes, qRes]: any) => {
       if (fRes.data) setFiche(fRes.data as Fiche)
